@@ -1,0 +1,321 @@
+/* FromZeroToHero — estilos de Progreso (.prog-*) y Ajustes (.aju-*) */
+
+/* ---- títulos de vista ---- */
+.prog-titulo,
+.aju-titulo {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+/* ---- pestañas de Progreso ---- */
+.prog-pestanas {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.prog-pestana {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--borde);
+  background: var(--panel);
+  color: var(--texto-suave);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.prog-pestana-activa {
+  border-color: var(--oro);
+  background: rgba(217, 164, 65, 0.14);
+  color: var(--oro-claro);
+}
+
+/* ---- gráficas ---- */
+.prog-grafica {
+  margin-top: 12px;
+}
+
+.prog-gl-svg {
+  width: 100%;
+  height: auto;
+}
+
+.prog-gl-vacia {
+  text-align: center;
+  padding: 24px 8px;
+  font-size: 14px;
+}
+
+.prog-gl-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-bottom: 8px;
+}
+
+.prog-gl-leyenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--texto-suave);
+}
+
+.prog-gl-leyenda-punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ---- comunes de Progreso ---- */
+.prog-vacio {
+  text-align: center;
+  padding: 26px 16px;
+}
+
+.prog-vacio p:first-child {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.prog-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.prog-nota {
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.prog-btn-bloque,
+.aju-btn-bloque {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.prog-oculto,
+.aju-oculto {
+  display: none;
+}
+
+.prog-chip-tacto {
+  min-height: 44px;
+}
+
+/* ---- pestaña Cuerpo ---- */
+.prog-form-peso {
+  margin-top: 12px;
+}
+
+.prog-form-peso .input {
+  flex: 1;
+}
+
+.prog-medidas-form > div:last-child {
+  grid-column: 1 / -1;
+}
+
+.prog-medidas-lista {
+  list-style: none;
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--texto-suave);
+}
+
+.prog-tipos-foto {
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.prog-fotos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.prog-foto {
+  padding: 0;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--panel-2);
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.prog-foto img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.prog-foto-pie {
+  display: block;
+  font-size: 11px;
+  color: var(--texto-suave);
+  padding: 4px 4px 6px;
+}
+
+.prog-foto-hueco {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--texto-suave);
+  font-size: 12px;
+  background: var(--panel-2);
+  border-radius: 10px;
+}
+
+.prog-foto-grande {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.prog-comparador {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.prog-comparador-img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+}
+
+/* ---- pestaña Logros ---- */
+.prog-logros {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.prog-logro {
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.prog-logro-icono {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.prog-logro-nombre {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.prog-logro-detalle {
+  font-size: 12px;
+  color: var(--texto-suave);
+}
+
+.prog-logro-xp {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--oro);
+  margin-top: auto;
+}
+
+.prog-logro-si {
+  border-color: rgba(217, 164, 65, 0.55);
+  background: linear-gradient(180deg, rgba(217, 164, 65, 0.1), var(--panel));
+}
+
+.prog-logro-no {
+  opacity: 0.55;
+}
+
+.prog-logro-no .prog-logro-icono {
+  filter: grayscale(1);
+}
+
+/* ---- modales (Progreso y Ajustes) ---- */
+.prog-acciones-modal,
+.aju-acciones-modal {
+  margin-top: 14px;
+  justify-content: flex-end;
+}
+
+.prog-acciones-modal .btn,
+.aju-acciones-modal .btn {
+  flex: 1;
+}
+
+/* ---- Ajustes ---- */
+.aju-campos {
+  margin-top: 12px;
+}
+
+.aju-dias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.aju-dia {
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  padding: 6px 8px;
+}
+
+.aju-nota {
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.aju-nota:first-child {
+  margin-top: 0;
+}
+
+.aju-sobre p {
+  margin-bottom: 6px;
+}
+
+.aju-sobre p:last-child {
+  margin-bottom: 0;
+}
+
+.aju-titulo-peligro {
+  color: var(--rojo);
+}
+
+.aju-peligro {
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+.aju-resumen {
+  list-style: none;
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aju-campo-borrar {
+  margin-top: 10px;
+}

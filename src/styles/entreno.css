@@ -1,0 +1,295 @@
+/* FromZeroToHero — estilos del módulo rutinas (.rut-) y modo entreno (.ent-) */
+
+/* ---------- Rutinas: comunes ---------- */
+.rut-titulo { font-size: 26px; margin: 2px 0 4px; }
+.rut-intro { margin-bottom: 14px; font-size: 14px; }
+.rut-volver { margin: -4px 0 8px -12px; }
+.rut-boton-ancho { width: 100%; margin-top: 10px; min-height: 48px; }
+.rut-vacio { margin: 10px 0; text-align: center; font-size: 14px; }
+.rut-vacio-panel { text-align: center; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+
+.rut-dia {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 56px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  text-align: left;
+  box-shadow: var(--sombra);
+  transition: transform 0.06s ease;
+}
+.rut-dia:active { transform: scale(0.98); border-color: var(--oro); }
+.rut-dia-nombre { font-weight: 700; font-size: 16px; }
+.rut-dia-meta { flex-shrink: 0; font-size: 13px; }
+
+/* ---------- Rutinas: editor de día ---------- */
+.rut-ejercicio { margin-bottom: 10px; }
+.rut-ejercicio-cab {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.rut-ejercicio-nombre { font-weight: 700; }
+.rut-quitar {
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  border: 1px solid var(--borde);
+  background: var(--panel-2);
+  color: var(--texto-suave);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+}
+.rut-quitar:active { border-color: var(--rojo); color: var(--rojo); }
+.rut-objetivos { display: flex; flex-direction: column; gap: 8px; }
+.rut-objetivo { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.rut-objetivo-etiqueta { font-size: 14px; color: var(--texto-suave); font-weight: 600; }
+
+/* ---------- Rutinas: formularios y modales ---------- */
+.rut-form { display: flex; flex-direction: column; }
+.rut-form .etiqueta { margin-top: 12px; }
+.rut-form .etiqueta:first-child { margin-top: 0; }
+.rut-form .btn { margin-top: 18px; }
+.rut-modal-botones { margin-top: 16px; justify-content: flex-end; }
+.rut-modal-botones .btn { min-width: 110px; }
+
+/* ---------- Selector / buscador de ejercicios ---------- */
+.rut-picker { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.rut-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.rut-chips .chip { flex-shrink: 0; min-height: 44px; }
+.rut-picker-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+.rut-picker-item { display: flex; align-items: stretch; gap: 8px; }
+.rut-picker-elegir {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 8px 12px;
+  text-align: left;
+  background: var(--panel-2);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+}
+button.rut-picker-elegir:active { border-color: var(--oro); transform: scale(0.99); }
+.rut-picker-nombre { font-weight: 600; }
+.rut-picker-meta { font-size: 12.5px; }
+
+/* ---------- Entreno: selección de día ---------- */
+.ent-rutina-bloque { margin-bottom: 4px; }
+.ent-dia-btn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 64px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  text-align: left;
+  box-shadow: var(--sombra);
+  transition: transform 0.06s ease;
+}
+.ent-dia-btn:active { transform: scale(0.98); border-color: var(--oro); }
+.ent-dia-nombre { font-weight: 700; font-size: 18px; }
+.ent-dia-libre { border-style: dashed; }
+
+/* ---------- Entreno: sesión activa ---------- */
+.ent-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.ent-titulo { font-size: 24px; }
+.ent-ejercicio { margin-bottom: 12px; }
+.ent-ejercicio-cab {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.ent-ejercicio-nombre { font-size: 18px; }
+.ent-objetivo {
+  font-size: 13px;
+  color: var(--texto-suave);
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+.ent-ultima { font-size: 14.5px; margin-bottom: 2px; }
+.ent-mejor { font-size: 13px; margin-bottom: 4px; }
+
+.ent-series { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.ent-serie {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: rgba(0, 0, 0, 0.12);
+}
+.ent-serie-hecha { border-color: rgba(74, 222, 128, 0.35); background: rgba(74, 222, 128, 0.06); }
+.ent-serie-num {
+  align-self: center;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--texto-suave);
+}
+.ent-serie-steppers {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+.ent-check {
+  flex-shrink: 0;
+  width: 64px;
+  min-height: 56px;
+  align-self: stretch;
+  border-radius: 12px;
+  border: 2px solid var(--borde);
+  background: var(--panel-2);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--texto-suave);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.06s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.ent-check:active { transform: scale(0.95); }
+.ent-check-hecha {
+  background: rgba(74, 222, 128, 0.18);
+  border-color: var(--verde);
+  color: var(--verde);
+}
+
+.ent-btn-serie { width: 100%; margin-top: 10px; min-height: 48px; }
+.ent-btn-anadir { width: 100%; min-height: 52px; margin-bottom: 14px; }
+.ent-btn-terminar { margin-bottom: 8px; }
+.ent-btn-descartar { width: 100%; min-height: 48px; color: var(--rojo); }
+.ent-hueco-banner { height: 100px; }
+
+/* ---------- Entreno: pantalla de recompensas ---------- */
+.ent-recompensa { text-align: center; padding-top: 30px; }
+.ent-recompensa-icono { font-size: 64px; margin-bottom: 6px; }
+.ent-recompensa-titulo { font-size: 26px; margin-bottom: 2px; }
+.ent-xp-total {
+  font-size: 42px;
+  font-weight: 800;
+  color: var(--oro-claro);
+  margin: 14px 0 4px;
+  text-shadow: 0 0 22px rgba(217, 164, 65, 0.45);
+}
+.ent-resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 14px 0;
+}
+.ent-resumen-dato { display: flex; flex-direction: column; gap: 2px; padding: 10px 6px; }
+.ent-resumen-cifra { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ent-resumen-dato .texto-suave { font-size: 12px; }
+.ent-premios {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+  text-align: left;
+}
+.ent-premio {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14.5px;
+}
+.ent-premio > span:first-child { font-size: 20px; line-height: 1.2; }
+.ent-premio-pr { border-color: var(--oro); }
+.ent-premio-logro { border-color: var(--oro); background: rgba(217, 164, 65, 0.08); }
+.ent-premio-nivel { border-color: var(--oro-claro); background: rgba(240, 200, 110, 0.1); }
+
+/* ---------- Temporizador de descanso (banner fijo sobre la TabBar) ---------- */
+.ent-tempo {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: calc(var(--alto-tabbar) + 10px);
+  z-index: 60;
+  max-width: 500px;
+  margin: 0 auto;
+  background: var(--panel-2);
+  border: 1px solid var(--oro);
+  border-radius: var(--radio);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+.ent-tempo-barra { height: 4px; background: var(--panel); }
+.ent-tempo-barra-relleno {
+  height: 100%;
+  background: linear-gradient(90deg, var(--oro), var(--oro-claro));
+  transition: width 0.25s linear;
+}
+.ent-tempo-fila { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+.ent-tempo-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ent-tempo-etiqueta {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--texto-suave);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ent-tempo-cuenta {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--oro-claro);
+}
+.ent-tempo-btn { min-height: 48px; min-width: 74px; flex-shrink: 0; font-size: 15px; }
