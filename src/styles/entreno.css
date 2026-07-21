@@ -6,6 +6,19 @@
 .rut-volver { margin: -4px 0 8px -12px; }
 .rut-boton-ancho { width: 100%; margin-top: 10px; min-height: 48px; }
 .rut-vacio { margin: 10px 0; text-align: center; font-size: 14px; }
+.rut-autosave { font-size: 13px; margin: 6px 2px 0; }
+.rut-listo { margin-top: 16px; }
+.rut-borrar-enlace {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--rojo);
+  opacity: 0.75;
+}
+.rut-borrar-enlace:active { opacity: 1; }
 .rut-vacio-panel { text-align: center; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
 
 .rut-dia {

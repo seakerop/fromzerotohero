@@ -329,6 +329,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
           onChange={(ev) => editarDia(rutina.id, dia.id, (d) => ({ ...d, nombre: ev.target.value }))}
           placeholder="Torso, Pierna, Empuje…"
         />
+        <p className="texto-suave rut-autosave">Todo se guarda solo mientras editas.</p>
         <h2 className="titulo-seccion">Ejercicios del día</h2>
         {dia.ejercicios.length === 0 && (
           <p className="texto-suave rut-vacio">Aún no hay ejercicios. Añade el primero y dale forma a este día.</p>
@@ -391,10 +392,16 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
             </div>
           )
         })}
-        <button className="btn btn-primario rut-boton-ancho" onClick={() => setModal({ tipo: 'picker' })}>
+        <button className="btn rut-boton-ancho" onClick={() => setModal({ tipo: 'picker' })}>
           ＋ Añadir ejercicio
         </button>
-        <button className="btn btn-peligro rut-boton-ancho" onClick={() => setModal({ tipo: 'borrar-dia' })}>
+        <button
+          className="btn btn-primario btn-grande rut-listo"
+          onClick={() => { setModal(null); setDiaId(null); avisar(`«${dia.nombre || 'Día'}» guardado`) }}
+        >
+          ✓ Día listo
+        </button>
+        <button className="rut-borrar-enlace" onClick={() => setModal({ tipo: 'borrar-dia' })}>
           Borrar este día
         </button>
         {modal && modal.tipo === 'picker' && (
@@ -430,6 +437,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
           onChange={(ev) => editarRutina(rutina.id, (r) => ({ ...r, nombre: ev.target.value }))}
           placeholder="Torso / Pierna"
         />
+        <p className="texto-suave rut-autosave">Todo se guarda solo mientras editas.</p>
         <h2 className="titulo-seccion">Días de entreno</h2>
         {rutina.dias.length === 0 && (
           <p className="texto-suave rut-vacio">Una rutina se forja día a día. Crea el primero.</p>
@@ -442,8 +450,18 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
             </span>
           </button>
         ))}
-        <button className="btn btn-primario rut-boton-ancho" onClick={crearDia}>＋ Añadir día</button>
-        <button className="btn btn-peligro rut-boton-ancho" onClick={() => setModal({ tipo: 'borrar-rutina' })}>
+        <button className="btn rut-boton-ancho" onClick={crearDia}>＋ Añadir día</button>
+        <button
+          className="btn btn-primario btn-grande rut-listo"
+          onClick={() => {
+            setModal(null)
+            setRutinaId(null)
+            avisar(`«${rutina.nombre || 'Rutina'}» guardada · te espera en ⚔️ Entreno`)
+          }}
+        >
+          ✓ Rutina lista
+        </button>
+        <button className="rut-borrar-enlace" onClick={() => setModal({ tipo: 'borrar-rutina' })}>
           Borrar rutina
         </button>
         {modal && modal.tipo === 'borrar-rutina' && (
