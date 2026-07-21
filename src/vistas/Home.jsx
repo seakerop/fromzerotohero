@@ -3,7 +3,14 @@ import Avatar from '../components/Avatar.jsx'
 import BarraXP from '../components/BarraXP.jsx'
 import StatBarra from '../components/StatBarra.jsx'
 import { claveDia, diaISO, sumarDias, formatearFecha } from '../engine/fechas.js'
-import { nivelDesdeXp, statsActuales, calcularRacha } from '../engine/motor.js'
+import {
+  nivelDesdeXp,
+  statsActuales,
+  calcularRacha,
+  diasDeAccion,
+  etapaArbol,
+  siguienteEtapaArbol,
+} from '../engine/motor.js'
 import { logroPorId } from '../data/logros.js'
 
 const LETRAS_DIA = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
@@ -16,6 +23,9 @@ export default function Home({ estado, aplicarEvento, irA, avisar }) {
   const nv = nivelDesdeXp(estado.progreso.xp)
   const stats = statsActuales(estado)
   const racha = calcularRacha(estado, hoy)
+  const diasCamino = diasDeAccion(estado)
+  const etapaDelArbol = etapaArbol(diasCamino)
+  const siguienteArbol = siguienteEtapaArbol(diasCamino)
 
   const etiquetaXp = nv.xpParaSubir === null
     ? `Nv ${nv.nivel} · Nivel máximo`
@@ -85,11 +95,15 @@ export default function Home({ estado, aplicarEvento, irA, avisar }) {
 
       <section className="panel">
         <div className="home-carta">
-          <Avatar etapaId={nv.etapa.id} tam={104} />
+          <Avatar dias={diasCamino} tam={104} />
           <div className="home-carta-info">
             <h1 className="home-apodo">{estado.perfil.apodo}</h1>
             <div className="home-etapa">{nv.etapa.nombre} · Nivel {nv.nivel}</div>
             <BarraXP progreso={nv.progreso} etiqueta={etiquetaXp} />
+            <div className="home-arbol-linea texto-suave" title={etapaDelArbol.descripcion}>
+              🌱 {etapaDelArbol.nombre} · día {diasCamino} del camino
+              {siguienteArbol ? ` · crece el día ${siguienteArbol.dias}` : ''}
+            </div>
           </div>
         </div>
       </section>

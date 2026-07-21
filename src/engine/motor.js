@@ -5,6 +5,7 @@ import { EJERCICIOS_SEED } from '../data/ejercicios.js'
 import { logroPorId } from '../data/logros.js'
 import { claveSemana, diaISO, sumarDias } from './fechas.js'
 import { nivelDesdeXp } from './niveles.js'
+import { diasDeAccion, etapaArbol } from './arbol.js'
 import { e1rm, detectarPRs } from './prs.js'
 import { calcularRacha } from './racha.js'
 import { recalibrarBaseline } from './baseline.js'
@@ -21,6 +22,7 @@ import {
 export { nivelDesdeXp } from './niveles.js'
 export { statsActuales } from './stats.js'
 export { calcularRacha } from './racha.js'
+export { diasDeAccion, etapaArbol, siguienteEtapaArbol } from './arbol.js'
 
 // ---------------------------------------------------------------- estado
 
@@ -89,6 +91,7 @@ export function aplicar(estado, evento) {
   }
 
   const xpAntes = e.progreso.xp
+  const etapaArbolAntes = etapaArbol(diasDeAccion(e))
   const acc = { xp: [], pr: [], racha: null, sinEfecto: false }
 
   switch (evento.tipo) {
@@ -125,6 +128,11 @@ export function aplicar(estado, evento) {
     resultados.push({ tipo: 'nivel', nivel: detalle.nivel, etapa: detalle.etapa })
   }
   if (acc.racha) resultados.push(acc.racha)
+
+  const etapaArbolAhora = etapaArbol(diasDeAccion(e))
+  if (etapaArbolAhora.id !== etapaArbolAntes.id) {
+    resultados.push({ tipo: 'arbol', etapa: etapaArbolAhora })
+  }
 
   return { estado: e, resultados }
 }

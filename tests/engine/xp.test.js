@@ -149,7 +149,10 @@ describe('peso corporal: XP por el ACTO de registrar, jamás por el valor', () =
       const r = aplicar(e, { tipo: 'peso', ...caso })
       e = r.estado
       deltas.push(e.progreso.xp - antes)
-      expect(r.resultados.map((x) => [x.tipo, x.cantidad, x.motivo])).toEqual([
+      // Solo los resultados de XP: el árbol puede crecer por el nuevo día de
+      // acción, pero eso no toca el XP y no depende del valor de la báscula.
+      const soloXp = r.resultados.filter((x) => x.tipo === 'xp')
+      expect(soloXp.map((x) => [x.tipo, x.cantidad, x.motivo])).toEqual([
         ['xp', 10, 'Peso registrado'],
       ])
     }

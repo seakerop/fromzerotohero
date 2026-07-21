@@ -1,232 +1,253 @@
-import { useId } from 'react'
+import { ETAPAS_ARBOL, etapaArbol } from '../data/arbol.js'
 
-// Avatar procedural (CONTRACT.md §16): SVG 0 0 120 120, 7 etapas del viaje del
-// héroe claramente distintas y crecientes en épica. Legible a 40px y a 200px.
+// El Árbol del Héroe: avatar procedural de 15 etapas que crece con los días
+// de acción. Regla de oro: el árbol nunca se marchita ni encoge — crece o
+// espera. Legible de 40px a 200px sobre fondo oscuro.
 
-const PIEL = '#d7a57e'
+const VERDE_OSCURO = '#3f6b34'
+const VERDE = '#4e8140'
+const VERDE_CLARO = '#5d9a4c'
+const VERDE_VIVO = '#6fb35a'
+const TRONCO = '#7c5f3e'
+const TRONCO_OSCURO = '#5f4830'
+const ORO = '#d9a441'
+const ORO_CLARO = '#f0c86e'
+const SEMILLA = '#b8905a'
+const RAIZ = '#d8cdb8'
 
-const FONDOS = {
-  zero:     { centro: '#1f2330', borde: '#10131b', anillo: '#272d3f' },
-  llamada:  { centro: '#252b3d', borde: '#131724', anillo: '#39415a' },
-  umbral:   { centro: '#2a3149', borde: '#151a29', anillo: '#4a527a' },
-  pruebas:  { centro: '#322e26', borde: '#171511', anillo: '#6b5a3a' },
-  caverna:  { centro: '#3a2f26', borde: '#181310', anillo: '#7c5f3a' },
-  renacido: { centro: '#363a52', borde: '#171926', anillo: '#8a90b8' },
-  hero:     { centro: '#4d3d1c', borde: '#1d160a', anillo: '#d9a441' },
+// Copa por etapa (índice 7..15): círculos [cx, cy, r, color]
+const COPAS = {
+  7: [[60, 60, 7.5, VERDE], [54, 64, 6, VERDE_OSCURO], [66, 64, 6, VERDE_CLARO]],
+  8: [[60, 55, 9, VERDE], [51, 61, 7, VERDE_OSCURO], [69, 61, 7, VERDE_CLARO], [60, 64, 7, VERDE]],
+  9: [[60, 54, 9.5, VERDE], [50, 60, 7.5, VERDE_OSCURO], [70, 60, 7.5, VERDE_CLARO], [60, 63, 7.5, VERDE]],
+  10: [[60, 50, 11, VERDE], [48, 57, 9, VERDE_OSCURO], [72, 57, 9, VERDE_CLARO], [54, 64, 8, VERDE], [66, 64, 8, VERDE_OSCURO]],
+  11: [[60, 50, 11, VERDE], [48, 57, 9, VERDE_OSCURO], [72, 57, 9, VERDE_CLARO], [54, 64, 8, VERDE], [66, 64, 8, VERDE_OSCURO]],
+  12: [[60, 48, 11.5, VERDE], [47, 55, 9.5, VERDE_OSCURO], [73, 55, 9.5, VERDE_CLARO], [53, 63, 8.5, VERDE], [67, 63, 8.5, VERDE_OSCURO]],
+  13: [[60, 44, 12, VERDE], [45, 51, 10, VERDE_OSCURO], [75, 51, 10, VERDE_CLARO], [51, 60, 9, VERDE], [69, 60, 9, VERDE_OSCURO], [60, 56, 10, VERDE_CLARO]],
+  14: [[60, 43, 12, VERDE], [45, 50, 10, VERDE_OSCURO], [75, 50, 10, VERDE_CLARO], [51, 59, 9, VERDE], [69, 59, 9, VERDE_OSCURO], [60, 55, 10, VERDE_VIVO]],
+  15: [[60, 42, 12.5, VERDE], [44, 49, 10.5, VERDE_OSCURO], [76, 49, 10.5, VERDE_CLARO], [50, 58, 9.5, VERDE], [70, 58, 9.5, VERDE_OSCURO], [60, 54, 10.5, VERDE_VIVO]],
 }
 
-function Sombra({ rx = 21 }) {
-  return <ellipse cx="60" cy="105" rx={rx} ry="4" fill="#000" opacity="0.3" />
+const ALTURA_TRONCO = { 7: 22, 8: 26, 9: 27, 10: 30, 11: 30, 12: 32, 13: 36, 14: 37, 15: 38 }
+const ANCHO_TRONCO = { 7: 3.5, 8: 4, 9: 4.5, 10: 5.5, 11: 5.5, 12: 6, 13: 7, 14: 7, 15: 7.5 }
+
+function Chispa({ x, y, r = 3, color = ORO_CLARO, opacidad = 1 }) {
+  const p = `M ${x} ${y - r} L ${x + r * 0.35} ${y - r * 0.35} L ${x + r} ${y} L ${x + r * 0.35} ${y + r * 0.35} L ${x} ${y + r} L ${x - r * 0.35} ${y + r * 0.35} L ${x - r} ${y} L ${x - r * 0.35} ${y - r * 0.35} Z`
+  return <path d={p} fill={color} opacity={opacidad} />
 }
 
-// Zero: silueta gris encorvada, sin rostro, apagada. El punto de partida.
-function FiguraZero() {
-  const gris = '#5a616f'
-  const grisOscuro = '#484e5b'
+function Hoja({ x, y, rot, largo = 7, color = VERDE_CLARO }) {
   return (
-    <g>
-      <Sombra rx={18} />
-      <path d="M53 80 Q52 92 51 102" stroke={grisOscuro} strokeWidth="10" strokeLinecap="round" fill="none" />
-      <path d="M65 80 Q66 92 67 102" stroke={grisOscuro} strokeWidth="10" strokeLinecap="round" fill="none" />
-      <path d="M49 62 Q45 75 46 87" stroke={grisOscuro} strokeWidth="8" strokeLinecap="round" fill="none" />
-      <path d="M67 60 Q71 74 69 87" stroke={grisOscuro} strokeWidth="8" strokeLinecap="round" fill="none" />
-      <path d="M46 84 Q43 60 57 50 Q69 43 72 55 L74 84 Q60 92 46 84 Z" fill={gris} />
-      <circle cx="64" cy="42" r="11" fill={gris} />
-    </g>
+    <ellipse cx={x} cy={y} rx={largo} ry={largo * 0.42} fill={color}
+      transform={`rotate(${rot} ${x} ${y})`} />
   )
 }
 
-// La Llamada: la figura despierta (piel en el rostro), erguida, chispa dorada.
-function FiguraLlamada() {
-  const cuerpo = '#7d8699'
-  const oscuro = '#646d81'
-  return (
-    <g>
-      <Sombra />
-      <path d="M54 80 L52 103" stroke={oscuro} strokeWidth="11" strokeLinecap="round" fill="none" />
-      <path d="M66 80 L68 103" stroke={oscuro} strokeWidth="11" strokeLinecap="round" fill="none" />
-      <path d="M45 53 Q39 64 38 76" stroke={cuerpo} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M75 53 Q81 64 82 76" stroke={cuerpo} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M44 50 Q60 43 76 50 L73 83 Q60 89 47 83 Z" fill={cuerpo} />
-      <circle cx="60" cy="32" r="12" fill={PIEL} />
-      <circle cx="86" cy="25" r="9" fill="#f0c86e" opacity="0.22" />
-      <path d="M86 15 L88.4 22.6 L96 25 L88.4 27.4 L86 35 L83.6 27.4 L76 25 L83.6 22.6 Z" fill="#f0c86e" />
-    </g>
-  )
-}
+export default function Avatar({ dias = 0, tam = 120 }) {
+  const etapa = etapaArbol(dias)
+  const n = ETAPAS_ARBOL.findIndex((e) => e.id === etapa.id) + 1 // 1..15
 
-// El Umbral: túnica sencilla de aprendiz con bordes dorados tenues.
-function FiguraUmbral() {
-  const tunica = '#3d4663'
-  return (
-    <g>
-      <Sombra />
-      <circle cx="53" cy="101" r="4" fill="#242a3d" />
-      <circle cx="67" cy="101" r="4" fill="#242a3d" />
-      <path d="M45 53 Q39 64 38 76" stroke={tunica} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M75 53 Q81 64 82 76" stroke={tunica} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M45 50 Q60 43 75 50 L79 98 Q60 105 41 98 Z" fill={tunica} stroke="#d9a441" strokeOpacity="0.35" strokeWidth="1.5" />
-      <path d="M41 98 Q60 105 79 98" stroke="#d9a441" strokeWidth="2.5" fill="none" opacity="0.85" />
-      <path d="M47 72 L73 72" stroke="#262c40" strokeWidth="5" strokeLinecap="round" />
-      <rect x="57" y="68.5" width="6" height="7" rx="1.5" fill="#d9a441" />
-      <circle cx="60" cy="32" r="12" fill={PIEL} />
-    </g>
-  )
-}
+  const runasEncendidas = n >= 13 ? 4 : n >= 12 ? 3 : n >= 10 ? 2 : n >= 8 ? 1 : 0
+  const runas = [
+    { x: 21, y: 73, w: 8, h: 11 },
+    { x: 33, y: 77, w: 6, h: 8 },
+    { x: 81, y: 77, w: 6, h: 8 },
+    { x: 91, y: 73, w: 8, h: 11 },
+  ]
 
-// Las Pruebas: peto de cuero con correas cruzadas, vendas en las muñecas.
-function FiguraPruebas() {
-  const pantalon = '#4e5563'
-  const cuero = '#7c4b2a'
-  const correa = '#4d2d16'
-  const venda = '#cfc9bd'
-  return (
-    <g>
-      <Sombra />
-      <path d="M54 80 L52 103" stroke={pantalon} strokeWidth="11" strokeLinecap="round" fill="none" />
-      <path d="M66 80 L68 103" stroke={pantalon} strokeWidth="11" strokeLinecap="round" fill="none" />
-      <path d="M45 53 Q39 64 38 76" stroke={PIEL} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M75 53 Q81 64 82 76" stroke={PIEL} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M34.5 69 L42 71" stroke={venda} strokeWidth="3" strokeLinecap="round" />
-      <path d="M34 73.5 L41.5 75" stroke={venda} strokeWidth="3" strokeLinecap="round" />
-      <path d="M78 71 L85.5 69" stroke={venda} strokeWidth="3" strokeLinecap="round" />
-      <path d="M78.5 75 L86 73.5" stroke={venda} strokeWidth="3" strokeLinecap="round" />
-      <path d="M44 50 Q60 43 76 50 L73 83 Q60 89 47 83 Z" fill={cuero} />
-      <path d="M48 52 L70 80" stroke={correa} strokeWidth="4" />
-      <path d="M72 52 L50 80" stroke={correa} strokeWidth="4" />
-      <path d="M47 81 L73 81" stroke={correa} strokeWidth="5" />
-      <circle cx="60" cy="81" r="3" fill="#d9a441" />
-      <circle cx="60" cy="32" r="12" fill={PIEL} />
-      <path d="M49 29 Q60 24.5 71 29" stroke="#a2452f" strokeWidth="3.5" fill="none" strokeLinecap="round" />
-    </g>
-  )
-}
+  const alto = ALTURA_TRONCO[n] || 0
+  const ancho = ANCHO_TRONCO[n] || 0
+  const copa = COPAS[Math.min(n, 15)] || null
 
-// La Caverna: armadura parcial y antorcha en alto que ilumina la oscuridad.
-function FiguraCaverna() {
-  const pantalon = '#454d5e'
-  const acero = '#98a2b8'
-  const aceroOscuro = '#6d7688'
-  return (
-    <g>
-      <circle cx="86" cy="19" r="13" fill="#fb923c" opacity="0.18" />
-      <Sombra />
-      <path d="M54 80 L52 103" stroke={pantalon} strokeWidth="11" strokeLinecap="round" fill="none" />
-      <path d="M66 80 L68 103" stroke={pantalon} strokeWidth="11" strokeLinecap="round" fill="none" />
-      <path d="M45 53 Q39 64 38 76" stroke={acero} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M75 52 L86 38" stroke={acero} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M86 40 L86 24" stroke="#6b4a2a" strokeWidth="4" strokeLinecap="round" />
-      <path d="M86 10 Q91.5 16.5 86 23 Q80.5 16.5 86 10 Z" fill="#fb923c" />
-      <circle cx="86" cy="17" r="2.6" fill="#fde68a" />
-      <path d="M44 50 Q60 43 76 50 L73 83 Q60 89 47 83 Z" fill="#6e4526" />
-      <path d="M44 50 Q60 43 76 50 L74.5 67 Q60 72 45.5 67 Z" fill={acero} stroke={aceroOscuro} strokeWidth="1" />
-      <circle cx="45" cy="51" r="7" fill="#7c8699" stroke={aceroOscuro} strokeWidth="1.5" />
-      <circle cx="60" cy="32" r="12" fill={PIEL} />
-    </g>
-  )
-}
-
-// Renacido: armadura completa de acero, capa carmesí y el primer destello dorado.
-function FiguraRenacido() {
-  const acero = '#aeb8cc'
-  const aceroMedio = '#8b95aa'
-  const aceroOscuro = '#667089'
-  return (
-    <g>
-      <Sombra rx={24} />
-      <path d="M45 51 Q37 78 41 102 Q60 109 79 102 Q83 78 75 51 Z" fill="#7f2231" />
-      <path d="M54 80 L52 103" stroke={aceroMedio} strokeWidth="11" strokeLinecap="round" fill="none" />
-      <path d="M66 80 L68 103" stroke={aceroMedio} strokeWidth="11" strokeLinecap="round" fill="none" />
-      <path d="M45 53 Q39 64 38 76" stroke={aceroMedio} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M75 53 Q81 64 82 76" stroke={aceroMedio} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M44 50 Q60 43 76 50 L73 83 Q60 89 47 83 Z" fill={acero} />
-      <path d="M60 46 L60 87" stroke={aceroOscuro} strokeWidth="2" />
-      <path d="M60 58 L64.5 63.5 L60 69 L55.5 63.5 Z" fill="#d9a441" />
-      <circle cx="44" cy="50" r="7.5" fill={aceroMedio} stroke={aceroOscuro} strokeWidth="1.5" />
-      <circle cx="76" cy="50" r="7.5" fill={aceroMedio} stroke={aceroOscuro} strokeWidth="1.5" />
-      <circle cx="60" cy="32" r="12" fill={PIEL} />
-      <path d="M47.5 31 Q47.5 18.5 60 18.5 Q72.5 18.5 72.5 31 Q60 25.5 47.5 31 Z" fill={acero} stroke={aceroOscuro} strokeWidth="1" />
-    </g>
-  )
-}
-
-// Hero: armadura dorada, capa, yelmo con penacho y aura radiante. El retorno.
-function FiguraHero({ idAura, idOro }) {
-  const oroSolido = '#e3b654'
-  const oroBorde = '#f7dfa0'
-  const oroOscuro = '#b8842c'
-  return (
-    <g>
-      <circle cx="60" cy="56" r="46" fill={`url(#${idAura})`} />
-      <g stroke="#f0c86e" strokeWidth="3" strokeLinecap="round" opacity="0.8">
-        <path d="M60 13 L60 4" />
-        <path d="M28 26 L22 20" />
-        <path d="M92 26 L98 20" />
-        <path d="M26 58 L17 58" />
-        <path d="M94 58 L103 58" />
-      </g>
-      <Sombra rx={25} />
-      <path d="M45 51 Q37 78 41 102 Q60 109 79 102 Q83 78 75 51 Z" fill="#9c2333" />
-      <path d="M41 102 Q60 109 79 102" stroke="#d9a441" strokeWidth="2" fill="none" />
-      <path d="M55 82 L48 103" stroke={oroOscuro} strokeWidth="11" strokeLinecap="round" fill="none" />
-      <path d="M65 82 L72 103" stroke={oroOscuro} strokeWidth="11" strokeLinecap="round" fill="none" />
-      <path d="M45 53 Q36 63 34.5 74" stroke={oroSolido} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M75 53 Q84 63 85.5 74" stroke={oroSolido} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M44 50 Q60 43 76 50 L73 84 Q60 90 47 84 Z" fill={`url(#${idOro})`} stroke={oroBorde} strokeWidth="1.2" />
-      <path d="M60 55 L66 63 L60 71 L54 63 Z" fill="#fff3d6" />
-      <circle cx="44" cy="50" r="8" fill={oroSolido} stroke={oroBorde} strokeWidth="1.5" />
-      <circle cx="76" cy="50" r="8" fill={oroSolido} stroke={oroBorde} strokeWidth="1.5" />
-      <circle cx="60" cy="32" r="12" fill={PIEL} />
-      <path d="M52 18 Q60 6 68 18 Q60 13 52 18 Z" fill="#b3202e" />
-      <path d="M47.5 31 Q47.5 18.5 60 18.5 Q72.5 18.5 72.5 31 Q60 25.5 47.5 31 Z" fill={oroSolido} stroke={oroBorde} strokeWidth="1.2" />
-    </g>
-  )
-}
-
-const FIGURAS = {
-  zero: FiguraZero,
-  llamada: FiguraLlamada,
-  umbral: FiguraUmbral,
-  pruebas: FiguraPruebas,
-  caverna: FiguraCaverna,
-  renacido: FiguraRenacido,
-  hero: FiguraHero,
-}
-
-export default function Avatar({ etapaId = 'zero', tam = 120 }) {
-  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
-  const etapa = FIGURAS[etapaId] ? etapaId : 'zero'
-  const fondo = FONDOS[etapa]
-  const Figura = FIGURAS[etapa]
-  const idFondo = `av-fondo-${uid}`
-  const idAura = `av-aura-${uid}`
-  const idOro = `av-oro-${uid}`
   return (
     <svg
       viewBox="0 0 120 120"
       width={tam}
       height={tam}
-      className="avatar"
       role="img"
-      aria-label={`Avatar de la etapa ${etapa}`}
+      aria-label={`Tu árbol: ${etapa.nombre}`}
     >
       <defs>
-        <radialGradient id={idFondo} cx="50%" cy="42%" r="70%">
-          <stop offset="0%" stopColor={fondo.centro} />
-          <stop offset="100%" stopColor={fondo.borde} />
+        <clipPath id="av-circulo">
+          <circle cx="60" cy="60" r="56" />
+        </clipPath>
+        <radialGradient id="av-brillo" cx="50%" cy="42%" r="60%">
+          <stop offset="0%" stopColor={ORO} stopOpacity={n >= 14 ? 0.16 : 0.05} />
+          <stop offset="100%" stopColor={ORO} stopOpacity="0" />
         </radialGradient>
-        <radialGradient id={idAura} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#f0c86e" stopOpacity="0.55" />
-          <stop offset="70%" stopColor="#f0c86e" stopOpacity="0.18" />
-          <stop offset="100%" stopColor="#f0c86e" stopOpacity="0" />
-        </radialGradient>
-        <linearGradient id={idOro} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#f0c86e" />
-          <stop offset="100%" stopColor="#b8842c" />
-        </linearGradient>
       </defs>
-      <circle cx="60" cy="60" r="57" fill={`url(#${idFondo})`} stroke={fondo.anillo} strokeWidth="2.5" />
-      {etapa === 'hero' ? <FiguraHero idAura={idAura} idOro={idOro} /> : <Figura />}
+
+      <circle cx="60" cy="60" r="56" fill="#141826" stroke="#2a3045" strokeWidth="2" />
+      {n >= 14 && (
+        <circle cx="60" cy="60" r="52" fill="none" stroke={ORO} strokeWidth="1"
+          opacity={n === 15 ? 0.5 : 0.3} />
+      )}
+      {n === 15 && (
+        <circle cx="60" cy="60" r="48" fill="none" stroke={ORO_CLARO} strokeWidth="0.6" opacity="0.3" />
+      )}
+
+      <g clipPath="url(#av-circulo)">
+        <circle cx="60" cy="60" r="56" fill="url(#av-brillo)" />
+
+        {/* tierra */}
+        <path d="M 0 83 Q 60 74 120 83 L 120 120 L 0 120 Z" fill="#1c1712" />
+        <path d="M 0 83 Q 60 74 120 83" fill="none" stroke="#39301f" strokeWidth="1.6" />
+
+        {/* piedras rúnicas */}
+        {runas.map((p, i) => (
+          <g key={i}>
+            <rect x={p.x} y={p.y} width={p.w} height={p.h} rx="2.4"
+              fill="#232a3c" stroke="#333b52" strokeWidth="1" />
+            <line
+              x1={p.x + p.w / 2} y1={p.y + 2.4} x2={p.x + p.w / 2} y2={p.y + p.h - 2.4}
+              stroke={i < runasEncendidas ? ORO : '#3a4258'}
+              strokeWidth="1.4" strokeLinecap="round"
+            />
+          </g>
+        ))}
+
+        {/* ETAPA 1 — semilla */}
+        {n === 1 && (
+          <g>
+            <path d="M 50 80 Q 60 75 70 80 Q 60 84 50 80 Z" fill="#242015" />
+            <ellipse cx="60" cy="79" rx="4" ry="5.4" fill={SEMILLA} />
+            <path d="M 60 73.6 Q 62.8 76 62.6 79" fill="none" stroke={ORO_CLARO} strokeWidth="1" opacity="0.8" />
+            <Chispa x={60} y={64} r={2.6} opacidad={0.9} />
+          </g>
+        )}
+
+        {/* ETAPA 2 — el despertar: la cáscara se agrieta, asoma la raíz */}
+        {n === 2 && (
+          <g>
+            <path d="M 49 80 Q 60 74.5 71 80 Q 60 84.5 49 80 Z" fill="#242015" />
+            <ellipse cx="60" cy="78.6" rx="4.2" ry="5.6" fill={SEMILLA} />
+            <path d="M 58.4 74.4 L 60.2 77 L 58.9 79.6 L 60.6 82" fill="none" stroke="#4a3823" strokeWidth="1" />
+            <path d="M 60 83.8 Q 59 88 60.6 92 Q 61.4 94.5 60.4 97" fill="none" stroke={RAIZ} strokeWidth="1.3" strokeLinecap="round" opacity="0.85" />
+            <Chispa x={60} y={62.5} r={3} opacidad={0.95} />
+          </g>
+        )}
+
+        {/* ETAPA 3 — germen bajo tierra, empujando hacia la superficie */}
+        {n === 3 && (
+          <g>
+            <path d="M 47 80.5 Q 60 73.5 73 80.5 Q 60 86 47 80.5 Z" fill="#26221a" />
+            <ellipse cx="61.5" cy="88" rx="3.4" ry="4.4" fill={SEMILLA} opacity="0.8" />
+            <path d="M 61 91 Q 60 95 61 99" fill="none" stroke={RAIZ} strokeWidth="1.2" strokeLinecap="round" opacity="0.8" />
+            <path d="M 61 85 Q 58 82 58.5 78.5 Q 58.8 76.8 60.6 76.2" fill="none" stroke="#8fbf74" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="60.8" cy="76.2" r="1.5" fill="#a7d68a" />
+            <Chispa x={60} y={65} r={2.4} opacidad={0.75} />
+          </g>
+        )}
+
+        {/* ETAPA 4 — brote: cruza la superficie */}
+        {n === 4 && (
+          <g>
+            <path d="M 60 79 Q 60 73 60 70.5" fill="none" stroke={VERDE_CLARO} strokeWidth="2" strokeLinecap="round" />
+            <Hoja x={55.5} y={70} rot={-32} largo={6.2} color={VERDE_VIVO} />
+            <Hoja x={64.5} y={70} rot={32} largo={6.2} color={VERDE_CLARO} />
+            <path d="M 56 80.4 Q 60 78.6 64 80.4" fill="none" stroke="#39301f" strokeWidth="1.2" />
+          </g>
+        )}
+
+        {/* ETAPA 5 — plántula */}
+        {n === 5 && (
+          <g>
+            <path d="M 60 79 Q 59.4 70 60 64.5" fill="none" stroke={VERDE_CLARO} strokeWidth="2.2" strokeLinecap="round" />
+            <Hoja x={54.5} y={74} rot={-30} largo={6.5} color={VERDE} />
+            <Hoja x={65.5} y={72.5} rot={30} largo={6.5} color={VERDE_CLARO} />
+            <Hoja x={55} y={68} rot={-26} largo={6} color={VERDE_CLARO} />
+            <Hoja x={65} y={66.5} rot={26} largo={6} color={VERDE_VIVO} />
+            <circle cx="60" cy="63" r="1.8" fill="#a7d68a" />
+          </g>
+        )}
+
+        {/* ETAPA 6 — tallo firme: lo tierno se vuelve madera */}
+        {n === 6 && (
+          <g>
+            <path d="M 60 80 L 60 66" fill="none" stroke={TRONCO} strokeWidth="3" strokeLinecap="round" />
+            <path d="M 60 70 Q 55 67 52.5 63.5" fill="none" stroke={TRONCO} strokeWidth="2" strokeLinecap="round" />
+            <path d="M 60 66 Q 60 61 60 58.5" fill="none" stroke={VERDE_CLARO} strokeWidth="2.2" strokeLinecap="round" />
+            <Hoja x={51} y={61.5} rot={-38} largo={5.8} color={VERDE_CLARO} />
+            <Hoja x={56} y={57} rot={-20} largo={5.6} color={VERDE} />
+            <Hoja x={64.5} y={56.5} rot={26} largo={6} color={VERDE_VIVO} />
+            <circle cx="60" cy="55.8" r="1.7" fill="#a7d68a" />
+          </g>
+        )}
+
+        {/* ETAPAS 7-15 — árbol con tronco y copa */}
+        {n >= 7 && copa && (
+          <g>
+            {/* raíces visibles desde la etapa 9 (Raíces hondas): lo que no se ve */}
+            {n >= 9 && (
+              <g opacity={n === 9 ? 1 : 0.75}>
+                <path d={`M ${60 - ancho} 80 Q ${52 - ancho} 84 ${46 - ancho} 90`} fill="none"
+                  stroke={n >= 14 ? ORO : TRONCO_OSCURO} strokeWidth="2"
+                  strokeLinecap="round" opacity={n >= 14 ? 0.5 : 0.9} />
+                <path d={`M ${60 + ancho} 80 Q ${68 + ancho} 84 ${74 + ancho} 90`} fill="none"
+                  stroke={n >= 14 ? ORO : TRONCO_OSCURO} strokeWidth="2"
+                  strokeLinecap="round" opacity={n >= 14 ? 0.5 : 0.9} />
+                <path d="M 60 82 Q 59 89 60 96" fill="none"
+                  stroke={n >= 14 ? ORO : TRONCO_OSCURO} strokeWidth="1.6"
+                  strokeLinecap="round" opacity={n >= 14 ? 0.45 : 0.8} />
+              </g>
+            )}
+            {/* tronco con base ensanchada */}
+            <path
+              d={`M ${60 - ancho} 81 Q ${60 - ancho * 0.55} ${81 - alto * 0.5} ${60 - ancho * 0.45} ${81 - alto}
+                  L ${60 + ancho * 0.45} ${81 - alto} Q ${60 + ancho * 0.55} ${81 - alto * 0.5} ${60 + ancho} 81
+                  Q ${60 + ancho + 2.5} 82.5 ${60 + ancho + 4} 84 L ${60 - ancho - 4} 84
+                  Q ${60 - ancho - 2.5} 82.5 ${60 - ancho} 81 Z`}
+              fill={TRONCO}
+            />
+            <path d={`M 60 81 Q 59 ${81 - alto * 0.6} 60 ${81 - alto}`} fill="none"
+              stroke={TRONCO_OSCURO} strokeWidth="1.2" opacity="0.7" />
+            {/* rama lateral en árboles grandes */}
+            {n >= 13 && (
+              <path d={`M 60 ${81 - alto * 0.62} Q 72 ${79 - alto * 0.72} 79 ${77 - alto * 0.68}`}
+                fill="none" stroke={TRONCO} strokeWidth="3" strokeLinecap="round" />
+            )}
+            {/* copa */}
+            {copa.map(([cx, cy, r, color], i) => (
+              <circle key={i} cx={cx} cy={cy} r={r} fill={color} />
+            ))}
+            {/* toques dorados en el follaje (etapas 14-15) */}
+            {n >= 14 && (
+              <g>
+                <circle cx="47" cy="46" r="4.5" fill={ORO} opacity="0.55" />
+                <circle cx="74" cy="45" r="4" fill={ORO} opacity="0.5" />
+                <circle cx="62" cy="38" r="3.5" fill={ORO_CLARO} opacity="0.55" />
+              </g>
+            )}
+            {/* flores (etapa 11+) */}
+            {n >= 11 && [
+              [50, 50], [61, 44], [71, 51], [55, 58], [67, 59], [44, 56], [76, 57],
+            ].map(([x, y], i) => (
+              <circle key={i} cx={x} cy={y} r="1.3" fill={ORO_CLARO}
+                opacity={n >= 12 ? 0.8 : 0.95} />
+            ))}
+            {/* frutos (etapa 12+) */}
+            {n >= 12 && [[52, 63], [64, 65], [72, 60], [46, 58.5], [60, 60]].map(([x, y], i) => (
+              <g key={i}>
+                <circle cx={x} cy={y} r="2" fill={ORO} />
+                <circle cx={x - 0.6} cy={y - 0.6} r="0.6" fill={ORO_CLARO} />
+              </g>
+            ))}
+            {/* luciérnagas (etapa 14+) */}
+            {n >= 14 && [[34, 52, 0.9], [86, 47, 0.7], [40, 38, 0.8], [82, 66, 0.6]].map(([x, y, o], i) => (
+              <circle key={i} cx={x} cy={y} r="1.1" fill={ORO_CLARO} opacity={o} />
+            ))}
+            {/* estrellas en la copa (etapa 15) */}
+            {n === 15 && (
+              <g>
+                <Chispa x={44} y={35} r={2.6} opacidad={0.95} />
+                <Chispa x={72} y={30} r={3.2} opacidad={0.95} />
+                <Chispa x={58} y={25} r={2.2} opacidad={0.8} />
+                <Chispa x={84} y={40} r={2} opacidad={0.7} />
+              </g>
+            )}
+          </g>
+        )}
+      </g>
     </svg>
   )
 }

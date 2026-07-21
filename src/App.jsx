@@ -67,6 +67,7 @@ export default function App() {
     else if (r.tipo === 'logro') avisar(`Logro: ${r.logro.nombre} (+${r.logro.xp} XP)`, 'logro')
     else if (r.tipo === 'nivel') avisar(`¡Nivel ${r.nivel} — ${r.etapa.nombre}!`, 'nivel')
     else if (r.tipo === 'racha') avisar(`Racha: ${r.dias} días`, 'racha')
+    else if (r.tipo === 'arbol') avisar(`🌳 Tu árbol ha crecido: ${r.etapa.nombre}`, 'nivel')
   }
 
   function aplicarEvento(evento) {

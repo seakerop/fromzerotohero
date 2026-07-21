@@ -83,13 +83,17 @@ function Revelacion({ apodo, stats, alConfirmar }) {
   return (
     <div className="onb-revelacion">
       <div className="onb-rev-avatar">
-        <Avatar etapaId={etapa.id} tam={170} />
+        <Avatar dias={1} tam={170} />
       </div>
       <div>
         <h1 className="onb-rev-nombre">{apodo}</h1>
         <div className="onb-rev-etapa">{etapa.nombre} · Nivel 1</div>
       </div>
       <p className="onb-rev-lema">{etapa.lema}</p>
+      <p className="onb-rev-semilla texto-suave">
+        Hoy plantas tu semilla. Crecerá con cada día en que hagas algo —
+        entrenar, moverte, registrar — y nunca dará marcha atrás.
+      </p>
       <div className="panel onb-rev-stats">
         <StatBarra nombre="Fuerza" icono="⚔️" valor={fuerza} />
         <StatBarra nombre="Resistencia" icono="🏃" valor={resistencia} />

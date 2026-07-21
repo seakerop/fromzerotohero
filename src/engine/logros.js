@@ -4,6 +4,7 @@
 
 import { LOGROS } from '../data/logros.js'
 import { NIVEL_MAX } from '../data/niveles.js'
+import { diasDeAccion } from './arbol.js'
 import { diasEntre, diaISO, sumarDias } from './fechas.js'
 import { nivelDesdeXp } from './niveles.js'
 import { MOTIVOS } from './xp.js'
@@ -44,14 +45,6 @@ function hayDiasSeguidosSobreBase(estado, cuantos) {
   return false
 }
 
-function diasConAlgunRegistro(estado) {
-  const dias = new Set()
-  for (const s of estado.sesiones) dias.add(s.fecha)
-  for (const p of estado.pasos) dias.add(p.fecha)
-  for (const p of estado.cuerpo.pesos) dias.add(p.fecha)
-  return dias.size
-}
-
 // Sesión tras ≥7 días sin entrenar (con ≥1 sesión previa): entre dos sesiones
 // en fechas A y B hay B−A−1 días sin entrenar, luego B−A ≥ 8.
 function huboRetorno(estado) {
@@ -73,7 +66,7 @@ const CONDICIONES = {
   imparable: (e) => e.progreso.rachaMejor >= 10,
   camino_diario: (e) => hayDiasSeguidosSobreBase(e, 7),
   el_espejo: (e) => e.cuerpo.fotos.length >= 1,
-  cronista: (e) => diasConAlgunRegistro(e) >= 30,
+  cronista: (e) => diasDeAccion(e) >= 30,
   hero: (e) => nivelDesdeXp(e.progreso.xp).nivel >= NIVEL_MAX,
 }
 

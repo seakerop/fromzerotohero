@@ -443,3 +443,7 @@
   }
   .barraxp-relleno, .statbarra-relleno, .onb-progreso-relleno { transition: none; }
 }
+
+/* --- Árbol del Héroe --- */
+.home-arbol-linea { font-size: 12.5px; margin-top: 7px; }
+.onb-rev-semilla { font-size: 14px; max-width: 300px; margin: 0 auto; }
