@@ -4,7 +4,8 @@
 export function registrarSW() {
   if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((error) => {
+    // Ruta relativa: la app puede vivir en una subruta (GitHub Pages).
+    navigator.serviceWorker.register('./sw.js').catch((error) => {
       // Sin SW la app funciona igual; solo se pierde el modo offline.
       console.warn('No se pudo registrar el service worker:', error)
     })
