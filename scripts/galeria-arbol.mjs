@@ -12,13 +12,14 @@ const entrada = `
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import Avatar from './src/components/Avatar.jsx'
-import { ETAPAS_ARBOL } from './src/data/arbol.js'
-export const tarjetas = ETAPAS_ARBOL.map((e, i) => ({
-  n: i + 1,
-  nombre: e.nombre,
-  dias: e.dias,
-  descripcion: e.descripcion,
-  svg: renderToStaticMarkup(createElement(Avatar, { dias: e.dias, tam: 150 })),
+import { ETAPAS_ARBOL, etapaArbol } from './src/data/arbol.js'
+const DIAS = [0, 2, 3, 5, 7, 10, 14, 17, 21, 25, 30, 36, 42, 50, 60, 70, 85,
+  100, 115, 132, 150, 170, 190, 205, 225, 240, 265, 300, 340, 365, 400, 450]
+export const tarjetas = DIAS.map((d) => ({
+  d,
+  etapa: etapaArbol(d).nombre,
+  hito: ETAPAS_ARBOL.some((x) => x.dias === d),
+  svg: renderToStaticMarkup(createElement(Avatar, { dias: d, tam: 130 })),
 }))
 `
 
@@ -38,12 +39,11 @@ rmSync(bundle, { force: true })
 
 const figuras = tarjetas
   .map(
-    (t) => `      <figure>
+    (t) => `      <figure${t.hito ? ' class="hito"' : ''}>
         ${t.svg}
         <figcaption>
-          <strong>${t.n} · ${t.nombre}</strong>
-          <span>${t.dias === 0 ? 'el comienzo' : `desde el día ${t.dias}`}</span>
-          <em>«${t.descripcion}»</em>
+          <strong>día ${t.d}</strong>
+          <span>${t.etapa}${t.hito ? ' ★' : ''}</span>
         </figcaption>
       </figure>`
   )
@@ -60,20 +60,21 @@ const html = `<!doctype html>
   header { text-align: center; padding: 26px 16px 6px; }
   h1 { margin: 0; font-size: 22px; color: #d9a441; }
   header p { color: #98a0b8; font-size: 14px; max-width: 460px; margin: 8px auto 0; }
-  main { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; padding: 18px; max-width: 1100px; margin: 0 auto; }
-  figure { margin: 0; background: #151824; border: 1px solid #2a3045; border-radius: 14px; padding: 14px 10px; text-align: center; }
+  main { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; padding: 18px; max-width: 1200px; margin: 0 auto; }
+  figure { margin: 0; background: #151824; border: 1px solid #2a3045; border-radius: 14px; padding: 12px 8px; text-align: center; }
+  figure.hito { border-color: #d9a441; }
   figure svg { margin: 0 auto; display: block; }
-  figcaption { margin-top: 8px; display: flex; flex-direction: column; gap: 2px; }
-  figcaption strong { font-size: 15px; }
-  figcaption span { color: #d9a441; font-size: 12.5px; }
-  figcaption em { color: #98a0b8; font-size: 12.5px; font-style: italic; }
+  figcaption { margin-top: 6px; display: flex; flex-direction: column; gap: 1px; }
+  figcaption strong { font-size: 14px; }
+  figcaption span { color: #d9a441; font-size: 12px; }
 </style>
 </head>
 <body>
 <header>
   <h1>🌱 El Árbol del Héroe</h1>
-  <p>Crece con tus días de acción: días en los que entrenas, te mueves o registras.
-  Máximo un día por día real. Nunca se marchita: crece o espera.</p>
+  <p>32 momentos de los primeros 450 días de acción. El árbol es continuo: altura,
+  ramas, hojas, flores y frutos crecen poco a poco, casi cada día. Las tarjetas
+  doradas ★ son los hitos con nombre.</p>
 </header>
 <main>
 ${figuras}
