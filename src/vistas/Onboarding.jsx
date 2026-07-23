@@ -93,6 +93,7 @@ function Revelacion({ apodo, stats, alConfirmar }) {
       <p className="onb-rev-semilla texto-suave">
         Hoy plantas tu semilla. Crecerá con cada día en que hagas algo —
         entrenar, moverte, registrar — y nunca dará marcha atrás.
+        Cuídala con tus días: lo que le pase, te lo contará.
       </p>
       <div className="panel onb-rev-stats">
         <StatBarra nombre="Fuerza" icono="⚔️" valor={fuerza} />

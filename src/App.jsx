@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { aplicar, crearEstadoInicial } from './engine/motor.js'
-import { claveDia } from './engine/fechas.js'
+import { aplicar, crearEstadoInicial, diasDeAccion } from './engine/motor.js'
+import { claveDia, diasEntre } from './engine/fechas.js'
 import { cargarEstado, guardarEstado } from './db/db.js'
+import { estacionDeMes, momentosEntre, MENSAJES_ESTACION } from './components/Avatar.jsx'
 import TabBar from './components/TabBar.jsx'
 import Toasts from './components/Toasts.jsx'
 import Onboarding from './vistas/Onboarding.jsx'
@@ -20,9 +21,31 @@ export default function App() {
   const [cargado, setCargado] = useState(false)
   const [vista, setVista] = useState('home')
   const [toasts, setToasts] = useState([])
+  const [susurro, setSusurro] = useState(null)
   const estadoRef = useRef(null)
   const timerGuardado = useRef(null)
   estadoRef.current = estado
+
+  // El susurro del árbol: al abrir, si algo cambió desde la última visita,
+  // UNA tarjeta lo constata (sin hipérboles y sin premiar el mero abrir).
+  // Nunca un reproche: si no hay novedad tras días fuera, solo una bienvenida.
+  function marcarArbolVisto(e, anunciar) {
+    const dias = diasDeAccion(e)
+    const estacion = estacionDeMes(new Date().getMonth() + 1)
+    const hoy = claveDia()
+    const visto = e.arbolVisto
+    if (anunciar && visto) {
+      const lineas = []
+      const nuevos = momentosEntre(visto.dia ?? 0, dias)
+      if (nuevos.length > 0) lineas.push(nuevos[nuevos.length - 1].mensaje)
+      if (visto.estacion && visto.estacion !== estacion) lineas.push(MENSAJES_ESTACION[estacion])
+      if (lineas.length === 0 && visto.fecha && diasEntre(visto.fecha, hoy) >= 7) {
+        lineas.push('Tu árbol sigue aquí, igual que lo dejaste. Hoy puede crecer.')
+      }
+      if (lineas.length > 0) setSusurro({ lineas })
+    }
+    return { ...e, arbolVisto: { dia: dias, estacion, fecha: hoy } }
+  }
 
   useEffect(() => {
     let vivo = true
@@ -30,7 +53,7 @@ export default function App() {
       if (!vivo) return
       if (e) {
         const { estado: conTick } = aplicar(e, { tipo: 'tick_diario', hoy: claveDia() })
-        setEstado(conTick)
+        setEstado(marcarArbolVisto(conTick, true))
       }
       setCargado(true)
     })
@@ -71,8 +94,21 @@ export default function App() {
   }
 
   function aplicarEvento(evento) {
+    const antes = diasDeAccion(estadoRef.current)
     const { estado: nuevo, resultados } = aplicar(estadoRef.current, evento)
-    setEstado(nuevo)
+    const despues = diasDeAccion(nuevo)
+    let final = nuevo
+    if (despues > antes) {
+      // Un momento del árbol brotó en vivo: susurro como toast, salvo que el
+      // motor ya anuncie cambio de etapa (evitamos el doble aviso).
+      const nuevos = momentosEntre(antes, despues)
+      const huboEtapa = resultados.some((r) => r.tipo === 'arbol')
+      if (nuevos.length > 0 && !huboEtapa) {
+        avisar(`🌿 ${nuevos[nuevos.length - 1].mensaje}`, 'info')
+      }
+      final = marcarArbolVisto(nuevo, false)
+    }
+    setEstado(final)
     resultados.forEach(notificar)
     return resultados
   }
@@ -85,7 +121,7 @@ export default function App() {
     const hoy = claveDia()
     const inicial = crearEstadoInicial({ ...respuestas, hoy })
     const { estado: nuevo, resultados } = aplicar(inicial, { tipo: 'perfil_creado', hoy })
-    setEstado(nuevo)
+    setEstado(marcarArbolVisto(nuevo, false))
     resultados.forEach(notificar)
   }
 
@@ -113,6 +149,8 @@ export default function App() {
           aplicarEvento={aplicarEvento}
           irA={setVista}
           avisar={avisar}
+          susurro={susurro}
+          cerrarSusurro={() => setSusurro(null)}
         />
       </main>
       <TabBar activa={vista} onCambiar={setVista} />

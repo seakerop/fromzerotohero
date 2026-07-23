@@ -1,6 +1,11 @@
 import { useState } from 'react'
-import Avatar from '../components/Avatar.jsx'
+import Avatar, {
+  MOMENTOS_ARBOL,
+  proximoMomento,
+  estacionDeMes,
+} from '../components/Avatar.jsx'
 import BarraXP from '../components/BarraXP.jsx'
+import Modal from '../components/Modal.jsx'
 import StatBarra from '../components/StatBarra.jsx'
 import { claveDia, diaISO, sumarDias, formatearFecha } from '../engine/fechas.js'
 import {
@@ -14,10 +19,17 @@ import {
 import { logroPorId } from '../data/logros.js'
 
 const LETRAS_DIA = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+const NOMBRE_ESTACION = {
+  primavera: 'primavera',
+  verano: 'verano',
+  otono: 'otoño',
+  invierno: 'invierno',
+}
 
-export default function Home({ estado, aplicarEvento, irA, avisar }) {
+export default function Home({ estado, aplicarEvento, irA, avisar, susurro, cerrarSusurro }) {
   const [textoPasos, setTextoPasos] = useState('')
   const [textoPeso, setTextoPeso] = useState('')
+  const [fichaAbierta, setFichaAbierta] = useState(false)
 
   const hoy = claveDia()
   const nv = nivelDesdeXp(estado.progreso.xp)
@@ -95,7 +107,14 @@ export default function Home({ estado, aplicarEvento, irA, avisar }) {
 
       <section className="panel">
         <div className="home-carta">
-          <Avatar dias={diasCamino} tam={104} />
+          <button
+            type="button"
+            className="home-avatar-boton"
+            onClick={() => setFichaAbierta(true)}
+            aria-label="Ver la ficha de tu árbol"
+          >
+            <Avatar dias={diasCamino} tam={104} />
+          </button>
           <div className="home-carta-info">
             <h1 className="home-apodo">{estado.perfil.apodo}</h1>
             <div className="home-etapa">{nv.etapa.nombre} · Nivel {nv.nivel}</div>
@@ -107,6 +126,57 @@ export default function Home({ estado, aplicarEvento, irA, avisar }) {
           </div>
         </div>
       </section>
+
+      {susurro && (
+        <button type="button" className="home-susurro" onClick={cerrarSusurro}>
+          <span className="home-susurro-icono" aria-hidden="true">🌿</span>
+          <span className="home-susurro-cuerpo">
+            {susurro.lineas.map((linea, i) => (
+              <span key={i} className="home-susurro-linea">{linea}</span>
+            ))}
+          </span>
+        </button>
+      )}
+
+      {fichaAbierta && (
+        <Modal titulo="Tu árbol" abierto onCerrar={() => setFichaAbierta(false)}>
+          <div className="ficha-arbol">
+            <Avatar dias={diasCamino} tam={160} />
+            <div>
+              <div className="ficha-etapa">{etapaDelArbol.nombre}</div>
+              <p className="ficha-lema">«{etapaDelArbol.descripcion}»</p>
+            </div>
+            <div className="ficha-datos">
+              Día {diasCamino} del camino
+              {proximoMomento(diasCamino) &&
+                ` · próximo brote: día ${proximoMomento(diasCamino).dia}`}
+              <br />
+              Ahora es {NOMBRE_ESTACION[estacionDeMes(new Date().getMonth() + 1)]}: la
+              estación real viste tu árbol.
+            </div>
+            <p className="ficha-como">
+              Crece con tus días de acción: días en los que entrenas, caminas o
+              registras. Máximo un día por día real, sin atajos. Y nunca
+              retrocede: si faltas, te espera.
+            </p>
+            <h3 className="titulo-seccion ficha-titulo">Crónica</h3>
+            <div className="ficha-cronica">
+              {MOMENTOS_ARBOL.map((m) => {
+                const hecho = m.dia <= diasCamino
+                return (
+                  <div key={m.dia} className={hecho ? 'ficha-momento hecho' : 'ficha-momento'}>
+                    <span>
+                      <span className="ficha-check" aria-hidden="true">{hecho ? '✓ ' : '· '}</span>
+                      {m.etiqueta}
+                    </span>
+                    <span className="ficha-dia">día {m.dia}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </Modal>
+      )}
 
       <h2 className="titulo-seccion">Atributos</h2>
       <section className="panel">
