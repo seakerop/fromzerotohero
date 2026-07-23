@@ -1,15 +1,16 @@
 import { etapaArbol } from '../data/arbol.js'
 
-// El Árbol del Héroe, versión CONTINUA: la geometría entera (altura, grosor,
-// hojas, ramas, copa, flores, frutos, oro) se deriva de los días de acción,
-// así que el árbol cambia un poco casi cada día — sin saltos entre etapas.
-// Las 15 etapas con nombre (data/arbol.js) quedan como hitos, no como dibujos.
-// Regla de oro intacta: nunca se marchita, crece o espera.
+// El Árbol del Héroe, tercera iteración: un DIORAMA que se puebla momento a
+// momento. La clave no es que el árbol "se haga grande", sino que cada pocos
+// días de acción aparece algo nuevo y señalable: una grieta, una hoja, una
+// rama, una seta, un nido, un pájaro, una flor… 43 momentos en 450 días,
+// con el tamaño interpolando suave por debajo. Nunca se marchita ni retrocede.
 
-const VERDE_OSCURO = '#3f6b34'
+const VERDE_OSCURO = '#39622f'
 const VERDE = '#4e8140'
-const VERDE_CLARO = '#5d9a4c'
-const VERDE_VIVO = '#6fb35a'
+const VERDE_CLARO = '#61a04f'
+const VERDE_VIVO = '#79bd63'
+const VERDE_BRILLO = '#95d47c'
 const VERDE_TIERNO = '#8fbf74'
 const TRONCO = '#7c5f3e'
 const TRONCO_OSCURO = '#5f4830'
@@ -22,125 +23,200 @@ const SUELO_Y = 81
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v))
 const lerp = (a, b, t) => a + (b - a) * clamp(t, 0, 1)
+// Progreso 0→1 desde que algo aparece (dia0) hasta que madura (en `dur` días).
+const madura = (d, dia0, dur) => clamp((d - dia0) / dur, 0, 1)
 
-function mezclar(hexA, hexB, t) {
-  const a = [1, 3, 5].map((i) => parseInt(hexA.slice(i, i + 2), 16))
-  const b = [1, 3, 5].map((i) => parseInt(hexB.slice(i, i + 2), 16))
-  const c = a.map((x, i) => Math.round(lerp(x, b[i], t)))
-  return `#${c.map((x) => x.toString(16).padStart(2, '0')).join('')}`
+// Catálogo de momentos: qué aparece y cuándo. La galería lo usa para etiquetar.
+export const MOMENTOS_ARBOL = [
+  { dia: 0, etiqueta: 'La semilla' },
+  { dia: 2, etiqueta: 'La grieta' },
+  { dia: 4, etiqueta: 'La primera raíz' },
+  { dia: 6, etiqueta: 'La segunda raíz' },
+  { dia: 8, etiqueta: 'El germen' },
+  { dia: 11, etiqueta: 'A un dedo de la luz' },
+  { dia: 14, etiqueta: 'El brote' },
+  { dia: 17, etiqueta: 'La tercera hoja' },
+  { dia: 20, etiqueta: 'La cuarta hoja' },
+  { dia: 24, etiqueta: 'La quinta hoja' },
+  { dia: 28, etiqueta: 'El penacho' },
+  { dia: 33, etiqueta: 'La base se endurece' },
+  { dia: 38, etiqueta: 'La primera rama' },
+  { dia: 44, etiqueta: 'Hojas en la rama' },
+  { dia: 50, etiqueta: 'La segunda rama' },
+  { dia: 57, etiqueta: 'Más follaje' },
+  { dia: 64, etiqueta: 'Ya es tronco' },
+  { dia: 72, etiqueta: 'La tercera rama' },
+  { dia: 80, etiqueta: 'La copa se une' },
+  { dia: 85, etiqueta: 'Primera runa' },
+  { dia: 92, etiqueta: 'Una seta al pie' },
+  { dia: 100, etiqueta: 'Musgo en el tronco' },
+  { dia: 115, etiqueta: 'Raíces a la vista' },
+  { dia: 125, etiqueta: 'La cuarta rama' },
+  { dia: 135, etiqueta: 'Un nido' },
+  { dia: 150, etiqueta: 'Segunda runa' },
+  { dia: 165, etiqueta: 'Llega un pájaro' },
+  { dia: 180, etiqueta: 'Hierba alta' },
+  { dia: 190, etiqueta: 'El primer capullo' },
+  { dia: 198, etiqueta: 'La flor se abre' },
+  { dia: 200, etiqueta: 'La quinta rama' },
+  { dia: 210, etiqueta: 'Tres flores' },
+  { dia: 225, etiqueta: 'Floración' },
+  { dia: 240, etiqueta: 'Tercera runa · primer fruto' },
+  { dia: 255, etiqueta: 'Más frutos' },
+  { dia: 270, etiqueta: 'La cosecha' },
+  { dia: 285, etiqueta: 'Una luciérnaga' },
+  { dia: 300, etiqueta: 'Cuarta runa' },
+  { dia: 320, etiqueta: 'La rama colgante' },
+  { dia: 340, etiqueta: 'El primer oro' },
+  { dia: 365, etiqueta: 'Árbol del Héroe' },
+  { dia: 425, etiqueta: 'Noche de luciérnagas' },
+  { dia: 450, etiqueta: 'Leyenda' },
+]
+
+export function proximoMomento(dias) {
+  return MOMENTOS_ARBOL.find((m) => m.dia > dias) || null
 }
+
+// Ramas: nacen en días concretos y tardan ~60 días en extenderse del todo.
+const RAMAS = [
+  { dia: 38, lado: -1, frac: 0.88, maxLen: 15 },
+  { dia: 50, lado: 1, frac: 0.76, maxLen: 16 },
+  { dia: 72, lado: -1, frac: 0.6, maxLen: 17 },
+  { dia: 125, lado: 1, frac: 0.46, maxLen: 18 },
+  { dia: 200, lado: -1, frac: 0.34, maxLen: 16 },
+]
+
+// Hojas del tallo joven: van saliendo una a una y ceden el sitio a la copa.
+const HOJAS_TALLO = [
+  { dia: 14, frac: 0.68, lado: -1, rot: -34 },
+  { dia: 14, frac: 0.78, lado: 1, rot: 32 },
+  { dia: 17, frac: 0.55, lado: 1, rot: 28 },
+  { dia: 20, frac: 0.88, lado: -1, rot: -28 },
+  { dia: 24, frac: 0.44, lado: -1, rot: -24 },
+]
+
+// Flores y frutos: posiciones normalizadas dentro de la copa, entran por orden.
+const FLORES = [
+  { dia: 198, p: [0.15, -0.85] },
+  { dia: 210, p: [-0.75, -0.2] },
+  { dia: 210, p: [0.7, -0.1] },
+  { dia: 225, p: [-0.35, 0.45] },
+  { dia: 225, p: [0.45, 0.5] },
+  { dia: 225, p: [-0.95, 0.25] },
+  { dia: 225, p: [0.95, 0.3] },
+]
+const FRUTOS = [
+  { dia: 240, p: [-0.55, 0.6] },
+  { dia: 255, p: [0.3, 0.75] },
+  { dia: 255, p: [0.85, 0.35] },
+  { dia: 270, p: [-0.9, 0.3] },
+  { dia: 270, p: [0.6, -0.3] },
+]
+const LUCIERNAGAS = [
+  { dia: 285, x: 36, y: 50, o: 0.9 },
+  { dia: 425, x: 86, y: 47, o: 0.7 },
+  { dia: 425, x: 40, y: 36, o: 0.8 },
+  { dia: 425, x: 82, y: 66, o: 0.6 },
+]
 
 function Chispa({ x, y, r = 3, color = ORO_CLARO, opacidad = 1 }) {
   const p = `M ${x} ${y - r} L ${x + r * 0.35} ${y - r * 0.35} L ${x + r} ${y} L ${x + r * 0.35} ${y + r * 0.35} L ${x} ${y + r} L ${x - r * 0.35} ${y + r * 0.35} L ${x - r} ${y} L ${x - r * 0.35} ${y - r * 0.35} Z`
   return <path d={p} fill={color} opacity={opacidad} />
 }
 
-// Ramas: g0 = punto de crecimiento en el que nace cada una (≈ días 30, 47,
-// 69, 100, 144, 199). frac = altura del anclaje en el tronco (0 = base).
-const RAMAS = [
-  { g0: 0.16, lado: -1, frac: 0.9 },
-  { g0: 0.24, lado: 1, frac: 0.78 },
-  { g0: 0.33, lado: -1, frac: 0.64 },
-  { g0: 0.43, lado: 1, frac: 0.5 },
-  { g0: 0.55, lado: -1, frac: 0.38 },
-  { g0: 0.68, lado: 1, frac: 0.29 },
-]
-
-// Hojas sueltas del tallo joven: van saliendo una a una (día 14, 17, 20…)
-// y se desvanecen cuando la copa toma el relevo.
-const HOJAS_TALLO = [
-  { frac: 0.62, lado: -1, rot: -34 },
-  { frac: 0.74, lado: 1, rot: 32 },
-  { frac: 0.5, lado: 1, rot: 28 },
-  { frac: 0.86, lado: -1, rot: -28 },
-  { frac: 0.4, lado: -1, rot: -24 },
-  { frac: 0.94, lado: 1, rot: 24 },
-]
-
-// Posiciones normalizadas dentro de la copa (se escalan con su tamaño).
-const FLORES = [
-  [-0.75, -0.2], [0.15, -0.85], [0.7, -0.1], [-0.35, 0.45], [0.45, 0.5],
-  [-0.95, 0.25], [0.95, 0.3], [-0.1, -0.35], [0.35, -0.55],
-]
-const FRUTOS = [[-0.55, 0.6], [0.3, 0.75], [0.85, 0.35], [-0.9, 0.3], [0, 0.5], [0.6, -0.3]]
-const LUCIERNAGAS = [[34, 52, 0.9], [86, 47, 0.7], [40, 38, 0.8], [82, 66, 0.6]]
+// Penacho de follaje con volumen: sombra, cuerpo y dos luces.
+function Penacho({ x, y, r }) {
+  if (r <= 0.4) return null
+  return (
+    <g>
+      <circle cx={x + r * 0.16} cy={y + r * 0.2} r={r} fill={VERDE_OSCURO} />
+      <circle cx={x - r * 0.06} cy={y - r * 0.08} r={r * 0.9} fill={VERDE} />
+      <circle cx={x - r * 0.28} cy={y - r * 0.3} r={r * 0.55} fill={VERDE_CLARO} />
+      <circle cx={x - r * 0.42} cy={y - r * 0.44} r={r * 0.26} fill={VERDE_BRILLO} />
+    </g>
+  )
+}
 
 function Subsuelo({ d }) {
-  // Días 0-13: semilla → despertar → germen empujando hacia la superficie.
-  const crack = clamp((d - 2) / 2, 0, 1)
-  const raizLargo = lerp(0, 12, (d - 3) / 11)
-  const brote = d >= 7
-  const broteY = lerp(85, 78.2, (d - 7) / 7) // el germen sube día a día
+  const grieta = d >= 2
+  const raiz1 = madura(d, 4, 4)
+  const raiz2 = madura(d, 6, 4)
+  const germen = d >= 8
+  const germenY = lerp(85, 78.2, madura(d, 8, 6)) // día 11: a un dedo de la luz
   return (
     <g>
       <path d="M 49 80 Q 60 74.5 71 80 Q 60 84.5 49 80 Z" fill="#242015" />
-      <ellipse cx="60" cy={d >= 7 ? 87 : 78.8} rx={d >= 7 ? 3.4 : 4.2} ry={d >= 7 ? 4.4 : 5.6}
-        fill={SEMILLA} opacity={d >= 7 ? 0.8 : 1} />
-      {crack > 0 && !brote && (
+      <ellipse cx="60" cy={germen ? 87 : 78.8} rx={germen ? 3.4 : 4.2} ry={germen ? 4.4 : 5.6}
+        fill={SEMILLA} opacity={germen ? 0.8 : 1} />
+      {grieta && !germen && (
         <path d="M 58.4 74.4 L 60.2 77 L 58.9 79.6 L 60.6 82" fill="none"
-          stroke="#4a3823" strokeWidth="1" opacity={crack} />
+          stroke="#4a3823" strokeWidth="1" />
       )}
-      {d >= 3 && (
-        <path d={`M 60 ${brote ? 90.5 : 84} q -1 ${raizLargo * 0.4} 0.6 ${raizLargo}`}
+      {raiz1 > 0 && (
+        <path d={`M 60 ${germen ? 90.5 : 84} q -1 ${raiz1 * 4} 0.6 ${raiz1 * 9}`}
           fill="none" stroke={RAIZ} strokeWidth="1.3" strokeLinecap="round" opacity="0.85" />
       )}
-      {brote && (
+      {raiz2 > 0 && (
+        <path d={`M 59 ${germen ? 89 : 83} q -3 ${raiz2 * 3} -4.5 ${raiz2 * 6.5}`}
+          fill="none" stroke={RAIZ} strokeWidth="1.1" strokeLinecap="round" opacity="0.7" />
+      )}
+      {germen && (
         <g>
-          <path d={`M 60.5 85 Q 57.5 ${broteY + 3.5} 58.2 ${broteY + 1} Q 58.6 ${broteY} 60 ${broteY}`}
+          <path d={`M 60.5 85 Q 57.5 ${germenY + 3.5} 58.2 ${germenY + 1} Q 58.6 ${germenY} 60 ${germenY}`}
             fill="none" stroke={VERDE_TIERNO} strokeWidth="2" strokeLinecap="round" />
-          <circle cx="60.2" cy={broteY} r="1.5" fill="#a7d68a" />
+          <circle cx="60.2" cy={germenY} r="1.5" fill="#a7d68a" />
         </g>
       )}
-      <Chispa x={60} y={d >= 7 ? 65 : 63.5} r={lerp(2.4, 3, d / 13)} opacidad={0.9} />
+      <Chispa x={60} y={germen ? 64.5 : 63.5} r={lerp(2.4, 3, d / 13)} opacidad={0.9} />
     </g>
   )
 }
 
 function Arbol({ d }) {
-  // Curva de crecimiento: 0 en el día 14, 1 en el día 365 (después solo
-  // cambia la luz: oro, aura, estrellas). Exponente <1 = arranque más visible.
-  const g = clamp(Math.pow((d - 14) / 351, 0.6), 0, 1)
-
+  // Altura y grosor: crecen suave del día 14 al 365; después solo cambia la luz.
+  const g = clamp(Math.pow((d - 14) / 350, 0.6), 0, 1)
   const altura = lerp(6, 46, g)
   const topeY = SUELO_Y - altura
-  const grosor = lerp(1.4, 7.5, Math.pow(g, 0.9))
-  const colorTallo = mezclar(VERDE_CLARO, TRONCO, clamp(g / 0.22, 0, 1))
+  const grosor = lerp(1.3, 7, Math.pow(g, 0.95))
+  const lign = madura(d, 33, 30) // la base se endurece del día 33 al 63 ("ya es tronco")
+  const colorTallo = mezcla(VERDE_CLARO, TRONCO, lign)
 
-  const oroT = clamp((d - 340) / 60, 0, 1)          // el dorado entra en fundido
-  const auraT = clamp((d - 365) / 40, 0, 1)
-  const raicesT = clamp((d - 100) / 50, 0, 1)        // raíces hondas: fundido 100→150
-  const nFlores = d >= 190 ? clamp(Math.floor((d - 190) / 8) + 1, 1, FLORES.length) : 0
-  const nFrutos = d >= 240 ? clamp(Math.floor((d - 240) / 12) + 1, 1, FRUTOS.length) : 0
-  const nLuciernagas = d >= 365 ? clamp(Math.floor((d - 365) / 20) + 1, 1, 4) : 0
+  const oroT = madura(d, 340, 50)
+  const auraT = madura(d, 365, 35)
+  const raicesT = madura(d, 115, 30)
 
-  // Copa: cúmulo superior + uno por rama crecida + dos laterales de relleno.
-  const cumulos = []
-  if (g > 0.045) cumulos.push([60, topeY + 1, lerp(2.2, 13, g), VERDE])
-  RAMAS.forEach((r, i) => {
-    const cr = clamp((g - r.g0) * 55, 0, 15 + 9 * (1 - r.frac))
-    if (cr <= 2) return
+  // Penachos de la copa
+  const penachos = []
+  const rPenachoTope = d >= 28 ? lerp(2.2, 12.5, madura(d, 28, 200)) : 0
+  if (rPenachoTope > 0) penachos.push([60, topeY + 1, rPenachoTope])
+  const puntas = []
+  RAMAS.forEach((r) => {
+    if (d < r.dia) return
+    const ext = madura(d, r.dia, 60)
+    const len = lerp(3, r.maxLen, ext)
     const ancX = 60 + r.lado * grosor * 0.4
     const ancY = SUELO_Y - altura * r.frac
-    const tipX = ancX + r.lado * cr * 0.85
-    const tipY = ancY - cr * 0.55
-    const radio = clamp((g - r.g0) * 34, 2, 8.5 + 5 * (1 - r.frac))
-    cumulos.push([tipX, tipY, radio, [VERDE_OSCURO, VERDE_CLARO, VERDE, VERDE_VIVO][i % 4], { ancX, ancY, tipX, tipY, cr }])
+    const tipX = ancX + r.lado * len * 0.85
+    const tipY = ancY - len * 0.5
+    puntas.push({ ancX, ancY, tipX, tipY, len, grosorRama: clamp(grosor * 0.42, 1, 2.8) })
+    if (d >= r.dia + 6) {
+      penachos.push([tipX, tipY, lerp(1.8, 7 + 5 * (1 - r.frac), madura(d, r.dia + 6, 70))])
+    }
   })
-  if (g > 0.5) {
-    const rl = clamp((g - 0.5) * 20, 0, 10)
-    cumulos.push([60 - (9 + 6 * g), topeY + 8, rl, VERDE_OSCURO])
-    cumulos.push([60 + (9 + 6 * g), topeY + 7, rl, VERDE_CLARO])
+  if (d >= 80) {
+    const rl = lerp(2, 10, madura(d, 80, 120))
+    penachos.push([60 - (8 + 6 * g), topeY + 7, rl])
+    penachos.push([60 + (8 + 6 * g), topeY + 6, rl * 0.92])
   }
 
-  // Centro y radio efectivo de la copa (para colocar flores y frutos).
   const copaX = 60
   const copaY = topeY + 5
   const copaR = lerp(6, 21, g)
-
-  const colorRaiz = mezclar(TRONCO_OSCURO, ORO, oroT * 0.7)
+  const colorRaiz = mezcla(TRONCO_OSCURO, ORO, oroT * 0.7)
 
   return (
     <g>
+      {/* raíces a la vista (día 115, homenaje a las semanas malas) */}
       {raicesT > 0 && (
         <g opacity={raicesT}>
           <path d={`M ${60 - grosor} 80 Q ${52 - grosor} 84 ${47 - grosor} 90`} fill="none"
@@ -152,35 +228,60 @@ function Arbol({ d }) {
         </g>
       )}
 
-      {/* tronco (de brizna a tronco sin cambiar de forma) */}
+      {/* hierba alta (día 180): la vida rodea al árbol */}
+      {d >= 180 && [[31, 0], [88, 1], [46, 2], [76, 3]].map(([x, i]) => (
+        <g key={`hi${i}`} opacity={madura(d, 180, 20)}>
+          <path d={`M ${x} ${SUELO_Y + 1} q -1.2 -3.4 -2.4 -4.6`} fill="none" stroke={VERDE_OSCURO} strokeWidth="1" strokeLinecap="round" />
+          <path d={`M ${x} ${SUELO_Y + 1} q 0.2 -4 0 -5.4`} fill="none" stroke={VERDE} strokeWidth="1" strokeLinecap="round" />
+          <path d={`M ${x} ${SUELO_Y + 1} q 1.4 -3.2 2.6 -4.2`} fill="none" stroke={VERDE_OSCURO} strokeWidth="1" strokeLinecap="round" />
+        </g>
+      ))}
+
+      {/* tronco: brizna → tronco con curva orgánica y base acampanada */}
       <path
-        d={`M ${60 - grosor} ${SUELO_Y} Q ${60 - grosor * 0.55} ${SUELO_Y - altura * 0.5} ${60 - grosor * 0.45} ${topeY}
-            L ${60 + grosor * 0.45} ${topeY} Q ${60 + grosor * 0.55} ${SUELO_Y - altura * 0.5} ${60 + grosor} ${SUELO_Y}
-            Q ${60 + grosor + lerp(0.5, 4, g)} ${SUELO_Y + 1.5} ${60 + grosor + lerp(1, 4.5, g)} ${SUELO_Y + 3}
-            L ${60 - grosor - lerp(1, 4.5, g)} ${SUELO_Y + 3}
-            Q ${60 - grosor - lerp(0.5, 4, g)} ${SUELO_Y + 1.5} ${60 - grosor} ${SUELO_Y} Z`}
+        d={`M ${60 - grosor} ${SUELO_Y}
+            C ${60 - grosor * 0.85} ${SUELO_Y - altura * 0.35} ${60 - grosor * 0.5} ${SUELO_Y - altura * 0.62} ${60 - grosor * 0.35} ${topeY}
+            L ${60 + grosor * 0.35} ${topeY}
+            C ${60 + grosor * 0.5} ${SUELO_Y - altura * 0.58} ${60 + grosor * 0.85} ${SUELO_Y - altura * 0.32} ${60 + grosor} ${SUELO_Y}
+            Q ${60 + grosor + lerp(0.5, 3.6, g)} ${SUELO_Y + 1.5} ${60 + grosor + lerp(1, 4.2, g)} ${SUELO_Y + 3}
+            L ${60 - grosor - lerp(1, 4.2, g)} ${SUELO_Y + 3}
+            Q ${60 - grosor - lerp(0.5, 3.6, g)} ${SUELO_Y + 1.5} ${60 - grosor} ${SUELO_Y} Z`}
         fill={colorTallo}
       />
-      {g > 0.18 && (
-        <path d={`M 60 ${SUELO_Y} Q 59 ${SUELO_Y - altura * 0.6} 60 ${topeY + 2}`} fill="none"
-          stroke={TRONCO_OSCURO} strokeWidth="1.1" opacity={clamp((g - 0.18) * 4, 0, 0.7)} />
+      {lign > 0.6 && (
+        <path d={`M ${60 - grosor * 0.25} ${SUELO_Y - 1} Q ${60 - grosor * 0.5} ${SUELO_Y - altura * 0.55} ${60 - grosor * 0.1} ${topeY + 3}`}
+          fill="none" stroke={TRONCO_OSCURO} strokeWidth="1" opacity={(lign - 0.6) * 1.6} />
+      )}
+
+      {/* musgo en el tronco (día 100) */}
+      {d >= 100 && (
+        <g opacity={madura(d, 100, 20)}>
+          <circle cx={60 - grosor * 0.9} cy={SUELO_Y - 2.5} r="1.5" fill={VERDE_OSCURO} />
+          <circle cx={60 - grosor * 0.4} cy={SUELO_Y - 0.8} r="1.1" fill={VERDE} />
+          <circle cx={60 + grosor * 0.7} cy={SUELO_Y - 1.6} r="1.2" fill={VERDE_OSCURO} />
+        </g>
       )}
 
       {/* ramas */}
-      {cumulos.map((c, i) => {
-        const rama = c[4]
-        if (!rama) return null
-        return (
-          <path key={`r${i}`}
-            d={`M ${rama.ancX} ${rama.ancY} Q ${(rama.ancX + rama.tipX) / 2} ${rama.ancY - rama.cr * 0.35} ${rama.tipX} ${rama.tipY}`}
-            fill="none" stroke={colorTallo} strokeWidth={clamp(grosor * 0.42, 1, 3)} strokeLinecap="round" />
-        )
-      })}
+      {puntas.map((r, i) => (
+        <path key={`r${i}`}
+          d={`M ${r.ancX} ${r.ancY} Q ${(r.ancX + r.tipX) / 2} ${r.ancY - r.len * 0.35} ${r.tipX} ${r.tipY}`}
+          fill="none" stroke={colorTallo} strokeWidth={r.grosorRama} strokeLinecap="round" />
+      ))}
 
-      {/* hojas sueltas del tallo joven (una nueva cada ~3 días; ceden el sitio a la copa) */}
+      {/* rama colgante (día 320): madurez que se inclina */}
+      {d >= 320 && (
+        <g opacity={madura(d, 320, 25)}>
+          <path d={`M ${60 + grosor * 0.3} ${topeY + 3} Q ${74} ${topeY + 2} ${80} ${topeY + 10}`}
+            fill="none" stroke={colorTallo} strokeWidth="2.2" strokeLinecap="round" />
+          <Penacho x={81} y={topeY + 12} r={4.5} />
+        </g>
+      )}
+
+      {/* hojas sueltas del tallo joven */}
       {HOJAS_TALLO.map((h, i) => {
-        if (d < 14 + i * 3) return null
-        const op = clamp((0.34 - g) / 0.1, 0, 1)
+        if (d < h.dia) return null
+        const op = clamp((70 - d) / 18, 0, 1)
         if (op <= 0) return null
         const y = SUELO_Y - altura * h.frac
         const x = 60 + h.lado * (grosor * 0.5 + 3.2)
@@ -192,14 +293,37 @@ function Arbol({ d }) {
       })}
 
       {/* copa */}
-      {cumulos.map(([cx, cy, r, color], i) => (
-        <circle key={`c${i}`} cx={cx} cy={cy} r={r} fill={color} />
+      {penachos.map(([x, y, r], i) => (
+        <Penacho key={`p${i}`} x={x} y={y} r={r} />
       ))}
-
-      {/* brotecito en la punta mientras es joven */}
       {g < 0.12 && <circle cx="60" cy={topeY - 1} r="1.7" fill="#a7d68a" />}
 
-      {/* oro del follaje (fundido desde el día ~340) */}
+      {/* seta al pie (día 92) */}
+      {d >= 92 && (
+        <g opacity={madura(d, 92, 15)}>
+          <rect x="43.2" y="77.6" width="1.8" height="3.2" rx="0.8" fill="#e8dcc0" />
+          <path d="M 41.2 78 Q 44.1 73.6 47 78 Z" fill="#a35a3f" />
+          <circle cx="43.2" cy="76.6" r="0.45" fill="#e8dcc0" />
+          <circle cx="45.2" cy="76.9" r="0.35" fill="#e8dcc0" />
+        </g>
+      )}
+
+      {/* nido (día 135) y pájaro (día 165) en la primera rama */}
+      {d >= 135 && puntas[0] && (
+        <g opacity={madura(d, 135, 15)}>
+          <ellipse cx={puntas[0].tipX + 2} cy={puntas[0].tipY + 1.6} rx="3" ry="1.6" fill="#6b4f2e" />
+          <ellipse cx={puntas[0].tipX + 2} cy={puntas[0].tipY + 1} rx="2.1" ry="0.9" fill="#4a3823" />
+          {d >= 165 && (
+            <g opacity={madura(d, 165, 12)}>
+              <circle cx={puntas[0].tipX + 2} cy={puntas[0].tipY - 0.8} r="1.5" fill="#7a8aa8" />
+              <circle cx={puntas[0].tipX + 3.3} cy={puntas[0].tipY - 1.6} r="1" fill="#8e9cb8" />
+              <path d={`M ${puntas[0].tipX + 4.2} ${puntas[0].tipY - 1.7} l 1.4 0.45 l -1.4 0.45 Z`} fill={ORO} />
+            </g>
+          )}
+        </g>
+      )}
+
+      {/* oro del follaje (día 340 en adelante) */}
       {oroT > 0 && (
         <g opacity={oroT * 0.6}>
           <circle cx={copaX - copaR * 0.6} cy={copaY - copaR * 0.4} r={copaR * 0.32} fill={ORO} />
@@ -208,40 +332,64 @@ function Arbol({ d }) {
         </g>
       )}
 
-      {/* flores: una nueva cada ~8 días desde el 190 */}
-      {FLORES.slice(0, nFlores).map(([fx, fy], i) => (
-        <circle key={`f${i}`} cx={copaX + fx * copaR} cy={copaY + fy * copaR * 0.8}
-          r="1.3" fill={ORO_CLARO} opacity="0.9" />
-      ))}
+      {/* capullo (día 190) y flores una a una */}
+      {d >= 190 && d < 198 && (
+        <ellipse cx={copaX + 0.15 * copaR} cy={copaY - 0.85 * copaR * 0.8} rx="1.1" ry="1.5"
+          fill={mezcla(VERDE_BRILLO, ORO_CLARO, madura(d, 190, 8))} />
+      )}
+      {FLORES.map((f, i) => {
+        if (d < f.dia) return null
+        return (
+          <g key={`fl${i}`} opacity={madura(d, f.dia, 6)}>
+            <circle cx={copaX + f.p[0] * copaR} cy={copaY + f.p[1] * copaR * 0.8} r="1.4" fill={ORO_CLARO} />
+            <circle cx={copaX + f.p[0] * copaR} cy={copaY + f.p[1] * copaR * 0.8} r="0.5" fill="#fff2cf" />
+          </g>
+        )
+      })}
 
-      {/* frutos: uno nuevo cada ~12 días desde el 240 */}
-      {FRUTOS.slice(0, nFrutos).map(([fx, fy], i) => (
-        <g key={`fr${i}`}>
-          <circle cx={copaX + fx * copaR} cy={copaY + fy * copaR * 0.85} r="2" fill={ORO} />
-          <circle cx={copaX + fx * copaR - 0.6} cy={copaY + fy * copaR * 0.85 - 0.6} r="0.6" fill={ORO_CLARO} />
-        </g>
-      ))}
+      {/* frutos uno a uno */}
+      {FRUTOS.map((f, i) => {
+        if (d < f.dia) return null
+        const x = copaX + f.p[0] * copaR
+        const y = copaY + f.p[1] * copaR * 0.85
+        return (
+          <g key={`fr${i}`} opacity={madura(d, f.dia, 8)}>
+            <circle cx={x} cy={y} r="2" fill={ORO} />
+            <circle cx={x - 0.6} cy={y - 0.6} r="0.6" fill={ORO_CLARO} />
+          </g>
+        )
+      })}
 
-      {/* luciérnagas y estrellas del final del camino */}
-      {LUCIERNAGAS.slice(0, nLuciernagas).map(([x, y, o], i) => (
-        <circle key={`l${i}`} cx={x} cy={y} r="1.1" fill={ORO_CLARO} opacity={o * auraT} />
-      ))}
+      {/* luciérnagas */}
+      {LUCIERNAGAS.map((l, i) => {
+        if (d < l.dia) return null
+        return <circle key={`lu${i}`} cx={l.x} cy={l.y} r="1.1" fill={ORO_CLARO}
+          opacity={l.o * madura(d, l.dia, 15)} />
+      })}
+
+      {/* estrellas de la Leyenda (día 450) */}
       {d >= 450 && (
         <g>
-          <Chispa x={44} y={35} r={2.6} opacidad={0.95} />
-          <Chispa x={72} y={30} r={3.2} opacidad={0.95} />
-          <Chispa x={58} y={25} r={2.2} opacidad={0.8} />
-          <Chispa x={84} y={40} r={2} opacidad={0.7} />
+          <Chispa x={44} y={33} r={2.6} opacidad={0.95} />
+          <Chispa x={72} y={28} r={3.2} opacidad={0.95} />
+          <Chispa x={58} y={23} r={2.2} opacidad={0.8} />
+          <Chispa x={84} y={38} r={2} opacidad={0.7} />
         </g>
       )}
     </g>
   )
 }
 
+function mezcla(hexA, hexB, t) {
+  const a = [1, 3, 5].map((i) => parseInt(hexA.slice(i, i + 2), 16))
+  const b = [1, 3, 5].map((i) => parseInt(hexB.slice(i, i + 2), 16))
+  return `#${a.map((x, i) => Math.round(lerp(x, b[i], t)).toString(16).padStart(2, '0')).join('')}`
+}
+
 export default function Avatar({ dias = 0, tam = 120 }) {
   const d = Math.max(0, dias)
   const etapa = etapaArbol(d)
-  const auraT = clamp((d - 365) / 40, 0, 1)
+  const auraT = madura(d, 365, 35)
   const runas = d >= 300 ? 4 : d >= 240 ? 3 : d >= 150 ? 2 : d >= 85 ? 1 : 0
   const piedras = [
     { x: 21, y: 73, w: 8, h: 11 },

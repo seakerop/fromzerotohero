@@ -11,15 +11,13 @@ const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..')
 const entrada = `
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import Avatar from './src/components/Avatar.jsx'
-import { ETAPAS_ARBOL, etapaArbol } from './src/data/arbol.js'
-const DIAS = [0, 2, 3, 5, 7, 10, 14, 17, 21, 25, 30, 36, 42, 50, 60, 70, 85,
-  100, 115, 132, 150, 170, 190, 205, 225, 240, 265, 300, 340, 365, 400, 450]
-export const tarjetas = DIAS.map((d) => ({
-  d,
-  etapa: etapaArbol(d).nombre,
-  hito: ETAPAS_ARBOL.some((x) => x.dias === d),
-  svg: renderToStaticMarkup(createElement(Avatar, { dias: d, tam: 130 })),
+import Avatar, { MOMENTOS_ARBOL } from './src/components/Avatar.jsx'
+import { ETAPAS_ARBOL } from './src/data/arbol.js'
+export const tarjetas = MOMENTOS_ARBOL.map((m) => ({
+  d: m.dia,
+  etiqueta: m.etiqueta,
+  hito: ETAPAS_ARBOL.some((x) => x.dias === m.dia),
+  svg: renderToStaticMarkup(createElement(Avatar, { dias: m.dia, tam: 120 })),
 }))
 `
 
@@ -43,7 +41,7 @@ const figuras = tarjetas
         ${t.svg}
         <figcaption>
           <strong>día ${t.d}</strong>
-          <span>${t.etapa}${t.hito ? ' ★' : ''}</span>
+          <span>${t.etiqueta}${t.hito ? ' ★' : ''}</span>
         </figcaption>
       </figure>`
   )
@@ -54,7 +52,7 @@ const html = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>El Árbol del Héroe — las 15 etapas</title>
+<title>El Árbol del Héroe — 43 momentos</title>
 <style>
   body { margin: 0; background: #0c0e13; color: #e8e6df; font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; }
   header { text-align: center; padding: 26px 16px 6px; }
@@ -72,9 +70,9 @@ const html = `<!doctype html>
 <body>
 <header>
   <h1>🌱 El Árbol del Héroe</h1>
-  <p>32 momentos de los primeros 450 días de acción. El árbol es continuo: altura,
-  ramas, hojas, flores y frutos crecen poco a poco, casi cada día. Las tarjetas
-  doradas ★ son los hitos con nombre.</p>
+  <p>43 momentos en 450 días de acción: cada pocos días aparece algo nuevo que
+  puedes señalar — una hoja, una rama, una seta, un nido, un pájaro, una flor…
+  Las tarjetas doradas ★ son además hitos con nombre de etapa.</p>
 </header>
 <main>
 ${figuras}
