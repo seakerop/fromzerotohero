@@ -1,24 +1,20 @@
 import { etapaArbol } from '../data/arbol.js'
 
 // El Árbol del Héroe — estilo "orgánico silueta" (dirección C, elegida por el
-// usuario en dist/estilos-arbol.html): cielo de atardecer, siluetas suaves con
-// luz arriba-izquierda y sombra al vientre, tronco cálido, oro en la madurez.
-// La copa se construye por LÓBULOS que se funden en una sola silueta: cada
-// capa (sombra, cuerpo, luz, brillo) pinta todos los lóbulos del mismo color,
-// así el conjunto lee como una nube única y no como bolas apiladas.
-// 43 momentos señalables (MOMENTOS_ARBOL) + tamaño continuo por debajo.
-// Regla de oro intacta: nunca se marchita, crece o espera.
+// usuario) + ESTACIONES REALES: el mes del calendario viste al árbol
+// (primavera en flor, verano pleno, otoño ámbar con hojas cayendo, invierno
+// con nieve SOBRE la copa — nunca ramas peladas). El crecimiento no cambia:
+// lo mueven los días de acción; la estación solo cambia el vestido.
+// La copa se construye por lóbulos fundidos en una silueta (capas monocolor).
+// 46 momentos señalables + tamaño continuo. Nunca se marchita ni retrocede.
 
-const V_OSC = '#31572b'
-const V_MED = '#457a39'
-const V_CLA = '#5f9c4b'
-const V_BRI = '#7fbd66'
 const TRONCO = '#6d5334'
 const ORO = '#d9a441'
 const ORO_CLARO = '#f0c86e'
 const SEMILLA = '#b8905a'
 const RAIZ = '#d8cdb8'
 const LUCERO = '#e8e2cf'
+const NIEVE = '#eef3f8'
 
 const SUELO_Y = 82
 
@@ -30,6 +26,21 @@ function mezcla(hexA, hexB, t) {
   const a = [1, 3, 5].map((i) => parseInt(hexA.slice(i, i + 2), 16))
   const b = [1, 3, 5].map((i) => parseInt(hexB.slice(i, i + 2), 16))
   return `#${a.map((x, i) => Math.round(lerp(x, b[i], t)).toString(16).padStart(2, '0')).join('')}`
+}
+
+export function estacionDeMes(mes) {
+  if (mes >= 3 && mes <= 5) return 'primavera'
+  if (mes >= 6 && mes <= 8) return 'verano'
+  if (mes >= 9 && mes <= 11) return 'otono'
+  return 'invierno'
+}
+
+// Paleta de copa por estación: [oscuro, medio, claro, brillo] + cielo.
+const PALETAS = {
+  primavera: { osc: '#35652c', med: '#4f9247', cla: '#6cb457', bri: '#8fd276', cielo: '#1c2635' },
+  verano: { osc: '#31572b', med: '#457a39', cla: '#5f9c4b', bri: '#7fbd66', cielo: '#1b2233' },
+  otono: { osc: '#7d4a1e', med: '#b06a2c', cla: '#cf8b3a', bri: '#e2a94e', cielo: '#231e2c' },
+  invierno: { osc: '#2b4232', med: '#3d5a44', cla: '#4e7257', bri: '#5f8a68', cielo: '#171f2e' },
 }
 
 export const MOMENTOS_ARBOL = [
@@ -59,21 +70,27 @@ export const MOMENTOS_ARBOL = [
   { dia: 125, etiqueta: 'La cuarta rama' },
   { dia: 135, etiqueta: 'Un nido' },
   { dia: 150, etiqueta: 'El segundo lucero' },
+  { dia: 160, etiqueta: 'La copa se abre' },
   { dia: 165, etiqueta: 'Llega un pájaro' },
   { dia: 180, etiqueta: 'Hierba alta' },
   { dia: 190, etiqueta: 'El primer capullo' },
   { dia: 198, etiqueta: 'La flor se abre' },
   { dia: 200, etiqueta: 'La quinta rama' },
   { dia: 210, etiqueta: 'Tres flores' },
+  { dia: 220, etiqueta: 'La copa gana altura' },
   { dia: 225, etiqueta: 'Floración' },
   { dia: 240, etiqueta: 'El primer fruto' },
   { dia: 255, etiqueta: 'Más frutos' },
   { dia: 270, etiqueta: 'La cosecha' },
+  { dia: 280, etiqueta: 'La copa se extiende' },
   { dia: 285, etiqueta: 'Una luciérnaga' },
   { dia: 300, etiqueta: 'El tercer lucero' },
+  { dia: 310, etiqueta: 'La segunda seta' },
   { dia: 320, etiqueta: 'La rama colgante' },
   { dia: 340, etiqueta: 'El primer oro' },
   { dia: 365, etiqueta: 'Árbol del Héroe' },
+  { dia: 385, etiqueta: 'El cuarto lucero' },
+  { dia: 410, etiqueta: 'Otra luciérnaga' },
   { dia: 425, etiqueta: 'Noche de luciérnagas' },
   { dia: 450, etiqueta: 'Leyenda' },
 ]
@@ -82,8 +99,6 @@ export function proximoMomento(dias) {
   return MOMENTOS_ARBOL.find((m) => m.dia > dias) || null
 }
 
-// Ramas: nacen en días concretos, se extienden en ~60 días y sostienen un
-// lóbulo de copa. frac = altura del anclaje; lado = izquierda/derecha.
 const RAMAS = [
   { dia: 38, lado: -1, frac: 0.86, maxLen: 13 },
   { dia: 50, lado: 1, frac: 0.74, maxLen: 14 },
@@ -100,7 +115,6 @@ const HOJAS_TALLO = [
   { dia: 24, frac: 0.42, lado: -1, rot: -22 },
 ]
 
-// Posiciones normalizadas dentro de la copa (x, y en radios de copa).
 const FLORES = [
   { dia: 198, p: [0.1, -0.75] },
   { dia: 210, p: [-0.7, -0.25] },
@@ -121,20 +135,30 @@ const LUCEROS = [
   { dia: 85, x: 38, y: 26 },
   { dia: 150, x: 82, y: 21 },
   { dia: 300, x: 25, y: 42 },
+  { dia: 385, x: 95, y: 36 },
 ]
 const LUCIERNAGAS = [
   { dia: 285, x: 38, y: 56, o: 0.9 },
-  { dia: 425, x: 86, y: 48, o: 0.7 },
+  { dia: 410, x: 86, y: 48, o: 0.7 },
   { dia: 425, x: 44, y: 40, o: 0.75 },
   { dia: 425, x: 80, y: 66, o: 0.6 },
 ]
+
+// Adornos de estación (posiciones fijas; se escalan/muestran si hay copa).
+const FLORES_PRIMAVERA = [
+  [-0.55, -0.5], [0.3, -0.7], [0.85, -0.1], [-0.9, 0.05], [0.05, -0.2],
+  [-0.25, 0.5], [0.6, 0.45], [-0.05, 0.05],
+]
+const PETALOS_AIRE = [[33, 48], [86, 38], [50, 28]]
+const HOJAS_CAYENDO = [[31, 50, 35], [85, 40, -25], [49, 29, 60]]
+const HOJARASCA = [[38, 84.5], [52, 86], [68, 85.5], [80, 84], [60, 87.5]]
+const COPOS = [[28, 32], [88, 26], [40, 18], [72, 44], [22, 56], [94, 60]]
 
 function Estrella({ x, y, r, opacidad = 1 }) {
   const p = `M ${x} ${y - r} L ${x + r * 0.3} ${y - r * 0.3} L ${x + r} ${y} L ${x + r * 0.3} ${y + r * 0.3} L ${x} ${y + r} L ${x - r * 0.3} ${y + r * 0.3} L ${x - r} ${y} L ${x - r * 0.3} ${y - r * 0.3} Z`
   return <path d={p} fill={ORO_CLARO} opacity={opacidad} />
 }
 
-// Días 0-13: la semilla sobre el montículo, la grieta, las raíces, el germen.
 function Subsuelo({ d }) {
   const raiz1 = madura(d, 4, 4)
   const raiz2 = madura(d, 6, 4)
@@ -160,8 +184,8 @@ function Subsuelo({ d }) {
       {germen && (
         <g>
           <path d={`M 63 79.5 C 65.5 ${tipY + 5} 64.5 ${tipY + 2} 63.2 ${tipY + 0.5}`}
-            fill="none" stroke={V_BRI} strokeWidth="1.8" strokeLinecap="round" />
-          <ellipse cx="63" cy={tipY} rx="1.9" ry="1.1" fill={V_BRI}
+            fill="none" stroke="#8fd276" strokeWidth="1.8" strokeLinecap="round" />
+          <ellipse cx="63" cy={tipY} rx="1.9" ry="1.1" fill="#8fd276"
             transform={`rotate(-30 63 ${tipY})`} />
         </g>
       )}
@@ -171,21 +195,23 @@ function Subsuelo({ d }) {
   )
 }
 
-// Días 14+: el árbol. Silueta por capas: sombra interior, cuerpo, luz, brillo.
-function Arbol({ d }) {
+function Arbol({ d, pal, estacion }) {
   const g = clamp(Math.pow((d - 14) / 350, 0.6), 0, 1)
   const altura = lerp(9, 44, g)
   const topeY = SUELO_Y - altura
-  const w = lerp(1.1, 3.4, Math.pow(g, 0.95)) // media anchura del tronco
+  const w = lerp(1.1, 3.4, Math.pow(g, 0.95))
   const lign = madura(d, 33, 30)
-  const colorTronco = mezcla(V_CLA, TRONCO, lign)
+  const colorTronco = mezcla(pal.cla, TRONCO, lign)
   const oroT = madura(d, 340, 50)
   const auraT = madura(d, 365, 35)
   const raicesT = madura(d, 115, 30)
+  const invierno = estacion === 'invierno'
+  const otono = estacion === 'otono'
+  const primavera = estacion === 'primavera'
 
-  // --- lóbulos de la copa ---
+  // --- lóbulos de la copa (la silueta cambia de forma con los días) ---
   const lobulos = []
-  if (d >= 28) lobulos.push([60, topeY + 2, lerp(2.5, 12, madura(d, 28, 240))])
+  if (d >= 28) lobulos.push([60, topeY + 2, lerp(2.5, 12.5, madura(d, 28, 240))])
   const ramas = []
   RAMAS.forEach((r) => {
     if (d < r.dia) return
@@ -196,18 +222,21 @@ function Arbol({ d }) {
     const tipY = ancY - len * 0.6
     ramas.push({ ancX, ancY, tipX, tipY, len })
     if (d >= r.dia + 6) {
-      lobulos.push([tipX, tipY - 1, lerp(1.8, 7.5 + 4 * (1 - r.frac), madura(d, r.dia + 6, 70))])
+      lobulos.push([tipX, tipY - 1, lerp(1.8, 8 + 4.5 * (1 - r.frac), madura(d, r.dia + 6, 70))])
     }
   })
   if (d >= 80) {
     const rl = lerp(2, 9.5, madura(d, 80, 120))
-    lobulos.push([60 - (7 + 7 * g), topeY + 6, rl])
-    lobulos.push([60 + (7 + 7 * g), topeY + 5, rl * 0.94])
+    lobulos.push([60 - (7 + 8 * g), topeY + 6, rl])
+    lobulos.push([60 + (7 + 8 * g), topeY + 5, rl * 0.94])
   }
+  if (d >= 160) lobulos.push([60 - (13 + 7 * g), topeY + 9, lerp(2, 8, madura(d, 160, 90))])
+  if (d >= 220) lobulos.push([62, topeY - 4, lerp(2, 9, madura(d, 220, 90))])
+  if (d >= 280) lobulos.push([60 + (14 + 7 * g), topeY + 8, lerp(2, 8.5, madura(d, 280, 90))])
 
   const copaX = 60
   const copaY = topeY + 4
-  const copaR = lerp(5, 24, g)
+  const copaR = lerp(5, 26, g)
   const hayCopa = lobulos.length > 0
 
   const capa = (color, dx, dy, esc, opacidad = 1, minR = 0) =>
@@ -219,7 +248,6 @@ function Arbol({ d }) {
 
   return (
     <g>
-      {/* luceros del cielo (días 85, 150, 300) */}
       {LUCEROS.map((l, i) => {
         if (d < l.dia) return null
         const op = madura(d, l.dia, 12)
@@ -231,7 +259,14 @@ function Arbol({ d }) {
         )
       })}
 
-      {/* raíces a la vista (día 115) */}
+      {/* nieve en el suelo (invierno) */}
+      {invierno && (
+        <g>
+          <ellipse cx="60" cy="86" rx="40" ry="7" fill={NIEVE} opacity="0.16" />
+          <path d="M 20 84 Q 60 76.5 100 84" fill="none" stroke={NIEVE} strokeWidth="1.2" opacity="0.35" />
+        </g>
+      )}
+
       {raicesT > 0 && (
         <g opacity={raicesT}>
           <path d={`M ${60 - w} ${SUELO_Y - 1} Q ${54 - w} 84 ${50 - w} 88`} fill="none"
@@ -241,16 +276,20 @@ function Arbol({ d }) {
         </g>
       )}
 
-      {/* hierba alta (día 180) */}
       {d >= 180 && [[34, 0], [87, 1], [46, 2], [76, 3]].map(([x, i]) => (
-        <g key={`hi${i}`} opacity={madura(d, 180, 20) * 0.9}>
-          <path d={`M ${x} ${SUELO_Y + 2} q -1.4 -3.6 -2.6 -4.8`} fill="none" stroke={V_OSC} strokeWidth="1" strokeLinecap="round" />
-          <path d={`M ${x} ${SUELO_Y + 2} q 0.2 -4.4 -0.2 -5.8`} fill="none" stroke={V_MED} strokeWidth="1" strokeLinecap="round" />
-          <path d={`M ${x} ${SUELO_Y + 2} q 1.6 -3.4 2.8 -4.4`} fill="none" stroke={V_OSC} strokeWidth="1" strokeLinecap="round" />
+        <g key={`hi${i}`} opacity={madura(d, 180, 20) * (invierno ? 0.5 : 0.9)}>
+          <path d={`M ${x} ${SUELO_Y + 2} q -1.4 -3.6 -2.6 -4.8`} fill="none" stroke={pal.osc} strokeWidth="1" strokeLinecap="round" />
+          <path d={`M ${x} ${SUELO_Y + 2} q 0.2 -4.4 -0.2 -5.8`} fill="none" stroke={pal.med} strokeWidth="1" strokeLinecap="round" />
+          <path d={`M ${x} ${SUELO_Y + 2} q 1.6 -3.4 2.8 -4.4`} fill="none" stroke={pal.osc} strokeWidth="1" strokeLinecap="round" />
         </g>
       ))}
 
-      {/* tronco: brizna verde → tronco cálido con pies acampanados */}
+      {/* hojarasca de otoño en el suelo */}
+      {otono && hayCopa && HOJARASCA.map(([x, y], i) => (
+        <ellipse key={`ho${i}`} cx={x} cy={y} rx="1.6" ry="0.8" fill={pal.cla}
+          opacity="0.75" transform={`rotate(${i * 37 % 70 - 35} ${x} ${y})`} />
+      ))}
+
       <path
         d={`M ${60 - w} ${SUELO_Y}
             C ${60 - w * 0.9} ${SUELO_Y - altura * 0.4} ${60 - w * 0.55} ${SUELO_Y - altura * 0.7} ${60 - w * 0.4} ${topeY + (hayCopa ? 6 : 0)}
@@ -262,33 +301,29 @@ function Arbol({ d }) {
         fill={colorTronco}
       />
 
-      {/* musgo (día 100) */}
       {d >= 100 && (
         <g opacity={madura(d, 100, 20)}>
-          <circle cx={60 - w * 0.9} cy={SUELO_Y - 1.5} r="1.4" fill={V_OSC} />
-          <circle cx={60 - w * 0.2} cy={SUELO_Y + 0.2} r="1" fill={V_MED} />
-          <circle cx={60 + w * 0.75} cy={SUELO_Y - 0.6} r="1.1" fill={V_OSC} />
+          <circle cx={60 - w * 0.9} cy={SUELO_Y - 1.5} r="1.4" fill={pal.osc} />
+          <circle cx={60 - w * 0.2} cy={SUELO_Y + 0.2} r="1" fill={pal.med} />
+          <circle cx={60 + w * 0.75} cy={SUELO_Y - 0.6} r="1.1" fill={pal.osc} />
         </g>
       )}
 
-      {/* ramas */}
       {ramas.map((r, i) => (
         <path key={`r${i}`}
           d={`M ${r.ancX} ${r.ancY} Q ${(r.ancX + r.tipX) / 2} ${r.ancY - r.len * 0.4} ${r.tipX} ${r.tipY}`}
           fill="none" stroke={colorTronco} strokeWidth={clamp(w * 0.8, 1, 2.6)} strokeLinecap="round" />
       ))}
 
-      {/* rama colgante (día 320) */}
       {d >= 320 && (
         <g opacity={madura(d, 320, 25)}>
           <path d={`M ${60 + w * 0.3} ${topeY + 5} Q 75 ${topeY + 3} 81 ${topeY + 12}`}
             fill="none" stroke={colorTronco} strokeWidth="2" strokeLinecap="round" />
-          <circle cx="82" cy={topeY + 14} r="4.4" fill={V_MED} />
-          <circle cx="80.8" cy={topeY + 12.6} r="2.6" fill={V_CLA} />
+          <circle cx="82" cy={topeY + 14} r="4.4" fill={pal.med} />
+          <circle cx="80.8" cy={topeY + 12.6} r="2.6" fill={pal.cla} />
         </g>
       )}
 
-      {/* hojas sueltas del tallo joven */}
       {HOJAS_TALLO.map((h, i) => {
         if (d < h.dia) return null
         const op = clamp((70 - d) / 18, 0, 1)
@@ -297,53 +332,82 @@ function Arbol({ d }) {
         const x = 60 + h.lado * (w * 0.6 + 2.8)
         return (
           <ellipse key={`h${i}`} cx={x} cy={y} rx="4.2" ry="1.9" opacity={op}
-            fill={i % 2 ? V_BRI : V_CLA} transform={`rotate(${h.rot} ${x} ${y})`} />
+            fill={i % 2 ? pal.bri : pal.cla} transform={`rotate(${h.rot} ${x} ${y})`} />
         )
       })}
 
-      {/* copa en cuatro capas que se funden en una silueta */}
       {hayCopa && (
         <g>
-          {capa(V_MED, 0, 0, 1)}
-          {capa(V_OSC, 0.16, 0.24, 0.82, 0.9, 2.5)}
-          {capa(V_MED, -0.06, -0.1, 0.9)}
-          {capa(V_CLA, -0.2, -0.28, 0.68, 1, 2.5)}
-          {capa(V_BRI, -0.3, -0.4, 0.34, 1, 4)}
+          {capa(pal.med, 0, 0, 1)}
+          {capa(pal.osc, 0.16, 0.24, 0.82, 0.9, 2.5)}
+          {capa(pal.med, -0.06, -0.1, 0.9)}
+          {capa(pal.cla, -0.2, -0.28, 0.68, 1, 2.5)}
+          {capa(pal.bri, -0.3, -0.4, 0.34, 1, 4)}
           {oroT > 0 && capa(ORO, 0, -0.06, 0.95, oroT * 0.55)}
           {oroT > 0 && capa(ORO_CLARO, -0.22, -0.3, 0.6, oroT * 0.5, 3)}
+          {/* nieve posada sobre los lóbulos (invierno) */}
+          {invierno && lobulos.filter(([, , r]) => r > 3).map(([x, y, r], i) => (
+            <ellipse key={`nv${i}`} cx={x - r * 0.05} cy={y - r * 0.6} rx={r * 0.72} ry={r * 0.34}
+              fill={NIEVE} opacity="0.85" />
+          ))}
+          {/* flores de primavera repartidas por la copa */}
+          {primavera && copaR > 8 && FLORES_PRIMAVERA.map(([fx, fy], i) => (
+            <g key={`fp${i}`}>
+              <circle cx={copaX + fx * copaR} cy={copaY + fy * copaR * 0.8} r="1.2" fill="#e8a7b8" />
+              <circle cx={copaX + fx * copaR} cy={copaY + fy * copaR * 0.8} r="0.45" fill="#f7e6ea" />
+            </g>
+          ))}
         </g>
       )}
-      {!hayCopa && <ellipse cx="60" cy={topeY - 1} rx="2" ry="1.2" fill={V_BRI} />}
+      {!hayCopa && <ellipse cx="60" cy={topeY - 1} rx="2" ry="1.2" fill={pal.bri} />}
 
-      {/* seta al pie (día 92) */}
+      {/* pétalos (primavera) y hojas cayendo (otoño) */}
+      {primavera && hayCopa && PETALOS_AIRE.map(([x, y], i) => (
+        <ellipse key={`pa${i}`} cx={x} cy={y} rx="1.1" ry="0.6" fill="#e8a7b8" opacity="0.8"
+          transform={`rotate(${20 + i * 30} ${x} ${y})`} />
+      ))}
+      {otono && hayCopa && HOJAS_CAYENDO.map(([x, y, rot], i) => (
+        <ellipse key={`hc${i}`} cx={x} cy={y} rx="1.7" ry="0.85" fill={pal.bri} opacity="0.9"
+          transform={`rotate(${rot} ${x} ${y})`} />
+      ))}
+      {/* copos de nieve en el aire (invierno) */}
+      {invierno && COPOS.map(([x, y], i) => (
+        <circle key={`cp${i}`} cx={x} cy={y} r="0.8" fill={NIEVE} opacity="0.7" />
+      ))}
+
       {d >= 92 && (
         <g opacity={madura(d, 92, 15)}>
-          <path d="M 44.2 81.5 C 44 79.5 44.4 78.4 45.1 78.4 C 45.8 78.4 46.2 79.5 46 81.5 Z" fill="#e8dcc0" />
-          <path d="M 41.8 78.6 Q 45.1 73.8 48.4 78.6 Q 45.1 80 41.8 78.6 Z" fill="#a35a3f" />
-          <circle cx="44.2" cy="76.9" r="0.5" fill="#e8dcc0" />
-          <circle cx="46.3" cy="77.3" r="0.4" fill="#e8dcc0" />
+          <path d="M 43.8 81.8 C 43.6 79.4 44 78.1 44.9 78.1 C 45.8 78.1 46.2 79.4 46 81.8 Z" fill="#e8dcc0" />
+          <path d="M 41 78.4 Q 44.9 72.8 48.8 78.4 Q 44.9 80.1 41 78.4 Z" fill="#a35a3f" />
+          <circle cx="43.9" cy="76.3" r="0.55" fill="#e8dcc0" />
+          <circle cx="46.4" cy="76.8" r="0.45" fill="#e8dcc0" />
+        </g>
+      )}
+      {d >= 310 && (
+        <g opacity={madura(d, 310, 15)}>
+          <path d="M 74.6 81.4 C 74.5 79.6 74.8 78.6 75.4 78.6 C 76 78.6 76.3 79.6 76.2 81.4 Z" fill="#e8dcc0" />
+          <path d="M 72.6 78.8 Q 75.4 74.6 78.2 78.8 Q 75.4 80.2 72.6 78.8 Z" fill="#8f4f38" />
+          <circle cx="75" cy="77.2" r="0.4" fill="#e8dcc0" />
         </g>
       )}
 
-      {/* nido (135) y pájaro (165) en la primera rama */}
       {d >= 135 && ramas[0] && (
         <g opacity={madura(d, 135, 15)}>
-          <ellipse cx={ramas[0].tipX + 2.4} cy={ramas[0].tipY + 2} rx="3" ry="1.6" fill="#6b4f2e" />
-          <ellipse cx={ramas[0].tipX + 2.4} cy={ramas[0].tipY + 1.4} rx="2.1" ry="0.9" fill="#4a3823" />
+          <ellipse cx={ramas[0].tipX + 2.4} cy={ramas[0].tipY + 2} rx="3.2" ry="1.7" fill="#6b4f2e" />
+          <ellipse cx={ramas[0].tipX + 2.4} cy={ramas[0].tipY + 1.3} rx="2.2" ry="0.95" fill="#4a3823" />
           {d >= 165 && (
             <g opacity={madura(d, 165, 12)}>
-              <circle cx={ramas[0].tipX + 2.2} cy={ramas[0].tipY - 0.6} r="1.5" fill="#7a8aa8" />
-              <circle cx={ramas[0].tipX + 3.5} cy={ramas[0].tipY - 1.4} r="1" fill="#8e9cb8" />
-              <path d={`M ${ramas[0].tipX + 4.4} ${ramas[0].tipY - 1.5} l 1.5 0.5 l -1.5 0.5 Z`} fill={ORO} />
+              <circle cx={ramas[0].tipX + 2.2} cy={ramas[0].tipY - 0.7} r="1.7" fill="#7a8aa8" />
+              <circle cx={ramas[0].tipX + 3.7} cy={ramas[0].tipY - 1.6} r="1.1" fill="#8e9cb8" />
+              <path d={`M ${ramas[0].tipX + 4.7} ${ramas[0].tipY - 1.7} l 1.6 0.55 l -1.6 0.55 Z`} fill={ORO} />
             </g>
           )}
         </g>
       )}
 
-      {/* capullo (190) y flores una a una */}
       {d >= 190 && d < 198 && (
-        <ellipse cx={copaX + 0.1 * copaR} cy={copaY - 0.75 * copaR * 0.8} rx="1.1" ry="1.6"
-          fill={mezcla(V_BRI, ORO_CLARO, madura(d, 190, 8))} />
+        <ellipse cx={copaX + 0.1 * copaR} cy={copaY - 0.75 * copaR * 0.8} rx="1.2" ry="1.7"
+          fill={mezcla(pal.bri, ORO_CLARO, madura(d, 190, 8))} />
       )}
       {FLORES.map((f, i) => {
         if (d < f.dia) return null
@@ -351,33 +415,29 @@ function Arbol({ d }) {
         const y = copaY + f.p[1] * copaR * 0.8
         return (
           <g key={`fl${i}`} opacity={madura(d, f.dia, 6)}>
-            <circle cx={x} cy={y} r="1.4" fill={ORO_CLARO} />
-            <circle cx={x} cy={y} r="0.5" fill="#fff4d6" />
+            <circle cx={x} cy={y} r="1.7" fill={ORO_CLARO} />
+            <circle cx={x} cy={y} r="0.6" fill="#fff4d6" />
           </g>
         )
       })}
-
-      {/* frutos uno a uno, con su brillo */}
       {FRUTOS.map((f, i) => {
         if (d < f.dia) return null
         const x = copaX + f.p[0] * copaR
         const y = copaY + f.p[1] * copaR * 0.85
         return (
           <g key={`fr${i}`} opacity={madura(d, f.dia, 8)}>
-            <circle cx={x} cy={y} r="2.3" fill={ORO} />
-            <circle cx={x - 0.7} cy={y - 0.7} r="0.75" fill={ORO_CLARO} />
+            <circle cx={x} cy={y} r="2.6" fill={ORO} />
+            <circle cx={x - 0.8} cy={y - 0.8} r="0.85" fill={ORO_CLARO} />
           </g>
         )
       })}
 
-      {/* luciérnagas */}
       {LUCIERNAGAS.map((l, i) => {
         if (d < l.dia) return null
         return <circle key={`lu${i}`} cx={l.x} cy={l.y} r="1.1" fill={ORO_CLARO}
           opacity={l.o * madura(d, l.dia, 15)} />
       })}
 
-      {/* aura y estrellas del final */}
       {auraT > 0 && (
         <circle cx="60" cy="56" r="49" fill="none" stroke={ORO} strokeWidth="1" opacity={auraT * 0.4} />
       )}
@@ -393,27 +453,31 @@ function Arbol({ d }) {
   )
 }
 
-export default function Avatar({ dias = 0, tam = 120 }) {
+export default function Avatar({ dias = 0, tam = 120, mes }) {
   const d = Math.max(0, dias)
   const etapa = etapaArbol(d)
+  const mesReal = mes || new Date().getMonth() + 1
+  const estacion = estacionDeMes(mesReal)
+  const pal = PALETAS[estacion]
+  const idBase = `av-${d}-${mesReal}`
   return (
     <svg viewBox="0 0 120 120" width={tam} height={tam} role="img"
-      aria-label={`Tu árbol: ${etapa.nombre} · día ${d}`}>
+      aria-label={`Tu árbol: ${etapa.nombre} · día ${d} · ${estacion}`}>
       <defs>
-        <radialGradient id="av-cielo" cx="50%" cy="30%" r="80%">
-          <stop offset="0%" stopColor="#1b2233" />
+        <radialGradient id={`${idBase}-cielo`} cx="50%" cy="30%" r="80%">
+          <stop offset="0%" stopColor={pal.cielo} />
           <stop offset="100%" stopColor="#10141f" />
         </radialGradient>
-        <clipPath id="av-rec">
+        <clipPath id={`${idBase}-rec`}>
           <circle cx="60" cy="60" r="56" />
         </clipPath>
       </defs>
       <circle cx="60" cy="60" r="56" fill="#141826" stroke="#2a3045" strokeWidth="2" />
-      <g clipPath="url(#av-rec)">
-        <circle cx="60" cy="60" r="56" fill="url(#av-cielo)" />
+      <g clipPath={`url(#${idBase}-rec)`}>
+        <circle cx="60" cy="60" r="56" fill={`url(#${idBase}-cielo)`} />
         <ellipse cx="60" cy="86" rx="42" ry="9" fill="#1c1712" />
         <path d="M 18 84 Q 60 76 102 84" fill="none" stroke="#39301f" strokeWidth="1.6" />
-        {d < 14 ? <Subsuelo d={d} /> : <Arbol d={d} />}
+        {d < 14 ? <Subsuelo d={d} /> : <Arbol d={d} pal={pal} estacion={estacion} />}
       </g>
     </svg>
   )

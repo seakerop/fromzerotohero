@@ -13,11 +13,19 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import Avatar, { MOMENTOS_ARBOL } from './src/components/Avatar.jsx'
 import { ETAPAS_ARBOL } from './src/data/arbol.js'
+const MESES = [['primavera', 4], ['verano', 7], ['otoño', 10], ['invierno', 1]]
+export const estaciones = []
+for (const d of [120, 300]) {
+  for (const [nombre, mes] of MESES) {
+    estaciones.push({ d, nombre,
+      svg: renderToStaticMarkup(createElement(Avatar, { dias: d, tam: 120, mes })) })
+  }
+}
 export const tarjetas = MOMENTOS_ARBOL.map((m) => ({
   d: m.dia,
   etiqueta: m.etiqueta,
   hito: ETAPAS_ARBOL.some((x) => x.dias === m.dia),
-  svg: renderToStaticMarkup(createElement(Avatar, { dias: m.dia, tam: 120 })),
+  svg: renderToStaticMarkup(createElement(Avatar, { dias: m.dia, tam: 120, mes: 7 })),
 }))
 `
 
@@ -32,8 +40,20 @@ await build({
   logLevel: 'silent',
   banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
 })
-const { tarjetas } = await import(pathToFileURL(bundle).href)
+const { tarjetas, estaciones } = await import(pathToFileURL(bundle).href)
 rmSync(bundle, { force: true })
+
+const figurasEstaciones = estaciones
+  .map(
+    (e) => `      <figure class="estacion">
+        ${e.svg}
+        <figcaption>
+          <strong>${e.nombre}</strong>
+          <span>día ${e.d}</span>
+        </figcaption>
+      </figure>`
+  )
+  .join('\n')
 
 const figuras = tarjetas
   .map(
@@ -52,7 +72,7 @@ const html = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>El Árbol del Héroe — 43 momentos</title>
+<title>El Árbol del Héroe — momentos y estaciones</title>
 <style>
   body { margin: 0; background: #0c0e13; color: #e8e6df; font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; }
   header { text-align: center; padding: 26px 16px 6px; }
@@ -61,6 +81,8 @@ const html = `<!doctype html>
   main { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; padding: 18px; max-width: 1200px; margin: 0 auto; }
   figure { margin: 0; background: #151824; border: 1px solid #2a3045; border-radius: 14px; padding: 12px 8px; text-align: center; }
   figure.hito { border-color: #d9a441; }
+  figure.estacion { border-color: #3a4258; }
+  .tit { max-width: 1200px; margin: 14px auto 0; padding: 0 18px; font-size: 15px; color: #f0c86e; }
   figure svg { margin: 0 auto; display: block; }
   figcaption { margin-top: 6px; display: flex; flex-direction: column; gap: 1px; }
   figcaption strong { font-size: 14px; }
@@ -70,10 +92,15 @@ const html = `<!doctype html>
 <body>
 <header>
   <h1>🌱 El Árbol del Héroe</h1>
-  <p>43 momentos en 450 días de acción: cada pocos días aparece algo nuevo que
-  puedes señalar — una hoja, una rama, una seta, un nido, un pájaro, una flor…
-  Las tarjetas doradas ★ son además hitos con nombre de etapa.</p>
+  <p>El árbol vive en el calendario real: la estación del año lo viste
+  (flores en primavera, ámbar y hojas cayendo en otoño, nieve encima en
+  invierno) mientras el crecimiento sigue su ritmo por días de acción.</p>
 </header>
+<h2 class="tit">Las cuatro estaciones — mismo árbol, distinto mes</h2>
+<main>
+${figurasEstaciones}
+</main>
+<h2 class="tit">49 momentos en 450 días — cada pocos días, algo nuevo que señalar</h2>
 <main>
 ${figuras}
 </main>
