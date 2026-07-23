@@ -159,13 +159,26 @@ function Estrella({ x, y, r, opacidad = 1 }) {
   return <path d={p} fill={ORO_CLARO} opacity={opacidad} />
 }
 
-function Subsuelo({ d }) {
+function Subsuelo({ d, estacion }) {
   const raiz1 = madura(d, 4, 4)
   const raiz2 = madura(d, 6, 4)
   const germen = d >= 8
   const tipY = lerp(78, 70.5, madura(d, 8, 6))
   return (
     <g>
+      {estacion === 'invierno' && (
+        <g>
+          <ellipse cx="60" cy="86" rx="40" ry="7" fill={NIEVE} opacity="0.16" />
+          <path d="M 20 84 Q 60 76.5 100 84" fill="none" stroke={NIEVE} strokeWidth="1.2" opacity="0.35" />
+          {COPOS.map(([x, y], i) => (
+            <circle key={i} cx={x} cy={y} r="0.8" fill={NIEVE} opacity="0.7" />
+          ))}
+        </g>
+      )}
+      {estacion === 'primavera' && PETALOS_AIRE.slice(0, 2).map(([x, y], i) => (
+        <ellipse key={`p${i}`} cx={x} cy={y} rx="1.1" ry="0.6" fill="#e8a7b8" opacity="0.8"
+          transform={`rotate(${25 + i * 40} ${x} ${y})`} />
+      ))}
       <path d="M 50 81.5 Q 60 76.5 70 81.5 Q 60 84.5 50 81.5 Z" fill="#242015" />
       <path d="M 56.5 80 C 56 74.5 58.5 71 60 71 C 61.5 71 64 74.5 63.5 80 C 63 82.5 57 82.5 56.5 80 Z"
         fill={SEMILLA} />
@@ -477,7 +490,7 @@ export default function Avatar({ dias = 0, tam = 120, mes }) {
         <circle cx="60" cy="60" r="56" fill={`url(#${idBase}-cielo)`} />
         <ellipse cx="60" cy="86" rx="42" ry="9" fill="#1c1712" />
         <path d="M 18 84 Q 60 76 102 84" fill="none" stroke="#39301f" strokeWidth="1.6" />
-        {d < 14 ? <Subsuelo d={d} /> : <Arbol d={d} pal={pal} estacion={estacion} />}
+        {d < 14 ? <Subsuelo d={d} estacion={estacion} /> : <Arbol d={d} pal={pal} estacion={estacion} />}
       </g>
     </svg>
   )

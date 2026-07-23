@@ -13,19 +13,15 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import Avatar, { MOMENTOS_ARBOL } from './src/components/Avatar.jsx'
 import { ETAPAS_ARBOL } from './src/data/arbol.js'
-const MESES = [['primavera', 4], ['verano', 7], ['otoño', 10], ['invierno', 1]]
-export const estaciones = []
-for (const d of [120, 300]) {
-  for (const [nombre, mes] of MESES) {
-    estaciones.push({ d, nombre,
-      svg: renderToStaticMarkup(createElement(Avatar, { dias: d, tam: 120, mes })) })
-  }
-}
-export const tarjetas = MOMENTOS_ARBOL.map((m) => ({
-  d: m.dia,
-  etiqueta: m.etiqueta,
-  hito: ETAPAS_ARBOL.some((x) => x.dias === m.dia),
-  svg: renderToStaticMarkup(createElement(Avatar, { dias: m.dia, tam: 120, mes: 7 })),
+const MESES = [['primavera 🌸', 4], ['verano ☀️', 7], ['otoño 🍂', 10], ['invierno ❄️', 1]]
+export const secciones = MESES.map(([nombre, mes]) => ({
+  nombre,
+  tarjetas: MOMENTOS_ARBOL.map((m) => ({
+    d: m.dia,
+    etiqueta: m.etiqueta,
+    hito: ETAPAS_ARBOL.some((x) => x.dias === m.dia),
+    svg: renderToStaticMarkup(createElement(Avatar, { dias: m.dia, tam: 120, mes })),
+  })),
 }))
 `
 
@@ -40,31 +36,24 @@ await build({
   logLevel: 'silent',
   banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
 })
-const { tarjetas, estaciones } = await import(pathToFileURL(bundle).href)
+const { secciones } = await import(pathToFileURL(bundle).href)
 rmSync(bundle, { force: true })
 
-const figurasEstaciones = estaciones
-  .map(
-    (e) => `      <figure class="estacion">
-        ${e.svg}
-        <figcaption>
-          <strong>${e.nombre}</strong>
-          <span>día ${e.d}</span>
-        </figcaption>
-      </figure>`
-  )
-  .join('\n')
-
-const figuras = tarjetas
-  .map(
-    (t) => `      <figure${t.hito ? ' class="hito"' : ''}>
+const cuerpo = secciones
+  .map((s) => {
+    const figuras = s.tarjetas
+      .map(
+        (t) => `      <figure${t.hito ? ' class="hito"' : ''}>
         ${t.svg}
         <figcaption>
           <strong>día ${t.d}</strong>
           <span>${t.etiqueta}${t.hito ? ' ★' : ''}</span>
         </figcaption>
       </figure>`
-  )
+      )
+      .join('\n')
+    return `<h2 class="tit">${s.nombre}</h2>\n<main>\n${figuras}\n</main>`
+  })
   .join('\n')
 
 const html = `<!doctype html>
@@ -91,19 +80,12 @@ const html = `<!doctype html>
 </head>
 <body>
 <header>
-  <h1>🌱 El Árbol del Héroe</h1>
-  <p>El árbol vive en el calendario real: la estación del año lo viste
-  (flores en primavera, ámbar y hojas cayendo en otoño, nieve encima en
-  invierno) mientras el crecimiento sigue su ritmo por días de acción.</p>
+  <h1>🌱 El Árbol del Héroe — todas las imágenes</h1>
+  <p>La matriz completa: los 49 momentos del camino en cada una de las 4
+  estaciones (196 combinaciones). El crecimiento lo marcan tus días de acción;
+  la estación del calendario real viste cualquier estado del árbol.</p>
 </header>
-<h2 class="tit">Las cuatro estaciones — mismo árbol, distinto mes</h2>
-<main>
-${figurasEstaciones}
-</main>
-<h2 class="tit">49 momentos en 450 días — cada pocos días, algo nuevo que señalar</h2>
-<main>
-${figuras}
-</main>
+${cuerpo}
 </body>
 </html>
 `
@@ -111,4 +93,5 @@ ${figuras}
 mkdirSync(join(RAIZ, 'dist'), { recursive: true })
 const salida = join(RAIZ, 'dist', 'galeria-arbol.html')
 writeFileSync(salida, html, 'utf8')
-console.log('galería generada en ' + salida + ' (' + tarjetas.length + ' etapas)')
+const total = secciones.reduce((n, s) => n + s.tarjetas.length, 0)
+console.log('galería generada en ' + salida + ' (' + total + ' imágenes en ' + secciones.length + ' estaciones)')
