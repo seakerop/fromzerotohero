@@ -243,6 +243,16 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
     }))
   }
 
+  function moverEnDia(indice, dir) {
+    editarDia(rutina.id, dia.id, (d) => {
+      const j = indice + dir
+      if (j < 0 || j >= d.ejercicios.length) return d
+      const lista = [...d.ejercicios]
+      ;[lista[indice], lista[j]] = [lista[j], lista[indice]]
+      return { ...d, ejercicios: lista }
+    })
+  }
+
   function crearEjercicio({ nombre, grupo, medida }) {
     const limpio = nombre.trim()
     if (!limpio) {
@@ -341,7 +351,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
         {dia.ejercicios.length === 0 && (
           <p className="texto-suave rut-vacio">Aún no hay ejercicios. Añade el primero y dale forma a este día.</p>
         )}
-        {dia.ejercicios.map((obj) => {
+        {dia.ejercicios.map((obj, indice) => {
           const ej = estado.ejercicios.find((x) => x.id === obj.ejercicioId) ||
             { id: obj.ejercicioId, nombre: obj.ejercicioId, grupo: '', medida: 'peso_reps' }
           return (
@@ -353,6 +363,26 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
                     {nombreGrupo(ej.grupo)} · {NOMBRE_MEDIDA[ej.medida] || ej.medida}
                   </div>
                 </div>
+                <span className="ent-mover">
+                  <button
+                    type="button"
+                    className="ent-mover-btn"
+                    disabled={indice === 0}
+                    onClick={() => moverEnDia(indice, -1)}
+                    aria-label={`Subir ${ej.nombre}`}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className="ent-mover-btn"
+                    disabled={indice === dia.ejercicios.length - 1}
+                    onClick={() => moverEnDia(indice, 1)}
+                    aria-label={`Bajar ${ej.nombre}`}
+                  >
+                    ↓
+                  </button>
+                </span>
                 <button
                   className="rut-quitar"
                   aria-label={`Quitar ${ej.nombre}`}

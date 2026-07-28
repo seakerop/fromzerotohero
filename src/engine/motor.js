@@ -308,6 +308,22 @@ function insertarPorFecha(lista, item) {
   lista.splice(i, 0, item)
 }
 
+// Borra una sesión registrada por error. Filosofía: neto cero, sin castigo y
+// sin farmeo — se resta el XP que dio (suelo 0) y se decrementan contadores,
+// pero los logros ya celebrados y rachaMejor se quedan (nunca se quitan), y
+// el xpLog conserva su historia. Puro: devuelve estado nuevo.
+export function borrarSesion(estado, sesionId) {
+  const e = structuredClone(estado)
+  const i = e.sesiones.findIndex((s) => s.id === sesionId)
+  if (i === -1) return e
+  const [sesion] = e.sesiones.splice(i, 1)
+  e.progreso.xp = Math.max(0, e.progreso.xp - (sesion.xpGanado || 0))
+  const c = e.progreso.contadores
+  c.sesionesTotales = Math.max(0, c.sesionesTotales - 1)
+  c.prsTotales = Math.max(0, c.prsTotales - (sesion.prs ? sesion.prs.length : 0))
+  return e
+}
+
 // ------------------------------------------------------------- selectores
 
 export function historicoEjercicio(estado, ejercicioId) {

@@ -3,7 +3,7 @@ import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
 import Temporizador, { desbloquearAudio } from '../components/Temporizador.jsx'
 import { historicoEjercicio } from '../engine/motor.js'
-import { claveDia, formatearFecha } from '../engine/fechas.js'
+import { claveDia, formatearFecha, sumarDias } from '../engine/fechas.js'
 import { SelectorEjercicios } from './Rutinas.jsx'
 
 function formatoKg(n) {
@@ -113,7 +113,7 @@ function Premio({ r }) {
   return null
 }
 
-function TarjetaEjercicio({ estado, sesion, ejS, iEj, alEditar, alMarcar, alAnadirSerie }) {
+function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar, alAnadirSerie, alMover }) {
   const ej = estado.ejercicios.find((x) => x.id === ejS.ejercicioId) ||
     { id: ejS.ejercicioId, nombre: ejS.ejercicioId, medida: 'peso_reps' }
   const h = historicoEjercicio(estado, ejS.ejercicioId)
@@ -124,6 +124,26 @@ function TarjetaEjercicio({ estado, sesion, ejS, iEj, alEditar, alMarcar, alAnad
     <section className="panel ent-ejercicio">
       <header className="ent-ejercicio-cab">
         <h3 className="ent-ejercicio-nombre">{ej.nombre}</h3>
+        <span className="ent-mover">
+          <button
+            type="button"
+            className="ent-mover-btn"
+            disabled={iEj === 0}
+            onClick={() => alMover(iEj, -1)}
+            aria-label={`Subir ${ej.nombre}`}
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            className="ent-mover-btn"
+            disabled={iEj === total - 1}
+            onClick={() => alMover(iEj, 1)}
+            aria-label={`Bajar ${ej.nombre}`}
+          >
+            ↓
+          </button>
+        </span>
         {objetivo && (
           <span className="ent-objetivo">
             Objetivo {objetivo.seriesObjetivo}×{objetivo.repsObjetivo}
@@ -202,6 +222,7 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
   const [modal, setModal] = useState(null)
   const [recompensa, setRecompensa] = useState(null)
   const [ahora, setAhora] = useState(Date.now())
+  const [modoAyer, setModoAyer] = useState(false)
   const contadorDescanso = useRef(0)
 
   const sesion = estado.sesionActiva
@@ -245,11 +266,17 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
     actualizarEstado((e) => (e.sesionActiva ? { ...e, sesionActiva: fn(e.sesionActiva) } : e))
   }
 
+  // Si "es de ayer", la sesión se guarda con la fecha de ayer (corte 04:00):
+  // registrar a posteriori el entreno olvidado protege la racha sin trucos.
+  const fechaAtras = () => (modoAyer ? sumarDias(claveDia(), -1) : null)
+
   function empezarDia(rutina, dia) {
+    const fechaObjetivo = fechaAtras()
     actualizarEstado((e) => ({
       ...e,
       sesionActiva: {
         iniciadaEn: Date.now(),
+        fechaObjetivo,
         rutinaId: rutina.id,
         diaId: dia.id,
         nombreDia: dia.nombre || 'Entreno',
@@ -259,19 +286,33 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
         })),
       },
     }))
+    setModoAyer(false)
   }
 
   function empezarLibre() {
+    const fechaObjetivo = fechaAtras()
     actualizarEstado((e) => ({
       ...e,
       sesionActiva: {
         iniciadaEn: Date.now(),
+        fechaObjetivo,
         rutinaId: null,
         diaId: null,
         nombreDia: 'Entreno libre',
         ejercicios: [],
       },
     }))
+    setModoAyer(false)
+  }
+
+  function moverEjercicio(iEj, dir) {
+    editarSesion((s) => {
+      const j = iEj + dir
+      if (j < 0 || j >= s.ejercicios.length) return s
+      const lista = [...s.ejercicios]
+      ;[lista[iEj], lista[j]] = [lista[j], lista[iEj]]
+      return { ...s, ejercicios: lista }
+    })
   }
 
   function editarSerie(iEj, iSerie, cambio) {
@@ -340,8 +381,9 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
       avisar('Marca al menos una serie con ✓ para completar la sesión')
       return
     }
-    const hoy = claveDia()
-    const duracionSeg = Math.max(1, Math.round((Date.now() - s.iniciadaEn) / 1000))
+    const hoy = s.fechaObjetivo || claveDia()
+    // Una sesión registrada a posteriori no tiene duración real que contar.
+    const duracionSeg = s.fechaObjetivo ? 0 : Math.max(1, Math.round((Date.now() - s.iniciadaEn) / 1000))
     const volumenKg = s.ejercicios.reduce(
       (tot, ej) => tot + ej.series.reduce((n, se) => n + (se.hecha ? se.pesoKg * se.reps : 0), 0), 0)
     const sesionEvento = {
@@ -422,6 +464,19 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
       <div className="vista">
         <h1 className="rut-titulo">⚔️ Entreno</h1>
         <p className="texto-suave rut-intro">Elige tu batalla de hoy.</p>
+        <button
+          type="button"
+          className={modoAyer ? 'chip chip-activo ent-chip-ayer' : 'chip ent-chip-ayer'}
+          onClick={() => setModoAyer(!modoAyer)}
+          aria-pressed={modoAyer}
+        >
+          🕰 Es de ayer (se me olvidó apuntarlo)
+        </button>
+        {modoAyer && (
+          <p className="texto-suave ent-ayer-nota">
+            El entreno se guardará con fecha de ayer y contará para tu racha.
+          </p>
+        )}
         {estado.rutinas.map((r) => (
           <section key={r.id} className="ent-rutina-bloque">
             <h2 className="titulo-seccion">{r.nombre || 'Rutina'}</h2>
@@ -468,6 +523,12 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
           <p className="texto-suave">⏱ {formatoDuracion(duracion)} · {seriesHechas}/{seriesTotales} series</p>
         </div>
       </header>
+      {sesion.fechaObjetivo && (
+        <p className="ent-ayer-banner">
+          🕰 Registrando el entreno de <strong>ayer</strong> ({formatearFecha(sesion.fechaObjetivo)}):
+          apunta lo que hiciste y guarda.
+        </p>
+      )}
       {sesion.ejercicios.length === 0 && (
         <p className="texto-suave rut-vacio">El campo de batalla está listo. Añade tu primer ejercicio.</p>
       )}
@@ -478,13 +539,24 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
           sesion={sesion}
           ejS={ejS}
           iEj={iEj}
+          total={sesion.ejercicios.length}
           alEditar={editarSerie}
           alMarcar={marcarSerie}
           alAnadirSerie={anadirSerie}
+          alMover={moverEjercicio}
         />
       ))}
       <button className="btn ent-btn-anadir" onClick={() => setModal('anadir')}>＋ Añadir ejercicio</button>
-      <button className="btn btn-primario btn-grande ent-btn-terminar" onClick={terminar}>
+      <button
+        className="btn btn-primario btn-grande ent-btn-terminar"
+        onClick={() => {
+          if (seriesHechas === 0) {
+            avisar('Marca al menos una serie con ✓ para completar la sesión')
+            return
+          }
+          setModal('fin')
+        }}
+      >
         🏁 Terminar entreno
       </button>
       <button className="btn btn-fantasma ent-btn-descartar" onClick={() => setModal('descartar')}>
@@ -509,6 +581,21 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
           <div className="fila rut-modal-botones">
             <button className="btn" onClick={() => setModal(null)}>Seguir entrenando</button>
             <button className="btn btn-peligro" onClick={descartar}>Descartar</button>
+          </div>
+        </Modal>
+      )}
+      {modal === 'fin' && (
+        <Modal titulo="Terminar entreno" abierto onCerrar={() => setModal(null)}>
+          <p>
+            Vas a guardar <strong>{seriesHechas}</strong> {seriesHechas === 1 ? 'serie' : 'series'}
+            {seriesTotales > seriesHechas
+              ? ` (las ${seriesTotales - seriesHechas} sin ✓ se descartan)`
+              : ''}
+            {sesion.fechaObjetivo ? ' con fecha de ayer' : ''}.
+          </p>
+          <div className="fila rut-modal-botones">
+            <button className="btn" onClick={() => setModal(null)}>Seguir entrenando</button>
+            <button className="btn btn-primario" onClick={terminar}>Guardar sesión</button>
           </div>
         </Modal>
       )}

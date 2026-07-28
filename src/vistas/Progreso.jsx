@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import GraficaLinea from '../components/GraficaLinea.jsx'
 import Modal from '../components/Modal.jsx'
 import { claveDia, formatearFecha } from '../engine/fechas.js'
-import { historicoEjercicio, pesosConMedia, progresoEjercicio, volumenSemanal } from '../engine/motor.js'
+import { borrarSesion, historicoEjercicio, pesosConMedia, progresoEjercicio, volumenSemanal } from '../engine/motor.js'
 import { LOGROS } from '../data/logros.js'
 import { guardarFoto, cargarFoto, borrarFoto } from '../db/fotos.js'
 
 const PESTANAS = [
+  ['diario', 'Diario'],
   ['fuerza', 'Fuerza'],
   ['volumen', 'Volumen'],
   ['cuerpo', 'Cuerpo'],
@@ -543,6 +544,95 @@ function TabLogros({ estado }) {
   )
 }
 
+function TabDiario({ estado, actualizarEstado, avisar }) {
+  const [abierta, setAbierta] = useState(null) // sesión en detalle
+  const [confirmarBorrado, setConfirmarBorrado] = useState(false)
+
+  const sesiones = [...estado.sesiones].reverse()
+  const nombreDe = (id) => {
+    const ej = estado.ejercicios.find((x) => x.id === id)
+    return ej ? ej.nombre : id
+  }
+  const volumenDe = (s) => {
+    const medidaDe = new Map(estado.ejercicios.map((e) => [e.id, e.medida]))
+    let kg = 0
+    for (const ej of s.ejercicios) {
+      if (medidaDe.get(ej.ejercicioId) !== 'peso_reps') continue
+      for (const serie of ej.series) kg += serie.pesoKg * serie.reps
+    }
+    return kg
+  }
+
+  function borrar() {
+    const id = abierta.id
+    setConfirmarBorrado(false)
+    setAbierta(null)
+    actualizarEstado((e) => borrarSesion(e, id))
+    avisar('Sesión borrada: su XP se descuenta, tus logros se quedan')
+  }
+
+  if (sesiones.length === 0) {
+    return (
+      <div className="panel prog-vacio">
+        <p>Tu diario está por escribir.</p>
+        <p className="texto-suave">Cada sesión que completes quedará aquí, con sus series y su XP.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="prog-diario">
+      {sesiones.map((s) => {
+        const nSeries = s.ejercicios.reduce((n, ej) => n + ej.series.length, 0)
+        const kg = volumenDe(s)
+        return (
+          <button key={s.id} type="button" className="panel prog-sesion" onClick={() => setAbierta(s)}>
+            <div className="prog-sesion-cab">
+              <strong>{s.nombreDia}</strong>
+              <span className="texto-suave">{formatearFecha(s.fecha)}</span>
+            </div>
+            <div className="texto-suave prog-sesion-meta">
+              {nSeries} {nSeries === 1 ? 'serie' : 'series'}
+              {kg > 0 ? ` · ${fmtKg(kg)} kg` : ''}
+              {` · +${s.xpGanado} XP`}
+              {s.prs && s.prs.length > 0 ? ` · 🏅 ${s.prs.length} PR${s.prs.length > 1 ? 's' : ''}` : ''}
+            </div>
+          </button>
+        )
+      })}
+
+      {abierta && (
+        <Modal titulo={`${abierta.nombreDia} · ${formatearFecha(abierta.fecha)}`} abierto
+          onCerrar={() => { setAbierta(null); setConfirmarBorrado(false) }}>
+          <div className="prog-detalle">
+            {abierta.ejercicios.map((ej, i) => (
+              <div key={i} className="prog-detalle-ej">
+                <strong>{nombreDe(ej.ejercicioId)}</strong>
+                <span className="texto-suave">
+                  {ej.series.map((se) => (se.pesoKg > 0 ? `${fmtNum(se.pesoKg)}×${se.reps}` : String(se.reps))).join(' · ')}
+                </span>
+              </div>
+            ))}
+            <p className="texto-suave prog-detalle-xp">+{abierta.xpGanado} XP{abierta.duracionSeg > 0 ? ` · ${Math.round(abierta.duracionSeg / 60)} min` : ''}</p>
+            {!confirmarBorrado ? (
+              <button type="button" className="rut-borrar-enlace" onClick={() => setConfirmarBorrado(true)}>
+                Borrar esta sesión
+              </button>
+            ) : (
+              <div className="fila aju-acciones-modal">
+                <button type="button" className="btn" onClick={() => setConfirmarBorrado(false)}>Conservar</button>
+                <button type="button" className="btn btn-peligro" onClick={borrar}>
+                  Borrar (−{abierta.xpGanado} XP)
+                </button>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+}
+
 export default function Progreso({ estado, actualizarEstado, aplicarEvento, avisar }) {
   const [pestana, setPestana] = useState('fuerza')
 
@@ -562,6 +652,9 @@ export default function Progreso({ estado, actualizarEstado, aplicarEvento, avis
           </button>
         ))}
       </div>
+      {pestana === 'diario' && (
+        <TabDiario estado={estado} actualizarEstado={actualizarEstado} avisar={avisar} />
+      )}
       {pestana === 'fuerza' && <TabFuerza estado={estado} />}
       {pestana === 'volumen' && <TabVolumen estado={estado} />}
       {pestana === 'cuerpo' && (

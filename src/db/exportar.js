@@ -58,3 +58,31 @@ export function importarJSON(texto) {
   }
   return estado
 }
+
+// Copia completa: igual que exportarJSON pero con las fotos serializadas en
+// base64 (las prepara db/fotos.serializarFotos) en el campo `fotos`.
+export function exportarJSONConFotos(estado, fotosSerializadas, exportadoEl = new Date().toISOString()) {
+  const limpio = migrar(estado)
+  const sinBlobs = { ...limpio, cuerpo: { ...limpio.cuerpo, fotos: [] } }
+  return JSON.stringify(
+    { app: 'fzth', version: sinBlobs.version, exportadoEl, estado: sinBlobs, fotos: fotosSerializadas },
+    null,
+    2
+  )
+}
+
+// Lee una copia y devuelve { estado, fotos }. Las copias antiguas (sin campo
+// `fotos`) siguen siendo válidas: fotos = [].
+export function importarCopia(texto) {
+  const estado = importarJSON(texto)
+  let fotos = []
+  try {
+    const envoltorio = JSON.parse(texto)
+    if (Array.isArray(envoltorio.fotos)) {
+      fotos = envoltorio.fotos.filter((f) => f && typeof f.datos === 'string' && f.fecha)
+    }
+  } catch {
+    fotos = []
+  }
+  return { estado, fotos }
+}

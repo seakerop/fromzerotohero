@@ -548,3 +548,10 @@
 .ficha-momento.hecho { color: var(--texto); }
 .ficha-momento.hecho .ficha-check { color: var(--verde); }
 .ficha-dia { font-size: 12px; color: var(--texto-suave); flex-shrink: 0; }
+
+/* Registrar ayer desde Home */
+.home-btn-ayer { width: 100%; margin-top: 2px; font-size: 14px; }
+.home-ayer { display: flex; flex-direction: column; gap: 14px; }
+.home-ayer .fila { margin-top: 6px; }
+.home-ayer-nota { font-size: 13px; margin: 2px 0 0; }
+.home-ayer-ir { width: 100%; }

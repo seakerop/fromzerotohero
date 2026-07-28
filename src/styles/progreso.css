@@ -319,3 +319,13 @@
 .aju-campo-borrar {
   margin-top: 10px;
 }
+
+/* Diario de sesiones */
+.prog-diario { display: flex; flex-direction: column; gap: 10px; }
+.prog-sesion { width: 100%; text-align: left; display: flex; flex-direction: column; gap: 4px; }
+.prog-sesion:active { transform: scale(0.99); }
+.prog-sesion-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 15px; }
+.prog-sesion-meta { font-size: 13px; }
+.prog-detalle { display: flex; flex-direction: column; gap: 10px; }
+.prog-detalle-ej { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.prog-detalle-xp { margin: 4px 0 0; font-size: 13px; }

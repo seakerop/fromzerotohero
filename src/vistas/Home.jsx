@@ -30,6 +30,9 @@ export default function Home({ estado, aplicarEvento, irA, avisar, susurro, cerr
   const [textoPasos, setTextoPasos] = useState('')
   const [textoPeso, setTextoPeso] = useState('')
   const [fichaAbierta, setFichaAbierta] = useState(false)
+  const [modalAyer, setModalAyer] = useState(false)
+  const [textoPasosAyer, setTextoPasosAyer] = useState('')
+  const [textoPesoAyer, setTextoPesoAyer] = useState('')
 
   const hoy = claveDia()
   const nv = nivelDesdeXp(estado.progreso.xp)
@@ -60,6 +63,10 @@ export default function Home({ estado, aplicarEvento, irA, avisar, susurro, cerr
   const pasosHoy = estado.pasos.find((p) => p.fecha === hoy) || null
   const pesoHoy = estado.cuerpo.pesos.find((p) => p.fecha === hoy) || null
 
+  const ayer = sumarDias(hoy, -1)
+  const pasosAyer = estado.pasos.find((p) => p.fecha === ayer) || null
+  const pesoAyer = estado.cuerpo.pesos.find((p) => p.fecha === ayer) || null
+
   const ultimosLogros = Object.entries(estado.progreso.logros)
     .map(([id, fecha]) => ({ logro: logroPorId(id), fecha }))
     .filter((x) => x.logro)
@@ -88,6 +95,31 @@ export default function Home({ estado, aplicarEvento, irA, avisar, susurro, cerr
     const resultados = aplicarEvento({ tipo: 'peso', fecha: hoy, kg })
     if (!resultados.some((r) => r.tipo === 'xp')) avisar('Peso de hoy actualizado', 'info')
     setTextoPeso('')
+  }
+
+  // Registrar el AYER que se te olvidó: mismo motor, misma dedup de XP, solo
+  // cambia la fecha. Únicamente ayer — el pasado lejano no se reconstruye.
+  function guardarPasosAyer() {
+    const n = parseInt(textoPasosAyer.replace(/[.\s]/g, ''), 10)
+    if (!Number.isFinite(n) || n < 0 || n > 200000) {
+      avisar('Introduce un número de pasos válido', 'error')
+      return
+    }
+    const resultados = aplicarEvento({ tipo: 'pasos', fecha: ayer, pasos: n, fuente: 'manual' })
+    if (!resultados.some((r) => r.tipo === 'xp')) avisar('Pasos de ayer actualizados', 'info')
+    setTextoPasosAyer('')
+  }
+
+  function guardarPesoAyer() {
+    const n = parseFloat(textoPesoAyer.replace(',', '.'))
+    if (!Number.isFinite(n) || n <= 0 || n > 400) {
+      avisar('Introduce un peso válido en kg', 'error')
+      return
+    }
+    const kg = Math.round(n * 10) / 10
+    const resultados = aplicarEvento({ tipo: 'peso', fecha: ayer, kg })
+    if (!resultados.some((r) => r.tipo === 'xp')) avisar('Peso de ayer actualizado', 'info')
+    setTextoPesoAyer('')
   }
 
   return (
@@ -269,6 +301,64 @@ export default function Home({ estado, aplicarEvento, irA, avisar, susurro, cerr
       <p className="texto-suave home-reg-nota">
         Registrar suma XP una vez al día. La báscula es solo tu gráfica: el número nunca cambia lo que ganas.
       </p>
+      <button type="button" className="btn btn-fantasma home-btn-ayer" onClick={() => setModalAyer(true)}>
+        🕰 ¿Te faltó ayer? Regístralo
+      </button>
+
+      {modalAyer && (
+        <Modal titulo={`Registrar ayer (${formatearFecha(ayer)})`} abierto onCerrar={() => setModalAyer(false)}>
+          <div className="home-ayer">
+            <div>
+              <span className="etiqueta">👟 Pasos de ayer</span>
+              <div className={pasosAyer ? 'home-reg-hoy home-reg-ok' : 'home-reg-hoy'}>
+                {pasosAyer ? `✓ ${pasosAyer.pasos.toLocaleString('es-ES')} registrados` : 'Sin registro'}
+              </div>
+              <div className="fila">
+                <input
+                  className="input"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="6000"
+                  value={textoPasosAyer}
+                  onChange={(e) => setTextoPasosAyer(e.target.value)}
+                  aria-label="Pasos de ayer"
+                />
+                <button type="button" className="btn" onClick={guardarPasosAyer} disabled={!textoPasosAyer.trim()}>
+                  {pasosAyer ? 'Corregir' : 'Guardar'}
+                </button>
+              </div>
+            </div>
+            <div>
+              <span className="etiqueta">⚖️ Peso de ayer</span>
+              <div className={pesoAyer ? 'home-reg-hoy home-reg-ok' : 'home-reg-hoy'}>
+                {pesoAyer ? `✓ ${pesoAyer.kg.toLocaleString('es-ES')} kg` : 'Sin registro'}
+              </div>
+              <div className="fila">
+                <input
+                  className="input"
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder="82,5"
+                  value={textoPesoAyer}
+                  onChange={(e) => setTextoPesoAyer(e.target.value)}
+                  aria-label="Peso de ayer en kilogramos"
+                />
+                <button type="button" className="btn" onClick={guardarPesoAyer} disabled={!textoPesoAyer.trim()}>
+                  {pesoAyer ? 'Corregir' : 'Guardar'}
+                </button>
+              </div>
+            </div>
+            <p className="texto-suave home-ayer-nota">
+              ¿Entrenaste ayer? Regístralo desde ⚔️ Entreno activando «Es de ayer».
+            </p>
+            <button type="button" className="btn home-ayer-ir" onClick={() => { setModalAyer(false); irA('entreno') }}>
+              Ir a Entreno
+            </button>
+          </div>
+        </Modal>
+      )}
 
       <h2 className="titulo-seccion">Últimas gestas</h2>
       <section className="panel">

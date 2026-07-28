@@ -29,3 +29,44 @@ export async function cargarFoto(id) {
 export async function borrarFoto(id) {
   await enTransaccion(STORE_FOTOS, 'readwrite', (store) => store.delete(id))
 }
+
+// --- Fotos en la copia de seguridad (base64) ---
+// Antes el export las excluía y cambiar de móvil las perdía para siempre.
+
+const TROZO = 0x8000
+
+export async function serializarFotos(metadatos) {
+  const salida = []
+  for (const m of metadatos || []) {
+    const blob = await cargarFoto(m.id)
+    if (!blob) continue
+    const bytes = new Uint8Array(await blob.arrayBuffer())
+    let bin = ''
+    for (let i = 0; i < bytes.length; i += TROZO) {
+      bin += String.fromCharCode(...bytes.subarray(i, i + TROZO))
+    }
+    salida.push({ id: m.id, fecha: m.fecha, tipo: m.tipo, mime: blob.type || 'image/jpeg', datos: btoa(bin) })
+  }
+  return salida
+}
+
+// Restaura las fotos de una copia y devuelve los metadatos con sus ids nuevos
+// (para escribirlos en estado.cuerpo.fotos).
+export async function restaurarFotos(serializadas) {
+  const metadatos = []
+  for (const f of serializadas || []) {
+    if (!f || typeof f.datos !== 'string' || !f.fecha) continue
+    let bytes
+    try {
+      const bin = atob(f.datos)
+      bytes = new Uint8Array(bin.length)
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    } catch {
+      continue // una foto corrupta no tumba el import
+    }
+    const blob = new Blob([bytes], { type: f.mime || 'image/jpeg' })
+    const id = await guardarFoto({ fecha: f.fecha, tipo: f.tipo || 'frente', blob })
+    metadatos.push({ id, fecha: f.fecha, tipo: f.tipo || 'frente' })
+  }
+  return metadatos
+}

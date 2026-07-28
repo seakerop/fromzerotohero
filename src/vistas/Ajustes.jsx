@@ -2,7 +2,8 @@ import { useState } from 'react'
 import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
 import { claveDia } from '../engine/fechas.js'
-import { exportarJSON, importarJSON } from '../db/exportar.js'
+import { exportarJSON, exportarJSONConFotos, importarCopia } from '../db/exportar.js'
+import { restaurarFotos, serializarFotos } from '../db/fotos.js'
 
 const DIAS = [
   [1, 'L', 'lunes'],
@@ -56,7 +57,15 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
 
   async function exportar() {
     const hoy = claveDia()
-    const texto = exportarJSON(estado, hoy)
+    let texto
+    try {
+      const fotos = estado.cuerpo.fotos || []
+      texto = fotos.length > 0
+        ? exportarJSONConFotos(estado, await serializarFotos(fotos), hoy)
+        : exportarJSON(estado, hoy)
+    } catch {
+      texto = exportarJSON(estado, hoy) // sin fotos antes que sin copia
+    }
     const nombre = `fromzerotohero-${hoy}.json`
     const archivo = new File([texto], nombre, { type: 'application/json' })
 
@@ -93,21 +102,30 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
     if (!fichero) return
     try {
       const texto = await fichero.text()
-      setImportado(importarJSON(texto))
+      setImportado(importarCopia(texto))
     } catch (err) {
       avisar(err && err.message ? err.message : 'Ese fichero no parece una copia válida', 'error')
     }
   }
 
-  function confirmarImportar() {
-    const nuevo = importado
+  async function confirmarImportar() {
+    const { estado: nuevo, fotos } = importado
     setImportado(null)
-    actualizarEstado(() => nuevo)
+    let final = nuevo
+    if (fotos.length > 0) {
+      try {
+        const metadatos = await restaurarFotos(fotos)
+        final = { ...nuevo, cuerpo: { ...nuevo.cuerpo, fotos: metadatos } }
+      } catch {
+        // si las fotos fallan, el resto de la copia entra igual
+      }
+    }
+    actualizarEstado(() => final)
     // Resincroniza el formulario de perfil: sin esto, «Guardar cambios»
     // machacaría el perfil recién importado con los valores anteriores.
-    setApodo(nuevo.perfil.apodo)
-    setEdad(String(nuevo.perfil.edad ?? ''))
-    setAltura(String(nuevo.perfil.alturaCm ?? ''))
+    setApodo(final.perfil.apodo)
+    setEdad(String(final.perfil.edad ?? ''))
+    setAltura(String(final.perfil.alturaCm ?? ''))
     avisar('Datos importados')
   }
 
@@ -217,7 +235,7 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
           onChange={alElegirCopia}
         />
         <p className="texto-suave aju-nota">
-          La copia incluye todo tu progreso salvo las fotos, que se quedan en el dispositivo.
+          La copia incluye todo tu progreso, fotos incluidas. Guárdala donde no se pierda.
         </p>
       </div>
 
@@ -243,9 +261,10 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
         <Modal titulo="Importar copia" abierto onCerrar={() => setImportado(null)}>
           <p>Vas a reemplazar todos los datos actuales por esta copia:</p>
           <ul className="aju-resumen">
-            <li>Héroe: <strong>{(importado.perfil && importado.perfil.apodo) || '—'}</strong></li>
-            <li>Sesiones: <strong>{importado.sesiones.length}</strong></li>
-            <li>XP total: <strong>{importado.progreso.xp}</strong></li>
+            <li>Héroe: <strong>{(importado.estado.perfil && importado.estado.perfil.apodo) || '—'}</strong></li>
+            <li>Sesiones: <strong>{importado.estado.sesiones.length}</strong></li>
+            <li>XP total: <strong>{importado.estado.progreso.xp}</strong></li>
+            <li>Fotos: <strong>{importado.fotos.length}</strong></li>
           </ul>
           <p className="texto-suave">Los datos actuales de este dispositivo se perderán.</p>
           <div className="fila aju-acciones-modal">

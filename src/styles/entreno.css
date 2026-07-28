@@ -306,3 +306,26 @@ button.rut-picker-elegir:active { border-color: var(--oro); transform: scale(0.9
   color: var(--oro-claro);
 }
 .ent-tempo-btn { min-height: 48px; min-width: 74px; flex-shrink: 0; font-size: 15px; }
+
+/* Reordenar ejercicios y registrar el ayer */
+.ent-mover { display: inline-flex; gap: 4px; flex-shrink: 0; }
+.ent-mover-btn {
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--borde);
+  background: var(--panel-2);
+  font-size: 17px;
+  font-weight: 700;
+}
+.ent-mover-btn:disabled { opacity: 0.3; }
+.ent-chip-ayer { margin-bottom: 10px; }
+.ent-ayer-nota { font-size: 13px; margin: -4px 0 10px; }
+.ent-ayer-banner {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: var(--radio);
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  background: rgba(96, 165, 250, 0.08);
+  font-size: 14px;
+}
