@@ -1,12 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
 
-// Triple pitido con WebAudio (oscilador puro, sin assets). Mejor esfuerzo:
-// si el navegador no deja sonar, no pasa nada.
-function pitar() {
+// Audio COMPARTIDO: iOS solo permite arrancar un AudioContext dentro de un
+// gesto de usuario. Entreno llama a desbloquearAudio() en cada ✓ de serie;
+// cuando el descanso llega a 0 (fuera de gesto), pitar() reutiliza ese
+// contexto ya desbloqueado. Mejor esfuerzo: sin audio no se rompe nada.
+let ctxAudio = null
+
+export function desbloquearAudio() {
   try {
     const Contexto = window.AudioContext || window.webkitAudioContext
     if (!Contexto) return
-    const ctx = new Contexto()
+    if (!ctxAudio) ctxAudio = new Contexto()
+    if (ctxAudio.state === 'suspended') ctxAudio.resume().catch(() => {})
+  } catch {
+    ctxAudio = null
+  }
+}
+
+function pitar() {
+  try {
+    if (!ctxAudio) desbloquearAudio()
+    const ctx = ctxAudio
+    if (!ctx) return
     if (ctx.state === 'suspended') ctx.resume().catch(() => {})
     const osc = ctx.createOscillator()
     const ganancia = ctx.createGain()
@@ -25,7 +40,10 @@ function pitar() {
     ganancia.connect(ctx.destination)
     osc.start(t0)
     osc.stop(t0 + 0.95)
-    osc.onended = () => { ctx.close().catch(() => {}) }
+    osc.onended = () => {
+      osc.disconnect()
+      ganancia.disconnect()
+    }
   } catch {
     // sin audio no se rompe el descanso
   }
@@ -36,6 +54,10 @@ export default function Temporizador({ segundos, alCerrar }) {
   const [total, setTotal] = useState(segundos)
   const [restante, setRestante] = useState(segundos)
   const avisado = useRef(false)
+  // alCerrar cambia en cada render del padre; con un ref el efecto del
+  // autocierre solo depende de `restante` y su timeout no se cancela.
+  const cerrarRef = useRef(alCerrar)
+  cerrarRef.current = alCerrar
 
   useEffect(() => {
     const intervalo = setInterval(() => {
@@ -53,9 +75,9 @@ export default function Temporizador({ segundos, alCerrar }) {
     avisado.current = true
     pitar()
     if (navigator.vibrate) navigator.vibrate([220, 110, 220])
-    const cierre = setTimeout(alCerrar, 1800)
+    const cierre = setTimeout(() => cerrarRef.current(), 1800)
     return () => clearTimeout(cierre)
-  }, [restante, alCerrar])
+  }, [restante])
 
   function extender() {
     setFin((f) => Math.max(f, Date.now()) + 30000)

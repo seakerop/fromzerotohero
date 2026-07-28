@@ -37,8 +37,10 @@ export function xpSesion(numSeriesHechas) {
 }
 
 // Bonus por pasos respecto al baseline: el mayor aplicable, no ambos.
+// Sin un baseline real (>0) no hay bonus: superar "cero" no es superar nada.
 export function xpBonusPasos(pasos, baselinePasos) {
-  if (baselinePasos > 0 && pasos >= baselinePasos * 1.5) return XP_TABLA.pasosMuySobreBase
+  if (!Number.isFinite(baselinePasos) || baselinePasos <= 0) return 0
+  if (pasos >= baselinePasos * 1.5) return XP_TABLA.pasosMuySobreBase
   if (pasos >= baselinePasos) return XP_TABLA.pasosSobreBase
   return 0
 }

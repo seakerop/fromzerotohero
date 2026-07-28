@@ -14,6 +14,11 @@ const TOPE_SUBIDA = 1.15
 // no produce resultados ni XP.
 export function recalibrarBaseline(estado, hoy) {
   const b = estado.baseline
+  if (!b.ultimaRecalibracion) {
+    // Estados migrados/importados sin fecha: se ancla hoy y se evalúa en 7 días.
+    b.ultimaRecalibracion = hoy
+    return estado
+  }
   if (diasEntre(b.ultimaRecalibracion, hoy) < DIAS_ENTRE_EVALUACIONES) return estado
 
   b.ultimaRecalibracion = hoy // clave de día de la última evaluación

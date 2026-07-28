@@ -54,19 +54,37 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
     }))
   }
 
-  function exportar() {
+  async function exportar() {
     const hoy = claveDia()
     const texto = exportarJSON(estado, hoy)
+    const nombre = `fromzerotohero-${hoy}.json`
+    const archivo = new File([texto], nombre, { type: 'application/json' })
+
+    // En iOS (sobre todo instalada como PWA) la descarga con <a download> es
+    // poco fiable: mejor la hoja de compartir, que ofrece «Guardar en Archivos».
+    const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const instalada = window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true
+    if ((esIOS || instalada) && navigator.canShare && navigator.canShare({ files: [archivo] })) {
+      try {
+        await navigator.share({ files: [archivo], title: 'Copia de FromZeroToHero' })
+        avisar('Copia compartida: guárdala en Archivos o donde quieras')
+      } catch (err) {
+        if (!err || err.name !== 'AbortError') avisar('No se pudo compartir la copia', 'error')
+      }
+      return
+    }
+
     const blob = new Blob([texto], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const enlace = document.createElement('a')
     enlace.href = url
-    enlace.download = `fromzerotohero-${hoy}.json`
+    enlace.download = nombre
     document.body.appendChild(enlace)
     enlace.click()
     enlace.remove()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
-    avisar('Copia exportada')
+    avisar('Copia descargada')
   }
 
   async function alElegirCopia(ev) {
@@ -85,6 +103,11 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
     const nuevo = importado
     setImportado(null)
     actualizarEstado(() => nuevo)
+    // Resincroniza el formulario de perfil: sin esto, «Guardar cambios»
+    // machacaría el perfil recién importado con los valores anteriores.
+    setApodo(nuevo.perfil.apodo)
+    setEdad(String(nuevo.perfil.edad ?? ''))
+    setAltura(String(nuevo.perfil.alturaCm ?? ''))
     avisar('Datos importados')
   }
 

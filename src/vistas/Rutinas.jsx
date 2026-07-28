@@ -266,6 +266,13 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
       avisar('Está en una rutina: quítalo de ella antes de borrarlo', 'error')
       return
     }
+    const conHistorial = estado.sesiones.some((s) =>
+      s.ejercicios.some((x) => x.ejercicioId === ej.id))
+    if (conHistorial) {
+      setModal(null)
+      avisar('Tiene entrenos registrados: se conserva para no perder tus gráficas', 'error')
+      return
+    }
     const enSesion = Boolean(estado.sesionActiva) &&
       estado.sesionActiva.ejercicios.some((x) => x.ejercicioId === ej.id)
     if (enSesion) {

@@ -49,6 +49,11 @@ export default function App() {
 
   useEffect(() => {
     let vivo = true
+    // Pide almacenamiento persistente: sin esto, iOS puede purgar IndexedDB
+    // (estado y fotos) por presión de disco. Mejor esfuerzo.
+    try {
+      navigator.storage?.persist?.().catch(() => {})
+    } catch { /* sin soporte, seguimos */ }
     cargarEstado().then((e) => {
       if (!vivo) return
       if (e) {
@@ -58,6 +63,25 @@ export default function App() {
       setCargado(true)
     })
     return () => { vivo = false }
+  }, [])
+
+  // Volcado inmediato al ocultarse la app: en iOS la PWA se suspende al
+  // instante y un debounce pendiente de 300 ms se perdería.
+  useEffect(() => {
+    function volcar() {
+      if (!estadoRef.current) return
+      clearTimeout(timerGuardado.current)
+      guardarEstado(estadoRef.current)
+    }
+    function alOcultar() {
+      if (document.visibilityState === 'hidden') volcar()
+    }
+    document.addEventListener('visibilitychange', alOcultar)
+    window.addEventListener('pagehide', volcar)
+    return () => {
+      document.removeEventListener('visibilitychange', alOcultar)
+      window.removeEventListener('pagehide', volcar)
+    }
   }, [])
 
   useEffect(() => {
@@ -129,7 +153,9 @@ export default function App() {
     return <div className="app-carga"><div className="app-carga-logo">⚔️</div>Cargando…</div>
   }
 
-  if (!estado) {
+  if (!estado || !estado.perfil) {
+    // Sin estado o sin perfil (migración/copia parcial): forja de personaje
+    // a pantalla completa (CONTRACT §17), nunca una pantalla en blanco.
     return (
       <>
         <Onboarding alTerminar={crearPersonaje} />

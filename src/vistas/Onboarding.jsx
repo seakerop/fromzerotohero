@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Avatar from '../components/Avatar.jsx'
+import Deslizador from '../components/Deslizador.jsx'
 import StatBarra from '../components/StatBarra.jsx'
 import Stepper from '../components/Stepper.jsx'
 import { etapaDeNivel } from '../data/etapas.js'
@@ -210,18 +211,9 @@ export default function Onboarding({ alTerminar }) {
 
         {paso === 2 && (
           <>
-            <div className="onb-campo">
-              <span className="etiqueta">Edad</span>
-              <Stepper valor={edad} paso={1} min={14} max={99} unidad="años" onCambiar={setEdad} />
-            </div>
-            <div className="onb-campo">
-              <span className="etiqueta">Altura</span>
-              <Stepper valor={alturaCm} paso={1} min={120} max={220} unidad="cm" onCambiar={setAlturaCm} />
-            </div>
-            <div className="onb-campo">
-              <span className="etiqueta">Peso actual</span>
-              <Stepper valor={pesoKg} paso={0.5} min={30} max={250} unidad="kg" onCambiar={setPesoKg} />
-            </div>
+            <Deslizador etiqueta="Edad" valor={edad} min={14} max={99} paso={1} unidad="años" onCambiar={setEdad} />
+            <Deslizador etiqueta="Altura" valor={alturaCm} min={120} max={220} paso={1} unidad="cm" onCambiar={setAlturaCm} />
+            <Deslizador etiqueta="Peso actual" valor={pesoKg} min={30} max={250} paso={0.5} unidad="kg" onCambiar={setPesoKg} />
             <p className="texto-suave onb-nota">
               Es tu punto de partida, no tu destino. Aquí solo se celebra lo que haces.
             </p>
@@ -249,7 +241,7 @@ export default function Onboarding({ alTerminar }) {
             {pasosOpcion !== null && (
               <div className="onb-campo">
                 <span className="etiqueta">Afina la cifra si quieres</span>
-                <Stepper valor={pasosDia} paso={500} min={0} max={40000} unidad="pasos" onCambiar={setPasosDia} />
+                <Stepper valor={pasosDia} paso={500} min={500} max={40000} unidad="pasos" onCambiar={setPasosDia} />
               </div>
             )}
             <div className="onb-campo">

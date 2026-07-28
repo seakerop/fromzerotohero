@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
-import Temporizador from '../components/Temporizador.jsx'
+import Temporizador, { desbloquearAudio } from '../components/Temporizador.jsx'
 import { historicoEjercicio } from '../engine/motor.js'
 import { claveDia, formatearFecha } from '../engine/fechas.js'
 import { SelectorEjercicios } from './Rutinas.jsx'
@@ -285,6 +285,9 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
   }
 
   function marcarSerie(iEj, iSerie) {
+    // Gesto de usuario: desbloquea el audio para que el aviso del descanso
+    // pueda sonar en iOS aunque llegue 90 s más tarde.
+    desbloquearAudio()
     const seraHecha = !sesion.ejercicios[iEj].series[iSerie].hecha
     editarSerie(iEj, iSerie, { hecha: seraHecha })
     if (seraHecha && estado.ajustes.descansoSeg > 0) {

@@ -52,5 +52,9 @@ export function importarJSON(texto) {
     }
   }
 
-  return migrar(bruto)
+  const estado = migrar(bruto)
+  if (!estado.perfil || typeof estado.perfil.apodo !== 'string' || !estado.perfil.apodo.trim()) {
+    throw new Error('La copia no contiene ningún personaje: falta el perfil del héroe.')
+  }
+  return estado
 }

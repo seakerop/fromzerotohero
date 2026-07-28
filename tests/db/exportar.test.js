@@ -69,13 +69,23 @@ describe('importarJSON', () => {
     expect(importado).toEqual({ ...estado, cuerpo: { ...estado.cuerpo, fotos: [] } })
   })
 
-  it('migra estados parciales rellenando defaults', () => {
-    const texto = JSON.stringify({ app: 'fzth', version: 1, exportadoEl: '2026-07-20', estado: { progreso: { xp: 9 } } })
+  it('migra estados parciales rellenando defaults (con perfil presente)', () => {
+    const texto = JSON.stringify({
+      app: 'fzth',
+      version: 1,
+      exportadoEl: '2026-07-20',
+      estado: { perfil: { apodo: 'Zero' }, progreso: { xp: 9 } },
+    })
     const importado = importarJSON(texto)
     expect(importado.progreso.xp).toBe(9)
     expect(importado.progreso.contadores.sesionesTotales).toBe(0)
     expect(importado.ejercicios).toEqual([])
-    expect(importado.perfil).toBeNull()
+    expect(importado.perfil.apodo).toBe('Zero')
+  })
+
+  it('una copia sin personaje se rechaza con mensaje claro', () => {
+    const texto = JSON.stringify({ app: 'fzth', version: 1, exportadoEl: '2026-07-20', estado: {} })
+    expect(() => importarJSON(texto)).toThrow(/personaje|perfil/)
   })
 
   it('texto que no es JSON lanza con mensaje claro en español', () => {

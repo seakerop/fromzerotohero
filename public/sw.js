@@ -2,7 +2,7 @@
    Estrategia: navegaciones network-first con fallback offline al index cacheado;
    el resto de assets cache-first con caching en runtime. */
 
-const CACHE = 'fzth-v1'
+const CACHE = 'fzth-v2'
 
 const PRECACHE = [
   '.',
@@ -52,7 +52,13 @@ self.addEventListener('fetch', (evento) => {
     evento.respondWith(
       fetch(peticion)
         .then((respuesta) => {
-          if (respuesta.ok) guardarEnCache(peticion, respuesta)
+          if (respuesta.ok) {
+            guardarEnCache(peticion, respuesta)
+            // Refresca también el fallback offline: sin esto, el precache del
+            // primer install serviría un index viejo tras cada deploy.
+            const copia = respuesta.clone()
+            caches.open(CACHE).then((cache) => cache.put('index.html', copia))
+          }
           return respuesta
         })
         .catch(() =>

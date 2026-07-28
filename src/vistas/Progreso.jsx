@@ -249,8 +249,8 @@ function TabCuerpo({ estado, aplicarEvento, actualizarEstado, avisar }) {
 
   function guardarPeso() {
     const kg = Math.round(Number(pesoTxt.replace(',', '.')) * 10) / 10
-    if (!kg || kg <= 0) {
-      avisar('Escribe un peso válido', 'error')
+    if (!kg || kg <= 0 || kg > 400) {
+      avisar('Escribe un peso válido en kg', 'error')
       return
     }
     const resultados = aplicarEvento({ tipo: 'peso', fecha: hoy, kg })
@@ -430,7 +430,6 @@ function TabCuerpo({ estado, aplicarEvento, actualizarEstado, avisar }) {
           className="prog-oculto"
           type="file"
           accept="image/*"
-          capture="environment"
           onChange={alElegirFoto}
         />
         <p className="texto-suave prog-nota">
