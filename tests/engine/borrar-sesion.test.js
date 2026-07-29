@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aplicar, borrarSesion, crearEstadoInicial } from '../../src/engine/motor.js'
+import { aplicar, borrarSesion, crearEstadoInicial, diasCamino } from '../../src/engine/motor.js'
 
 const RESPUESTAS = {
   apodo: 'Test',
@@ -57,6 +57,27 @@ describe('borrarSesion', () => {
     const despues = borrarSesion(e, sesion.id)
     expect(despues.progreso.xp).toBe(0)
     expect(despues.progreso.contadores.prsTotales).toBe(0)
+  })
+
+  it('el árbol nunca retrocede: borrar la única acción de un día no reduce diasCamino', () => {
+    const inicial = crearEstadoInicial(RESPUESTAS) // día 1: peso inicial del 2026-07-20
+    const { estado: conSesion } = aplicar(inicial, {
+      tipo: 'sesion_completada',
+      hoy: '2026-07-21',
+      sesion: {
+        fecha: '2026-07-21',
+        rutinaId: null,
+        diaId: null,
+        nombreDia: 'Entreno libre',
+        iniciadaEn: 1000,
+        duracionSeg: 900,
+        ejercicios: [{ ejercicioId: 'press-banca', series: [{ pesoKg: 40, reps: 8, hecha: true }] }],
+      },
+    })
+    expect(diasCamino(conSesion)).toBe(2)
+    const despues = borrarSesion(conSesion, conSesion.sesiones[0].id)
+    expect(despues.sesiones).toHaveLength(0)
+    expect(diasCamino(despues)).toBe(2) // la marca de agua se queda
   })
 
   it('con un id inexistente devuelve el estado intacto y no muta la entrada', () => {

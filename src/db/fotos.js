@@ -30,6 +30,12 @@ export async function borrarFoto(id) {
   await enTransaccion(STORE_FOTOS, 'readwrite', (store) => store.delete(id))
 }
 
+// Vacía el store completo: al importar una copia se reemplaza TODO el estado,
+// así que los blobs anteriores quedarían huérfanos ocupando sitio para siempre.
+export async function borrarTodasLasFotos() {
+  await enTransaccion(STORE_FOTOS, 'readwrite', (store) => store.clear())
+}
+
 // --- Fotos en la copia de seguridad (base64) ---
 // Antes el export las excluía y cambiar de móvil las perdía para siempre.
 

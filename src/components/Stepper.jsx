@@ -13,7 +13,13 @@ export default function Stepper({ valor, paso = 1, min = 0, max = Infinity, unid
     const actual = valorRef.current
     const bruto = actual + direccion * paso
     const nuevo = Math.min(max, Math.max(min, Number(bruto.toFixed(decimales))))
-    if (nuevo !== actual) onCambiar(nuevo)
+    if (nuevo !== actual) {
+      onCambiar(nuevo)
+    } else {
+      // Tope alcanzado: al deshabilitarse el botón, iOS ya no entrega el
+      // pointerup — se para aquí para no dejar un intervalo zombi.
+      soltar()
+    }
   }
 
   function soltar() {
@@ -47,6 +53,13 @@ export default function Stepper({ valor, paso = 1, min = 0, max = Infinity, unid
     onPointerLeave: soltar,
     onPointerCancel: soltar,
     onContextMenu: (e) => e.preventDefault(),
+    onKeyDown: (e) => {
+      // Accesible por teclado: sin esto, quitar onClick dejó Enter/Espacio mudos.
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        aplicarPaso(direccion)
+      }
+    },
     'aria-label': `${direccion < 0 ? 'Restar' : 'Sumar'} ${paso}${unidad ? ` ${unidad}` : ''}`,
   })
 

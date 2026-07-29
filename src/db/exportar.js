@@ -64,11 +64,15 @@ export function importarJSON(texto) {
 export function exportarJSONConFotos(estado, fotosSerializadas, exportadoEl = new Date().toISOString()) {
   const limpio = migrar(estado)
   const sinBlobs = { ...limpio, cuerpo: { ...limpio.cuerpo, fotos: [] } }
-  return JSON.stringify(
-    { app: 'fzth', version: sinBlobs.version, exportadoEl, estado: sinBlobs, fotos: fotosSerializadas },
-    null,
-    2
-  )
+  // Sin sangrado: con fotos en base64 el pretty-print duplicaría megas en
+  // memoria (y en disco) para nada.
+  return JSON.stringify({
+    app: 'fzth',
+    version: sinBlobs.version,
+    exportadoEl,
+    estado: sinBlobs,
+    fotos: fotosSerializadas,
+  })
 }
 
 // Lee una copia y devuelve { estado, fotos }. Las copias antiguas (sin campo

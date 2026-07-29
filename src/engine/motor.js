@@ -87,11 +87,12 @@ export function aplicar(estado, evento) {
 
   if (evento.tipo === 'tick_diario') {
     recalibrarBaseline(e, evento.hoy)
+    anotarDiasCamino(e)
     return { estado: e, resultados: [] }
   }
 
   const xpAntes = e.progreso.xp
-  const etapaArbolAntes = etapaArbol(diasDeAccion(e))
+  const etapaArbolAntes = etapaArbol(diasCamino(e))
   const acc = { xp: [], pr: [], racha: null, sinEfecto: false }
 
   switch (evento.tipo) {
@@ -129,12 +130,23 @@ export function aplicar(estado, evento) {
   }
   if (acc.racha) resultados.push(acc.racha)
 
-  const etapaArbolAhora = etapaArbol(diasDeAccion(e))
+  anotarDiasCamino(e)
+  const etapaArbolAhora = etapaArbol(diasCamino(e))
   if (etapaArbolAhora.id !== etapaArbolAntes.id) {
     resultados.push({ tipo: 'arbol', etapa: etapaArbolAhora })
   }
 
   return { estado: e, resultados }
+}
+
+// Marca de agua de los días de acción: el Árbol del Héroe NUNCA retrocede,
+// ni siquiera si se borra la única sesión de un día.
+function anotarDiasCamino(e) {
+  e.progreso.diasCaminoMax = Math.max(e.progreso.diasCaminoMax || 0, diasDeAccion(e))
+}
+
+export function diasCamino(estado) {
+  return Math.max(diasDeAccion(estado), (estado.progreso && estado.progreso.diasCaminoMax) || 0)
 }
 
 function darXp(e, acc, fecha, cantidad, motivo) {
@@ -235,7 +247,10 @@ function aplicarSesion(e, evento, acc) {
     acc.pr.push({ tipo: 'pr', ejercicioId: p.ejercicioId, nombre: p.nombre, detalle: p.detalle })
   }
 
-  const rachaNueva = calcularRacha(e, hoy)
+  // Referencia: el último día entrenado (al registrar AYER con hoy ya hecho,
+  // la racha debe contarse desde hoy, no desde ayer).
+  const ultimaFecha = e.sesiones.length ? e.sesiones[e.sesiones.length - 1].fecha : hoy
+  const rachaNueva = calcularRacha(e, ultimaFecha > hoy ? ultimaFecha : hoy)
   if (rachaNueva > e.progreso.rachaMejor) e.progreso.rachaMejor = rachaNueva
   if (rachaNueva > rachaAntes) acc.racha = { tipo: 'racha', dias: rachaNueva }
 }
@@ -316,6 +331,7 @@ export function borrarSesion(estado, sesionId) {
   const e = structuredClone(estado)
   const i = e.sesiones.findIndex((s) => s.id === sesionId)
   if (i === -1) return e
+  anotarDiasCamino(e) // fija la marca ANTES de quitar: el árbol no retrocede
   const [sesion] = e.sesiones.splice(i, 1)
   e.progreso.xp = Math.max(0, e.progreso.xp - (sesion.xpGanado || 0))
   const c = e.progreso.contadores

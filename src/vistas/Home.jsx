@@ -12,7 +12,7 @@ import {
   nivelDesdeXp,
   statsActuales,
   calcularRacha,
-  diasDeAccion,
+  diasCamino as diasCaminoDe,
   etapaArbol,
   siguienteEtapaArbol,
 } from '../engine/motor.js'
@@ -38,7 +38,8 @@ export default function Home({ estado, aplicarEvento, irA, avisar, susurro, cerr
   const nv = nivelDesdeXp(estado.progreso.xp)
   const stats = statsActuales(estado)
   const racha = calcularRacha(estado, hoy)
-  const diasCamino = diasDeAccion(estado)
+  // Marca de agua: los días del camino nunca retroceden (ni borrando sesiones).
+  const diasCamino = diasCaminoDe(estado)
   const etapaDelArbol = etapaArbol(diasCamino)
   const siguienteArbol = siguienteEtapaArbol(diasCamino)
 

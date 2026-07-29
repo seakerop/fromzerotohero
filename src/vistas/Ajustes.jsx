@@ -3,7 +3,7 @@ import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
 import { claveDia } from '../engine/fechas.js'
 import { exportarJSON, exportarJSONConFotos, importarCopia } from '../db/exportar.js'
-import { restaurarFotos, serializarFotos } from '../db/fotos.js'
+import { borrarTodasLasFotos, restaurarFotos, serializarFotos } from '../db/fotos.js'
 
 const DIAS = [
   [1, 'L', 'lunes'],
@@ -65,6 +65,7 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
         : exportarJSON(estado, hoy)
     } catch {
       texto = exportarJSON(estado, hoy) // sin fotos antes que sin copia
+      avisar('Las fotos no cupieron en la copia: se exporta sin ellas', 'error')
     }
     const nombre = `fromzerotohero-${hoy}.json`
     const archivo = new File([texto], nombre, { type: 'application/json' })
@@ -112,6 +113,12 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
     const { estado: nuevo, fotos } = importado
     setImportado(null)
     let final = nuevo
+    try {
+      // El import reemplaza TODO: los blobs del estado anterior sobran.
+      await borrarTodasLasFotos()
+    } catch {
+      // si no se puede limpiar, la copia entra igual
+    }
     if (fotos.length > 0) {
       try {
         const metadatos = await restaurarFotos(fotos)

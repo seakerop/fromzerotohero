@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { aplicar, crearEstadoInicial, diasDeAccion } from './engine/motor.js'
+import { aplicar, crearEstadoInicial, diasCamino } from './engine/motor.js'
 import { claveDia, diasEntre } from './engine/fechas.js'
 import { cargarEstado, guardarEstado } from './db/db.js'
 import { estacionDeMes, momentosEntre, MENSAJES_ESTACION } from './components/Avatar.jsx'
@@ -30,7 +30,7 @@ export default function App() {
   // UNA tarjeta lo constata (sin hipérboles y sin premiar el mero abrir).
   // Nunca un reproche: si no hay novedad tras días fuera, solo una bienvenida.
   function marcarArbolVisto(e, anunciar) {
-    const dias = diasDeAccion(e)
+    const dias = diasCamino(e)
     const estacion = estacionDeMes(new Date().getMonth() + 1)
     const hoy = claveDia()
     const visto = e.arbolVisto
@@ -118,9 +118,9 @@ export default function App() {
   }
 
   function aplicarEvento(evento) {
-    const antes = diasDeAccion(estadoRef.current)
+    const antes = diasCamino(estadoRef.current)
     const { estado: nuevo, resultados } = aplicar(estadoRef.current, evento)
-    const despues = diasDeAccion(nuevo)
+    const despues = diasCamino(nuevo)
     let final = nuevo
     if (despues > antes) {
       // Un momento del árbol brotó en vivo: susurro como toast, salvo que el
