@@ -18,6 +18,7 @@ import {
   siguienteEtapaArbol,
 } from '../engine/motor.js'
 import { logroPorId } from '../data/logros.js'
+import { suplementoPorId } from '../data/suplementos.js'
 
 const LETRAS_DIA = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 const NOMBRE_ESTACION = {
@@ -70,6 +71,28 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
   const ayer = sumarDias(hoy, -1)
   const pasosAyer = estado.pasos.find((p) => p.fecha === ayer) || null
   const pesoAyer = estado.cuerpo.pesos.find((p) => p.fecha === ayer) || null
+
+  // Suplementación: seguimiento informativo puro, SIN XP (como la báscula).
+  const pautaSupl = (estado.suplementos && estado.suplementos.pauta) || []
+  const tomas = (estado.suplementos && estado.suplementos.tomas) || {}
+  const tomasHoy = tomas[hoy] || []
+  const adherencia = pautaSupl.length > 0
+    ? Array.from({ length: 7 }, (_, i) => {
+        const fecha = sumarDias(hoy, i - 6)
+        const dia = tomas[fecha] || []
+        const completos = pautaSupl.filter((id) => dia.includes(id)).length
+        return completos === pautaSupl.length ? 'todo' : completos > 0 ? 'algo' : 'nada'
+      })
+    : []
+
+  function alternarSuplemento(id) {
+    actualizarEstado((prev) => {
+      const s = prev.suplementos || { pauta: [], tomas: {} }
+      const lista = s.tomas[hoy] || []
+      const nueva = lista.includes(id) ? lista.filter((x) => x !== id) : [...lista, id]
+      return { ...prev, suplementos: { ...s, tomas: { ...s.tomas, [hoy]: nueva } } }
+    })
+  }
 
   // Domingo de pacto: propuesta serena, una vez, y desaparece sola el lunes.
   const pacto = estado.pacto && estado.pacto.nombre ? estado.pacto : null
@@ -322,6 +345,39 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
       <p className="texto-suave home-reg-nota">
         Registrar suma XP una vez al día. La báscula es solo tu gráfica: el número nunca cambia lo que ganas.
       </p>
+
+      {pautaSupl.length > 0 && (
+        <>
+          <h2 className="titulo-seccion">Suplementos de hoy</h2>
+          <section className="panel">
+            <div className="supl-chips">
+              {pautaSupl.map((id) => {
+                const s = suplementoPorId(id)
+                if (!s) return null
+                const tomado = tomasHoy.includes(id)
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    className={tomado ? 'chip chip-activo' : 'chip'}
+                    onClick={() => alternarSuplemento(id)}
+                    aria-pressed={tomado}
+                  >
+                    {s.icono} {tomado ? '✓ ' : ''}{s.nombre.split(' (')[0]}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="supl-adherencia texto-suave" aria-label="Últimos 7 días de suplementación">
+              7 días:{' '}
+              {adherencia.map((d, i) => (
+                <span key={i} className={`supl-punto supl-punto-${d}`} aria-hidden="true">●</span>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+
       <button type="button" className="btn btn-fantasma home-btn-ayer" onClick={() => setModalAyer(true)}>
         🕰 ¿Te faltó ayer? Regístralo
       </button>

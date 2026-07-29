@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import FichaEjercicio from '../components/FichaEjercicio.jsx'
 import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
 import { GRUPOS } from '../data/ejercicios.js'
@@ -39,6 +40,7 @@ export function nombreGrupo(grupoId) {
 export function SelectorEjercicios({ ejercicios, alElegir, alBorrar }) {
   const [busqueda, setBusqueda] = useState('')
   const [grupo, setGrupo] = useState('todos')
+  const [ficha, setFicha] = useState(null)
 
   const filtrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
@@ -90,6 +92,13 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar }) {
                 {nombreGrupo(ej.grupo)} · {NOMBRE_MEDIDA[ej.medida] || ej.medida}
               </span>
             </Cuerpo>
+            <button
+              className="rut-info"
+              aria-label={`Ver técnica de ${ej.nombre}`}
+              onClick={() => setFicha(ej)}
+            >
+              ⓘ
+            </button>
             {alBorrar && ej.personalizado && (
               <button
                 className="rut-quitar"
@@ -105,6 +114,7 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar }) {
           <p className="texto-suave rut-vacio">Ningún ejercicio encaja con la búsqueda.</p>
         )}
       </div>
+      <FichaEjercicio ejercicio={ficha} abierto={Boolean(ficha)} onCerrar={() => setFicha(null)} />
     </div>
   )
 }

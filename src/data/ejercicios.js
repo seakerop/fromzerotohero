@@ -67,4 +67,19 @@ export const EJERCICIOS_SEED = [
   ej('eliptica', 'Elíptica', 'cardio', 'tiempo'),
   ej('bici-estatica', 'Bici estática', 'cardio', 'tiempo'),
   ej('remo-maquina', 'Remo máquina', 'cardio', 'tiempo'),
+  // Tanda 2 (2026-07): máquinas habituales y básicos que faltaban. Los
+  // personajes existentes los reciben por merge al arrancar (App.jsx).
+  ej('press-pecho-maquina', 'Press de pecho en máquina', 'pecho', 'peso_reps'),
+  ej('contractor', 'Contractor (peck deck)', 'pecho', 'peso_reps'),
+  ej('jalon-estrecho', 'Jalón agarre estrecho', 'espalda', 'peso_reps'),
+  ej('hiperextensiones', 'Hiperextensiones', 'espalda', 'reps'),
+  ej('press-hombro-maquina', 'Press de hombro en máquina', 'hombro', 'peso_reps'),
+  ej('encogimientos', 'Encogimientos de trapecio', 'hombro', 'peso_reps'),
+  ej('zancadas-bulgaras', 'Zancadas búlgaras', 'pierna', 'peso_reps'),
+  ej('sentadilla-goblet', 'Sentadilla goblet', 'pierna', 'peso_reps'),
+  ej('zancada-inversa', 'Zancada inversa', 'pierna', 'peso_reps'),
+  ej('aductores-maquina', 'Aductores en máquina', 'pierna', 'peso_reps'),
+  ej('abductores-maquina', 'Abductores en máquina', 'gluteo', 'peso_reps'),
+  ej('cuerda', 'Saltar a la cuerda', 'cardio', 'tiempo'),
+  ej('escaleras', 'Escaleras (stairmaster)', 'cardio', 'tiempo'),
 ]

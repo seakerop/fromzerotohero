@@ -552,6 +552,30 @@
 /* Registrar ayer desde Home */
 .home-btn-ayer { width: 100%; margin-top: 2px; font-size: 14px; }
 
+/* Fichas de técnica */
+.fej { display: flex; flex-direction: column; gap: 10px; }
+.fej-meta { font-size: 13px; margin: -4px 0 0; }
+.fej-musculos { font-size: 14.5px; }
+.fej-claves { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; }
+.fej-error { font-size: 14px; color: var(--rojo); }
+.fej-error strong { color: var(--rojo); }
+.fej-nota { font-size: 12.5px; margin: 4px 0 0; }
+
+/* Suplementación */
+.supl-fila { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--borde); }
+.supl-fila:last-of-type { border-bottom: none; }
+.supl-nombre { flex: 1; text-align: left; font-size: 14.5px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-height: 44px; }
+.supl-evid { font-size: 11px; border: 1px solid var(--borde); border-radius: 999px; padding: 2px 8px; color: var(--texto-suave); }
+.supl-evid-fuerte { border-color: var(--verde); color: var(--verde); }
+.supl-aviso { font-size: 12px; margin: 10px 0 0; }
+.supl-ficha { display: flex; flex-direction: column; gap: 10px; font-size: 14.5px; }
+.supl-ficha .supl-evid { align-self: flex-start; }
+.supl-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.supl-adherencia { margin-top: 10px; font-size: 12.5px; display: flex; align-items: center; gap: 3px; }
+.supl-punto { font-size: 11px; color: #2a3045; }
+.supl-punto-todo { color: var(--oro); }
+.supl-punto-algo { color: var(--texto-suave); }
+
 /* El pacto y la tarjeta de gesta */
 .home-btn-gesta { width: 100%; margin-top: 10px; }
 .gesta-marco { border-radius: var(--radio); overflow: hidden; border: 1px solid var(--borde); }

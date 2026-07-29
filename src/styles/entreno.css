@@ -307,6 +307,17 @@ button.rut-picker-elegir:active { border-color: var(--oro); transform: scale(0.9
 }
 .ent-tempo-btn { min-height: 48px; min-width: 74px; flex-shrink: 0; font-size: 15px; }
 
+/* Botón de ficha de técnica */
+.rut-info {
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 50%;
+  font-size: 17px;
+  color: var(--texto-suave);
+  flex-shrink: 0;
+}
+.rut-info:active { color: var(--oro); }
+
 /* Reordenar ejercicios y registrar el ayer */
 .ent-mover { display: inline-flex; gap: 4px; flex-shrink: 0; }
 .ent-mover-btn {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
+import FichaEjercicio from '../components/FichaEjercicio.jsx'
 import Temporizador, { desbloquearAudio } from '../components/Temporizador.jsx'
 import { historicoEjercicio } from '../engine/motor.js'
 import { claveDia, formatearFecha, sumarDias } from '../engine/fechas.js'
@@ -114,6 +115,7 @@ function Premio({ r }) {
 }
 
 function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar, alAnadirSerie, alMover }) {
+  const [verFicha, setVerFicha] = useState(false)
   const ej = estado.ejercicios.find((x) => x.id === ejS.ejercicioId) ||
     { id: ejS.ejercicioId, nombre: ejS.ejercicioId, medida: 'peso_reps' }
   const h = historicoEjercicio(estado, ejS.ejercicioId)
@@ -122,8 +124,16 @@ function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar,
 
   return (
     <section className="panel ent-ejercicio">
+      <FichaEjercicio ejercicio={ej} abierto={verFicha} onCerrar={() => setVerFicha(false)} />
       <header className="ent-ejercicio-cab">
         <h3 className="ent-ejercicio-nombre">{ej.nombre}</h3>
+        <button
+          className="rut-info"
+          aria-label={`Ver técnica de ${ej.nombre}`}
+          onClick={() => setVerFicha(true)}
+        >
+          ⓘ
+        </button>
         <span className="ent-mover">
           <button
             type="button"

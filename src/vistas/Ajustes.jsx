@@ -4,6 +4,7 @@ import Stepper from '../components/Stepper.jsx'
 import { claveDia } from '../engine/fechas.js'
 import { exportarJSON, exportarJSONConFotos, importarCopia } from '../db/exportar.js'
 import { borrarTodasLasFotos, restaurarFotos, serializarFotos } from '../db/fotos.js'
+import { AVISO_SUPLEMENTOS, SUPLEMENTOS } from '../data/suplementos.js'
 
 const DIAS = [
   [1, 'L', 'lunes'],
@@ -23,6 +24,17 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
   const [pasoBorrar, setPasoBorrar] = useState(0)
   const [textoBorrar, setTextoBorrar] = useState('')
   const [nombrePacto, setNombrePacto] = useState('')
+  const [fichaSupl, setFichaSupl] = useState(null)
+
+  const pautaSupl = (estado.suplementos && estado.suplementos.pauta) || []
+
+  function alternarPautaSupl(id) {
+    actualizarEstado((prev) => {
+      const s = prev.suplementos || { pauta: [], tomas: {} }
+      const pauta = s.pauta.includes(id) ? s.pauta.filter((x) => x !== id) : [...s.pauta, id]
+      return { ...prev, suplementos: { ...s, pauta } }
+    })
+  }
 
   function sellarPacto() {
     const nombre = nombrePacto.trim()
@@ -280,6 +292,47 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
           </>
         )}
       </div>
+
+      <div className="titulo-seccion">Suplementación</div>
+      <div className="panel">
+        <p className="texto-suave aju-nota">
+          Opcional, y sin XP a propósito: lo que tomas es información tuya, no un
+          juego. Marca «Lo tomo» y podrás apuntarlo cada día desde Inicio.
+        </p>
+        {SUPLEMENTOS.map((s) => (
+          <div key={s.id} className="supl-fila">
+            <button className="supl-nombre" onClick={() => setFichaSupl(s)}>
+              <span aria-hidden="true">{s.icono}</span> {s.nombre}
+              <span className={s.evidencia === 'fuerte' ? 'supl-evid supl-evid-fuerte' : 'supl-evid'}>
+                evidencia {s.evidencia}
+              </span>
+            </button>
+            <button
+              className={pautaSupl.includes(s.id) ? 'chip chip-activo' : 'chip'}
+              onClick={() => alternarPautaSupl(s.id)}
+              aria-pressed={pautaSupl.includes(s.id)}
+            >
+              {pautaSupl.includes(s.id) ? '✓ Lo tomo' : 'Lo tomo'}
+            </button>
+          </div>
+        ))}
+        <p className="texto-suave supl-aviso">{AVISO_SUPLEMENTOS}</p>
+      </div>
+
+      {fichaSupl && (
+        <Modal titulo={`${fichaSupl.icono} ${fichaSupl.nombre}`} abierto onCerrar={() => setFichaSupl(null)}>
+          <div className="supl-ficha">
+            <p className={fichaSupl.evidencia === 'fuerte' ? 'supl-evid supl-evid-fuerte' : 'supl-evid'}>
+              evidencia {fichaSupl.evidencia}
+            </p>
+            <p>{fichaSupl.que}</p>
+            <p><strong className="oro">Dosis:</strong> {fichaSupl.dosis}</p>
+            <p><strong className="oro">Cuándo:</strong> {fichaSupl.cuando}</p>
+            <p><strong>Ojo:</strong> {fichaSupl.ojo}</p>
+            <p className="texto-suave supl-aviso">{AVISO_SUPLEMENTOS}</p>
+          </div>
+        </Modal>
+      )}
 
       <div className="titulo-seccion">Tus datos</div>
       <div className="panel">

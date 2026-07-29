@@ -3,6 +3,15 @@ import { aplicar, crearEstadoInicial, diasCamino } from './engine/motor.js'
 import { claveDia, diasEntre } from './engine/fechas.js'
 import { cargarEstado, guardarEstado } from './db/db.js'
 import { estacionDeMes, momentosEntre, MENSAJES_ESTACION } from './components/Avatar.jsx'
+import { EJERCICIOS_SEED } from './data/ejercicios.js'
+
+// La biblioteca seed crece con las versiones: fusiona en bibliotecas ya
+// creadas los ejercicios nuevos que falten (por id; nunca pisa los tuyos).
+function fusionarSeed(e) {
+  const faltan = EJERCICIOS_SEED.filter((s) => !e.ejercicios.some((x) => x.id === s.id))
+  if (faltan.length === 0) return e
+  return { ...e, ejercicios: [...e.ejercicios, ...faltan] }
+}
 import TabBar from './components/TabBar.jsx'
 import Toasts from './components/Toasts.jsx'
 import Onboarding from './vistas/Onboarding.jsx'
@@ -58,7 +67,7 @@ export default function App() {
       if (!vivo) return
       if (e) {
         const { estado: conTick } = aplicar(e, { tipo: 'tick_diario', hoy: claveDia() })
-        setEstado(marcarArbolVisto(conTick, true))
+        setEstado(marcarArbolVisto(fusionarSeed(conTick), true))
       }
       setCargado(true)
     })
