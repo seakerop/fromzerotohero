@@ -551,6 +551,13 @@
 
 /* Registrar ayer desde Home */
 .home-btn-ayer { width: 100%; margin-top: 2px; font-size: 14px; }
+
+/* El pacto y la tarjeta de gesta */
+.home-btn-gesta { width: 100%; margin-top: 10px; }
+.gesta-marco { border-radius: var(--radio); overflow: hidden; border: 1px solid var(--borde); }
+.gesta-marco svg { display: block; }
+.gesta-nota { font-size: 13px; margin: 10px 0; }
+.aju-pacto-sellado { font-size: 15px; margin: 0 0 6px; }
 .home-ayer { display: flex; flex-direction: column; gap: 14px; }
 .home-ayer .fila { margin-top: 6px; }
 .home-ayer-nota { font-size: 13px; margin: 2px 0 0; }

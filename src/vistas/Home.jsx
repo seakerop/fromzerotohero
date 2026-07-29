@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Avatar, {
   MOMENTOS_ARBOL,
   proximoMomento,
@@ -7,7 +7,8 @@ import Avatar, {
 import BarraXP from '../components/BarraXP.jsx'
 import Modal from '../components/Modal.jsx'
 import StatBarra from '../components/StatBarra.jsx'
-import { claveDia, diaISO, sumarDias, formatearFecha } from '../engine/fechas.js'
+import TarjetaGesta, { compartirTarjeta } from '../components/TarjetaGesta.jsx'
+import { claveDia, claveSemana, diaISO, sumarDias, formatearFecha } from '../engine/fechas.js'
 import {
   nivelDesdeXp,
   statsActuales,
@@ -26,13 +27,15 @@ const NOMBRE_ESTACION = {
   invierno: 'invierno',
 }
 
-export default function Home({ estado, aplicarEvento, irA, avisar, susurro, cerrarSusurro }) {
+export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avisar, susurro, cerrarSusurro }) {
   const [textoPasos, setTextoPasos] = useState('')
   const [textoPeso, setTextoPeso] = useState('')
   const [fichaAbierta, setFichaAbierta] = useState(false)
   const [modalAyer, setModalAyer] = useState(false)
   const [textoPasosAyer, setTextoPasosAyer] = useState('')
   const [textoPesoAyer, setTextoPesoAyer] = useState('')
+  const [modalGesta, setModalGesta] = useState(false)
+  const refGesta = useRef(null)
 
   const hoy = claveDia()
   const nv = nivelDesdeXp(estado.progreso.xp)
@@ -67,6 +70,23 @@ export default function Home({ estado, aplicarEvento, irA, avisar, susurro, cerr
   const ayer = sumarDias(hoy, -1)
   const pasosAyer = estado.pasos.find((p) => p.fecha === ayer) || null
   const pesoAyer = estado.cuerpo.pesos.find((p) => p.fecha === ayer) || null
+
+  // Domingo de pacto: propuesta serena, una vez, y desaparece sola el lunes.
+  const pacto = estado.pacto && estado.pacto.nombre ? estado.pacto : null
+  const esDomingoDePacto = Boolean(
+    pacto && diaISO(hoy) === 7 && pacto.ultimoAvisoSemana !== claveSemana(hoy)
+  )
+
+  function abrirGesta(desdeAviso) {
+    setModalGesta(true)
+    if (desdeAviso && pacto) {
+      // Apaga el aviso de esta semana (edición directa, sin XP).
+      actualizarEstado((prev) => ({
+        ...prev,
+        pacto: { ...prev.pacto, ultimoAvisoSemana: claveSemana(hoy) },
+      }))
+    }
+  }
 
   const ultimosLogros = Object.entries(estado.progreso.logros)
     .map(([id, fecha]) => ({ logro: logroPorId(id), fecha }))
@@ -305,6 +325,36 @@ export default function Home({ estado, aplicarEvento, irA, avisar, susurro, cerr
       <button type="button" className="btn btn-fantasma home-btn-ayer" onClick={() => setModalAyer(true)}>
         🕰 ¿Te faltó ayer? Regístralo
       </button>
+
+      {esDomingoDePacto && (
+        <button type="button" className="home-susurro" onClick={() => abrirGesta(true)}>
+          <span className="home-susurro-icono" aria-hidden="true">🤝</span>
+          <span className="home-susurro-cuerpo">
+            <span className="home-susurro-linea">Domingo de pacto: comparte tu semana con {pacto.nombre}.</span>
+          </span>
+        </button>
+      )}
+      <button type="button" className="btn home-btn-gesta" onClick={() => abrirGesta(false)}>
+        🤝 Compartir mi semana
+      </button>
+
+      {modalGesta && (
+        <Modal titulo="Tu gesta de la semana" abierto onCerrar={() => setModalGesta(false)}>
+          <div className="gesta-marco">
+            <TarjetaGesta ref={refGesta} estado={estado} />
+          </div>
+          <p className="texto-suave gesta-nota">
+            Se comparte como imagen: exactamente lo que ves, nada más.
+          </p>
+          <button
+            type="button"
+            className="btn btn-primario btn-grande"
+            onClick={() => compartirTarjeta(refGesta.current, avisar)}
+          >
+            🤝 Compartir
+          </button>
+        </Modal>
+      )}
 
       {modalAyer && (
         <Modal titulo={`Registrar ayer (${formatearFecha(ayer)})`} abierto onCerrar={() => setModalAyer(false)}>

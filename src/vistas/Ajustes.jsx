@@ -22,6 +22,23 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
   const [importado, setImportado] = useState(null)
   const [pasoBorrar, setPasoBorrar] = useState(0)
   const [textoBorrar, setTextoBorrar] = useState('')
+  const [nombrePacto, setNombrePacto] = useState('')
+
+  function sellarPacto() {
+    const nombre = nombrePacto.trim()
+    if (!nombre) {
+      avisar('Ponle nombre a tu hermano de pacto', 'error')
+      return
+    }
+    actualizarEstado((prev) => ({ ...prev, pacto: { nombre, selladoEl: claveDia() } }))
+    setNombrePacto('')
+    avisar(`Pacto sellado con ${nombre}. Dos que se levantan a la vez.`)
+  }
+
+  function deshacerPacto() {
+    actualizarEstado((prev) => ({ ...prev, pacto: null }))
+    avisar('Pacto deshecho, sin rencores.')
+  }
 
   function guardarPerfil() {
     const apodoLimpio = apodo.trim()
@@ -228,6 +245,40 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
           unidad="s"
           onCambiar={cambiarDescanso}
         />
+      </div>
+
+      <div className="titulo-seccion">El pacto</div>
+      <div className="panel">
+        {estado.pacto && estado.pacto.nombre ? (
+          <>
+            <p className="aju-pacto-sellado">🤝 Pacto sellado con <strong>{estado.pacto.nombre}</strong></p>
+            <p className="texto-suave aju-nota">
+              Cada domingo, la app te propondrá compartir tu semana con {estado.pacto.nombre}.
+              Tú decides si la envías: el pacto anima, nunca vigila.
+            </p>
+            <button className="rut-borrar-enlace" onClick={deshacerPacto}>Deshacer el pacto</button>
+          </>
+        ) : (
+          <>
+            <p className="texto-suave aju-nota">
+              Dos que se levantan a la vez llegan más lejos. Sella un pacto con tu
+              hermano de armas: cada domingo compartiréis vuestra semana (una imagen,
+              por donde queráis). Nada sale de tu móvil sin que tú lo envíes.
+            </p>
+            <input
+              className="input"
+              type="text"
+              maxLength={20}
+              placeholder="Nombre de tu hermano de pacto"
+              value={nombrePacto}
+              onChange={(ev) => setNombrePacto(ev.target.value)}
+              aria-label="Nombre de tu hermano de pacto"
+            />
+            <button className="btn aju-btn-bloque" onClick={sellarPacto} disabled={!nombrePacto.trim()}>
+              🤝 Sellar el pacto
+            </button>
+          </>
+        )}
       </div>
 
       <div className="titulo-seccion">Tus datos</div>
