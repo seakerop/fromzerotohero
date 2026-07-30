@@ -8,6 +8,10 @@ const STORE_FOTOS = 'fotos'
 const CLAVE_ESTADO = 'v1'
 
 let promesaBD = null
+// Durante el borrado total no se admite ni una escritura más: sin esto, el
+// volcado de guardado al ocultarse la página podía RESUCITAR la base recién
+// borrada (el fallo de «Borrar todos los datos» en iOS).
+let borrando = false
 
 // Abre (o reutiliza) la conexión con la BD. Si el navegador la cierra por su
 // cuenta, la siguiente operación vuelve a abrirla.
@@ -27,6 +31,12 @@ export function abrirBD() {
     peticion.onsuccess = () => {
       const bd = peticion.result
       bd.onclose = () => { promesaBD = null }
+      // Si alguien pide borrar/actualizar la BD, soltamos la conexión: una
+      // conexión abierta bloquea deleteDatabase indefinidamente.
+      bd.onversionchange = () => {
+        bd.close()
+        promesaBD = null
+      }
       resolver(bd)
     }
     peticion.onerror = () => {
@@ -58,7 +68,30 @@ export async function cargarEstado() {
 
 // Guarda el estado de inmediato bajo la clave fija 'v1' (App debouncea).
 export async function guardarEstado(estado) {
+  if (borrando) return
   await enTransaccion(STORE_ESTADO, 'readwrite', (store) => store.put(estado, CLAVE_ESTADO))
+}
+
+// Borrado total DETERMINISTA: cierra nuestra conexión (que bloquearía el
+// deleteDatabase), espera a que el borrado termine de verdad y deja el módulo
+// inerte hasta la recarga. Nada de carreras con el reload.
+export async function borrarBaseDeDatos() {
+  borrando = true
+  try {
+    if (promesaBD) {
+      const bd = await promesaBD.catch(() => null)
+      if (bd) bd.close()
+    }
+  } finally {
+    promesaBD = null
+  }
+  await new Promise((resolver) => {
+    const peticion = indexedDB.deleteDatabase(NOMBRE_BD)
+    peticion.onsuccess = resolver
+    peticion.onerror = resolver // recargamos igual; mejor esfuerzo
+    // onblocked no corta: nuestra conexión ya está cerrada y cualquier otra
+    // pestaña la soltará por su onversionchange.
+  })
 }
 
 /* ---- migrar: normaliza cualquier objeto al modelo completo de §4 ---- */

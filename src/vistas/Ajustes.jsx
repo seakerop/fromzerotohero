@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
 import { claveDia } from '../engine/fechas.js'
+import { borrarBaseDeDatos } from '../db/db.js'
 import { exportarJSON, exportarJSONConFotos, importarCopia } from '../db/exportar.js'
 import { borrarTodasLasFotos, restaurarFotos, serializarFotos } from '../db/fotos.js'
 import { AVISO_SUPLEMENTOS, SUPLEMENTOS } from '../data/suplementos.js'
@@ -170,15 +171,19 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
     setTextoBorrar('')
   }
 
-  function borrarTodo() {
+  async function borrarTodo() {
     cerrarBorrar()
     actualizarEstado(() => null)
     const recargar = () => window.location.reload()
-    const peticion = window.indexedDB.deleteDatabase('fzth')
-    peticion.onsuccess = recargar
-    peticion.onerror = recargar
-    peticion.onblocked = recargar
-    setTimeout(recargar, 1500)
+    // Tope de seguridad por si algo se atasca: recargar igualmente.
+    const tope = setTimeout(recargar, 4000)
+    try {
+      await borrarBaseDeDatos()
+    } catch {
+      // recargamos de todos modos
+    }
+    clearTimeout(tope)
+    recargar()
   }
 
   return (
