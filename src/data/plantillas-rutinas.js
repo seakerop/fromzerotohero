@@ -5,10 +5,11 @@
 
 export const GUIA_NOVATO = [
   'Técnica primero: las primeras semanas el peso da igual, aprender el gesto lo es todo (toca ⓘ en cualquier ejercicio).',
-  'Progresión doble: cuando completes todas las series en lo alto del rango (p. ej. 3×12), sube un poco el peso y vuelve a 3×8.',
+  'Cada músculo al menos DOS veces por semana: por eso estas rutinas reparten el trabajo como lo reparten.',
+  'Progresión doble: cuando completes todas las series en lo alto del rango (p. ej. 3×12), sube el peso un poco (2-10%) y vuelve a 3×8.',
+  'Máquinas y pesos libres construyen el mismo músculo: usa lo que te dé confianza.',
   'Descansa 2-3 min en los grandes (sentadilla, press, remo) y 1-2 min en el resto.',
-  'Más días no es mejor: el músculo crece cuando descansas. Con 3 días bien hechos se progresa muchísimo.',
-  'La última palabra la tiene tu cuerpo: si algo duele (no agujetas), cámbialo.',
+  'Más días no es mejor: el músculo crece cuando descansas. La última palabra la tiene tu cuerpo: si algo duele (no agujetas), cámbialo.',
 ]
 
 function pl(ejercicioId, seriesObjetivo, repsObjetivo) {
@@ -23,7 +24,7 @@ export const PLANTILLAS = [
     diasSemana: 2,
     resumen: 'Todo el cuerpo en cada sesión, dos versiones que se alternan.',
     porQue:
-      'Con 2 días a la semana, tocar cada músculo dos veces es la mejor inversión: nada de dividir por grupos. Dos sesiones distintas para no aburrirse y cubrirlo todo.',
+      'Con 2 días a la semana, tocar cada músculo dos veces es la mejor inversión: nada de dividir por grupos. Dos sesiones distintas para no aburrirse, con empuje, tirón y pierna repartidos en ambas.',
     consejo: 'Alterna A y B. Si una semana solo puedes ir un día, no pasa nada: haz la que toque.',
     dias: [
       {
@@ -32,6 +33,7 @@ export const PLANTILLAS = [
           pl('sentadilla-goblet', 3, 10),
           pl('press-banca', 3, 8),
           pl('remo-polea-baja', 3, 10),
+          pl('peso-muerto-rumano', 3, 10),
           pl('elevaciones-laterales', 3, 12),
           pl('plancha', 3, 1),
         ],
@@ -40,6 +42,7 @@ export const PLANTILLAS = [
         nombre: 'Full body B',
         ejercicios: [
           pl('prensa', 3, 10),
+          pl('press-pecho-maquina', 3, 10),
           pl('jalon-al-pecho', 3, 10),
           pl('press-hombro-mancuernas', 3, 10),
           pl('curl-femoral', 3, 10),
@@ -52,10 +55,10 @@ export const PLANTILLAS = [
     id: 'fb-maquinas',
     nombre: 'Full body en máquinas',
     diasSemana: 2,
-    resumen: 'El primer mes sin miedo: las máquinas guían el movimiento.',
+    resumen: 'Todo en máquinas, con la misma ciencia detrás.',
     porQue:
-      'Si las barras y mancuernas imponen (a todo el mundo le pasó), las máquinas fijan el recorrido y te dejan concentrarte en sentir el músculo. Perfecta como primer mes; luego salta a la A/B clásica.',
-    consejo: 'Ajusta SIEMPRE el asiento antes de cada máquina (hay una clave en cada ficha ⓘ).',
+      'Los estudios que comparan máquinas y pesos libres encuentran el mismo crecimiento muscular: no es la opción "de mentira", es una opción. Las máquinas guían el recorrido, así que toda tu atención va a esforzarte. Ideal si el gimnasio te resulta nuevo o las barras aún imponen.',
+    consejo: 'Ajusta SIEMPRE el asiento antes de cada máquina (hay una clave en cada ficha ⓘ). La prensa se repite en ambos días a propósito: así las piernas trabajan dos veces por semana.',
     dias: [
       {
         nombre: 'Máquinas A',
@@ -63,16 +66,16 @@ export const PLANTILLAS = [
           pl('prensa', 3, 12),
           pl('press-pecho-maquina', 3, 10),
           pl('remo-polea-baja', 3, 12),
-          pl('extension-cuadriceps', 3, 12),
+          pl('curl-femoral', 3, 12),
           pl('crunch-en-polea', 3, 12),
         ],
       },
       {
         nombre: 'Máquinas B',
         ejercicios: [
+          pl('prensa', 3, 12),
           pl('jalon-al-pecho', 3, 10),
           pl('press-hombro-maquina', 3, 10),
-          pl('curl-femoral', 3, 12),
           pl('contractor', 3, 12),
           pl('gemelos', 3, 15),
         ],
@@ -124,40 +127,43 @@ export const PLANTILLAS = [
     ],
   },
   {
-    id: 'etp-3',
-    nombre: 'Empuje / Tirón / Pierna',
+    id: 'tpf-3',
+    nombre: 'Torso / Pierna / Full body',
     diasSemana: 3,
-    resumen: 'Cada día un patrón: empujar, tirar, piernas.',
+    resumen: 'Un día de torso, uno de pierna y uno de repaso completo.',
     porQue:
-      'Divide por movimientos, no por músculos: fácil de entender y de recordar. Cada grupo descansa de sobra. Buena alternativa si el full body se te hace largo.',
-    consejo: 'El orden da igual mientras no juntes dos días seguidos del mismo patrón.',
+      'Alternativa a la A/B/C con sesiones más enfocadas, manteniendo lo importante: cada músculo se trabaja al menos dos veces por semana (con 3 días, dividir en empuje/tirón/pierna dejaría cada grupo en una sola vez, y la evidencia favorece la frecuencia doble).',
+    consejo: 'Funciona en cualquier orden; deja el Full body para el día que llegues con menos energía.',
     dias: [
       {
-        nombre: 'Empuje',
+        nombre: 'Torso',
         ejercicios: [
           pl('press-banca', 3, 8),
-          pl('press-hombro-mancuernas', 3, 10),
-          pl('aperturas-polea', 3, 12),
-          pl('extension-triceps-polea', 3, 10),
-        ],
-      },
-      {
-        nombre: 'Tirón',
-        ejercicios: [
-          pl('jalon-al-pecho', 3, 10),
           pl('remo-polea-baja', 3, 10),
-          pl('face-pull', 3, 12),
-          pl('curl-barra', 3, 10),
+          pl('press-hombro-mancuernas', 3, 10),
+          pl('jalon-al-pecho', 3, 10),
+          pl('extension-triceps-polea', 2, 12),
         ],
       },
       {
         nombre: 'Pierna',
         ejercicios: [
           pl('sentadilla', 3, 8),
+          pl('peso-muerto-rumano', 3, 10),
           pl('prensa', 3, 10),
-          pl('curl-femoral', 3, 10),
           pl('gemelos', 3, 15),
           pl('plancha', 3, 1),
+        ],
+      },
+      {
+        nombre: 'Full body',
+        ejercicios: [
+          pl('sentadilla-goblet', 3, 12),
+          pl('press-inclinado-mancuernas', 3, 10),
+          pl('remo-con-mancuerna', 3, 10),
+          pl('curl-femoral', 3, 12),
+          pl('elevaciones-laterales', 3, 12),
+          pl('curl-barra', 2, 12),
         ],
       },
     ],
