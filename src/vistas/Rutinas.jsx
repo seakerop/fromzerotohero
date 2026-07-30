@@ -3,6 +3,7 @@ import FichaEjercicio from '../components/FichaEjercicio.jsx'
 import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
 import { GRUPOS } from '../data/ejercicios.js'
+import { GUIA_NOVATO, plantillasPorDias } from '../data/plantillas-rutinas.js'
 
 const NOMBRE_MEDIDA = {
   peso_reps: 'peso × reps',
@@ -167,7 +168,32 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
   const [rutinaId, setRutinaId] = useState(null)
   const [diaId, setDiaId] = useState(null)
   const [verBiblioteca, setVerBiblioteca] = useState(false)
+  const [verPlantillas, setVerPlantillas] = useState(false)
+  const [diasFiltro, setDiasFiltro] = useState(() =>
+    Math.min(5, Math.max(2, estado.ajustes.diasPlanificados.length || 3)))
   const [modal, setModal] = useState(null)
+
+  function usarPlantilla(plantilla) {
+    const id = nuevoId('rut')
+    const rutina = {
+      id,
+      nombre: plantilla.nombre,
+      dias: plantilla.dias.map((dia) => ({
+        id: nuevoId('dia'),
+        nombre: dia.nombre,
+        ejercicios: dia.ejercicios.map((ej) => ({
+          ejercicioId: ej.ejercicioId,
+          seriesObjetivo: ej.seriesObjetivo,
+          repsObjetivo: ej.repsObjetivo,
+          pesoObjetivoKg: null,
+        })),
+      })),
+    }
+    actualizarEstado((e) => ({ ...e, rutinas: [...e.rutinas, rutina] }))
+    setVerPlantillas(false)
+    setRutinaId(id)
+    avisar(`«${plantilla.nombre}» añadida: revísala y hazla tuya`)
+  }
 
   const rutina = estado.rutinas.find((r) => r.id === rutinaId) || null
   const dia = rutina ? rutina.dias.find((d) => d.id === diaId) || null : null
@@ -303,6 +329,68 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
     actualizarEstado((e) => ({ ...e, ejercicios: e.ejercicios.filter((x) => x.id !== ej.id) }))
     setModal(null)
     avisar(`«${ej.nombre}» borrado de la biblioteca`)
+  }
+
+  // ---------- Rutinas recomendadas (novatos) ----------
+  if (verPlantillas) {
+    const opciones = plantillasPorDias(diasFiltro)
+    const nombreDe = (id) => {
+      const ej = estado.ejercicios.find((x) => x.id === id)
+      return ej ? ej.nombre : id
+    }
+    return (
+      <div className="vista">
+        <button className="btn btn-fantasma rut-volver" onClick={() => setVerPlantillas(false)}>
+          ← Rutinas
+        </button>
+        <h1 className="rut-titulo">🗺 Rutinas recomendadas</h1>
+        <p className="texto-suave rut-intro">
+          Para empezar sin perderse: elige cuántos días entrenas, usa una tal
+          cual, y con las semanas la haces tuya.
+        </p>
+
+        <div className="panel rut-guia">
+          <div className="rut-guia-titulo">La guía del novato</div>
+          <ul className="rut-guia-lista">
+            {GUIA_NOVATO.map((linea, i) => (
+              <li key={i}>{linea}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rut-chips rut-chips-dias">
+          {[2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              className={diasFiltro === n ? 'chip chip-activo' : 'chip'}
+              onClick={() => setDiasFiltro(n)}
+            >
+              {n} días
+            </button>
+          ))}
+        </div>
+
+        {opciones.map((p) => (
+          <section key={p.id} className="panel rut-plantilla">
+            <h2 className="rut-plantilla-nombre">{p.nombre}</h2>
+            <p className="texto-suave rut-plantilla-resumen">{p.resumen}</p>
+            <p className="rut-plantilla-porque">{p.porQue}</p>
+            {p.dias.map((dia, i) => (
+              <div key={i} className="rut-pl-dia">
+                <strong>{dia.nombre}</strong>
+                <span className="texto-suave rut-pl-ejercicios">
+                  {dia.ejercicios.map((e) => nombreDe(e.ejercicioId)).join(' · ')}
+                </span>
+              </div>
+            ))}
+            <p className="texto-suave rut-plantilla-consejo">💡 {p.consejo}</p>
+            <button className="btn btn-primario rut-boton-ancho" onClick={() => usarPlantilla(p)}>
+              Usar esta rutina
+            </button>
+          </section>
+        ))}
+      </div>
+    )
   }
 
   // ---------- Biblioteca ----------
@@ -536,7 +624,8 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
         <div className="panel rut-vacio-panel">
           <p>Aún no tienes rutinas.</p>
           <p className="texto-suave">
-            Forja tu primer plan: días, ejercicios y objetivos. En el gimnasio solo tendrás que seguirlo.
+            ¿Primera vez? Las rutinas recomendadas te dan un plan probado con un
+            toque. Y si ya sabes lo que quieres, forja el tuyo.
           </p>
         </div>
       )}
@@ -548,6 +637,9 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
           </span>
         </button>
       ))}
+      <button className="btn rut-boton-ancho" onClick={() => setVerPlantillas(true)}>
+        🗺 Rutinas recomendadas (para empezar)
+      </button>
       <button className="btn btn-primario rut-boton-ancho" onClick={crearRutina}>＋ Nueva rutina</button>
       <h2 className="titulo-seccion">Biblioteca</h2>
       <button className="btn rut-boton-ancho" onClick={() => setVerBiblioteca(true)}>

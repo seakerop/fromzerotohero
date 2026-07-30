@@ -307,6 +307,26 @@ button.rut-picker-elegir:active { border-color: var(--oro); transform: scale(0.9
 }
 .ent-tempo-btn { min-height: 48px; min-width: 74px; flex-shrink: 0; font-size: 15px; }
 
+/* Rutinas recomendadas (novatos) */
+.rut-guia { margin-bottom: 12px; }
+.rut-guia-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--oro);
+  margin-bottom: 8px;
+}
+.rut-guia-lista { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; font-size: 13.5px; color: var(--texto-suave); }
+.rut-chips-dias { margin-bottom: 12px; }
+.rut-plantilla { margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px; }
+.rut-plantilla-nombre { font-size: 18px; }
+.rut-plantilla-resumen { font-size: 14px; margin: -4px 0 0; }
+.rut-plantilla-porque { font-size: 14px; line-height: 1.5; }
+.rut-pl-dia { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; background: var(--panel-2); border-radius: 10px; font-size: 13.5px; }
+.rut-pl-ejercicios { font-size: 12.5px; line-height: 1.5; }
+.rut-plantilla-consejo { font-size: 13px; margin: 0; }
+
 /* Botón de ficha de técnica */
 .rut-info {
   min-width: 40px;
