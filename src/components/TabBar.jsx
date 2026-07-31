@@ -1,9 +1,11 @@
+import { IconoAjustes, IconoEntreno, IconoInicio, IconoProgreso, IconoRutinas } from './Iconos.jsx'
+
 const TABS = [
-  { id: 'home', icono: '🏰', nombre: 'Inicio' },
-  { id: 'entreno', icono: '⚔️', nombre: 'Entreno' },
-  { id: 'rutinas', icono: '📜', nombre: 'Rutinas' },
-  { id: 'progreso', icono: '📈', nombre: 'Progreso' },
-  { id: 'ajustes', icono: '⚙️', nombre: 'Ajustes' },
+  { id: 'home', Icono: IconoInicio, nombre: 'Inicio' },
+  { id: 'entreno', Icono: IconoEntreno, nombre: 'Entreno' },
+  { id: 'rutinas', Icono: IconoRutinas, nombre: 'Rutinas' },
+  { id: 'progreso', Icono: IconoProgreso, nombre: 'Progreso' },
+  { id: 'ajustes', Icono: IconoAjustes, nombre: 'Ajustes' },
 ]
 
 export default function TabBar({ activa, onCambiar }) {
@@ -17,7 +19,7 @@ export default function TabBar({ activa, onCambiar }) {
           onClick={() => onCambiar(tab.id)}
           aria-current={activa === tab.id ? 'page' : undefined}
         >
-          <span className="tabbar-icono" aria-hidden="true">{tab.icono}</span>
+          <span className="tabbar-icono" aria-hidden="true"><tab.Icono /></span>
           <span>{tab.nombre}</span>
         </button>
       ))}

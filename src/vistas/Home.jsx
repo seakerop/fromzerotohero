@@ -5,6 +5,7 @@ import Avatar, {
   estacionDeMes,
 } from '../components/Avatar.jsx'
 import BarraXP from '../components/BarraXP.jsx'
+import { IconoEntreno, IconoRacha } from '../components/Iconos.jsx'
 import Modal from '../components/Modal.jsx'
 import StatBarra from '../components/StatBarra.jsx'
 import TarjetaGesta, { compartirTarjeta } from '../components/TarjetaGesta.jsx'
@@ -264,7 +265,7 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
       <h2 className="titulo-seccion">Racha</h2>
       <section className="panel">
         <div className="home-racha-cab">
-          <span className="home-racha-num">🔥 {racha}</span>
+          <span className="home-racha-num"><IconoRacha tam={20} /> {racha}</span>
           <span>{racha === 1 ? 'día de racha' : 'días de racha'}</span>
           {estado.progreso.rachaMejor > 0 && (
             <span className="texto-suave home-racha-mejor">Mejor: {estado.progreso.rachaMejor}</span>
@@ -295,7 +296,7 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
       </section>
 
       <button type="button" className="btn btn-primario btn-grande home-entrenar" onClick={() => irA('entreno')}>
-        ⚔️ {estado.sesionActiva ? 'Continuar entreno' : 'Entrenar'}
+        <IconoEntreno tam={20} /> {estado.sesionActiva ? 'Continuar entreno' : 'Entrenar'}
       </button>
 
       <h2 className="titulo-seccion">Registro de hoy</h2>

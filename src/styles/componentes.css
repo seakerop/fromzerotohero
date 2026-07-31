@@ -55,7 +55,8 @@
   font-weight: 600;
 }
 .tabbar-tab-activa { color: var(--oro-claro); }
-.tabbar-icono { font-size: 20px; line-height: 1; }
+.tabbar-icono { line-height: 0; display: flex; }
+.tabbar-icono svg { width: 22px; height: 22px; }
 
 /* ---- Modal ---- */
 .modal-fondo {
@@ -506,6 +507,10 @@
 /* --- Árbol del Héroe --- */
 .home-arbol-linea { font-size: 12.5px; margin-top: 7px; }
 .onb-rev-semilla { font-size: 14px; max-width: 300px; margin: 0 auto; }
+
+/* Racha con icono de línea alineado */
+.home-racha-num { display: inline-flex; align-items: center; gap: 6px; color: var(--oro-claro); }
+.home-racha-num svg { flex-shrink: 0; }
 
 /* --- Susurro del árbol y ficha --- */
 .home-avatar-boton { display: block; border-radius: 50%; flex-shrink: 0; }
