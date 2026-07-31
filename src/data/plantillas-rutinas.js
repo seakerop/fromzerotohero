@@ -390,6 +390,169 @@ export const PLANTILLAS = [
   },
 ]
 
+// ---------- Sin gimnasio: en casa y calistenia ----------
+PLANTILLAS.push(
+  {
+    id: 'casa-ab',
+    nombre: 'En casa A/B (sin material)',
+    diasSemana: 2,
+    equipo: 'casa',
+    resumen: 'Cuerpo completo con lo que hay en cualquier casa.',
+    porQue:
+      'Para empezar, tu propio cuerpo es carga de sobra: se progresa de verdad durante meses. La pieza clave es el remo invertido bajo una mesa robusta — sin él, la espalda se queda sin su tirón y las flexiones descompensan.',
+    consejo:
+      'Aquí se progresa en repeticiones y en VARIANTES: cuando 3×12 sea fácil, baja el apoyo de las flexiones (pared → silla → suelo) o pasa el puente a una pierna.',
+    dias: [
+      {
+        nombre: 'En casa A',
+        ejercicios: [
+          pl('sentadilla-aire', 3, 15),
+          pl('flexiones-inclinadas', 3, 10),
+          pl('remo-invertido', 3, 8),
+          pl('puente-gluteo', 3, 15),
+          pl('plancha', 3, 1),
+        ],
+      },
+      {
+        nombre: 'En casa B',
+        ejercicios: [
+          pl('zancadas-sin-peso', 3, 12),
+          pl('fondos-silla', 3, 10),
+          pl('superman', 3, 12),
+          pl('abdominales', 3, 15),
+          pl('escaladores', 3, 20),
+        ],
+      },
+    ],
+  },
+  {
+    id: 'casa-abc',
+    nombre: 'En casa A/B/C',
+    diasSemana: 3,
+    equipo: 'casa',
+    resumen: 'Tres días de cuerpo completo sin pisar un gimnasio.',
+    porQue:
+      'La misma lógica que la Full body A/B/C del gimnasio: cada músculo dos o tres veces por semana, sesiones cortas y recuperables. El día C sube un punto la dificultad (flexiones al suelo y burpees) para que la progresión viva dentro de la propia rutina.',
+    consejo:
+      'Si las flexiones del suelo aún no salen, cámbialas por inclinadas sin drama: la variante correcta es la que te deja hacer 8-12 limpias.',
+    dias: [
+      {
+        nombre: 'En casa A',
+        ejercicios: [
+          pl('sentadilla-aire', 3, 15),
+          pl('flexiones-inclinadas', 3, 10),
+          pl('remo-invertido', 3, 8),
+          pl('puente-gluteo', 3, 15),
+          pl('plancha', 3, 1),
+        ],
+      },
+      {
+        nombre: 'En casa B',
+        ejercicios: [
+          pl('zancadas-sin-peso', 3, 12),
+          pl('fondos-silla', 3, 10),
+          pl('pike-flexiones', 3, 8),
+          pl('superman', 3, 12),
+          pl('abdominales', 3, 15),
+        ],
+      },
+      {
+        nombre: 'En casa C',
+        ejercicios: [
+          pl('sentadilla-aire', 3, 20),
+          pl('flexiones', 3, 8),
+          pl('remo-invertido', 3, 10),
+          pl('zancadas-sin-peso', 3, 12),
+          pl('burpees', 3, 8),
+        ],
+      },
+    ],
+  },
+  {
+    id: 'cali-ab',
+    nombre: 'Calistenia A/B',
+    diasSemana: 2,
+    equipo: 'calistenia',
+    resumen: 'Con una barra de dominadas o un parque cerca.',
+    porQue:
+      'La gimnasia de toda la vida: dominadas, flexiones y sentadillas construyen fuerza real con una barra y el suelo. Dos sesiones de cuerpo completo con empuje y tirón equilibrados.',
+    consejo:
+      'Si las dominadas aún no salen: salta hasta arriba y BAJA lo más lento que puedas (negativas), o sustitúyelas por remo invertido hasta que llegue la primera. Llega.',
+    dias: [
+      {
+        nombre: 'Calistenia A',
+        ejercicios: [
+          pl('dominadas', 3, 5),
+          pl('flexiones', 3, 10),
+          pl('sentadilla-aire', 3, 15),
+          pl('plancha', 3, 1),
+        ],
+      },
+      {
+        nombre: 'Calistenia B',
+        ejercicios: [
+          pl('remo-invertido', 3, 10),
+          pl('pike-flexiones', 3, 8),
+          pl('zancadas-sin-peso', 3, 12),
+          pl('elevaciones-de-piernas', 3, 10),
+        ],
+      },
+    ],
+  },
+  {
+    id: 'cali-abc',
+    nombre: 'Calistenia A/B/C',
+    diasSemana: 3,
+    equipo: 'calistenia',
+    resumen: 'El clásico del parque, ordenado para progresar.',
+    porQue:
+      'Tres sesiones de cuerpo completo que reparten dominadas, flexiones y pierna para que cada patrón se trabaje dos o tres veces por semana. Los fondos en paralelas del día C se registran con 0 kg (o con lastre el día que toque presumir).',
+    consejo:
+      'Las dominadas mandan: cuando pases de 3×5 a 3×8, todo lo demás habrá subido contigo. Ante duda de técnica, ficha ⓘ y despacio.',
+    dias: [
+      {
+        nombre: 'Calistenia A',
+        ejercicios: [
+          pl('flexiones', 3, 10),
+          pl('dominadas', 3, 5),
+          pl('sentadilla-aire', 3, 15),
+          pl('plancha', 3, 1),
+        ],
+      },
+      {
+        nombre: 'Calistenia B',
+        ejercicios: [
+          pl('pike-flexiones', 3, 8),
+          pl('remo-invertido', 3, 10),
+          pl('zancadas-sin-peso', 3, 12),
+          pl('elevaciones-de-piernas', 3, 10),
+        ],
+      },
+      {
+        nombre: 'Calistenia C',
+        ejercicios: [
+          pl('fondos', 3, 6),
+          pl('dominadas', 3, 5),
+          pl('puente-gluteo', 3, 15),
+          pl('abdominales', 3, 15),
+          pl('superman', 3, 12),
+        ],
+      },
+    ],
+  }
+)
+
+export const EQUIPOS = [
+  ['gym', 'Gimnasio'],
+  ['casa', 'En casa'],
+  ['calistenia', 'Calistenia'],
+]
+
 export function plantillasPorDias(dias) {
   return PLANTILLAS.filter((p) => p.diasSemana === dias)
+}
+
+// Las plantillas sin campo `equipo` son de gimnasio (las 8 originales).
+export function plantillasFiltradas(dias, equipo) {
+  return PLANTILLAS.filter((p) => p.diasSemana === dias && (p.equipo || 'gym') === equipo)
 }

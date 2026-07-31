@@ -82,4 +82,17 @@ export const EJERCICIOS_SEED = [
   ej('abductores-maquina', 'Abductores en máquina', 'gluteo', 'peso_reps'),
   ej('cuerda', 'Saltar a la cuerda', 'cardio', 'tiempo'),
   ej('escaleras', 'Escaleras (stairmaster)', 'cardio', 'tiempo'),
+  // Tanda 3 (2026-08): entrenar EN CASA y calistenia, sin material o con
+  // barra de dominadas. Llegan por merge a bibliotecas existentes.
+  ej('sentadilla-aire', 'Sentadilla sin peso', 'pierna', 'reps'),
+  ej('zancadas-sin-peso', 'Zancadas sin peso', 'pierna', 'reps'),
+  ej('puente-gluteo', 'Puente de glúteo', 'gluteo', 'reps'),
+  ej('flexiones-inclinadas', 'Flexiones inclinadas (apoyo alto)', 'pecho', 'reps'),
+  ej('pike-flexiones', 'Flexiones pike (hombro)', 'hombro', 'reps'),
+  ej('fondos-silla', 'Fondos en silla o banco', 'triceps', 'reps'),
+  ej('remo-invertido', 'Remo invertido (mesa o barra baja)', 'espalda', 'reps'),
+  ej('abdominales', 'Abdominales (crunch)', 'core', 'reps'),
+  ej('superman', 'Superman (lumbar)', 'espalda', 'reps'),
+  ej('burpees', 'Burpees', 'cardio', 'reps'),
+  ej('escaladores', 'Escaladores (mountain climbers)', 'core', 'reps'),
 ]

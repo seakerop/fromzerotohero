@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { EJERCICIOS_SEED } from '../../src/data/ejercicios.js'
-import { GUIA_NOVATO, PLANTILLAS, plantillasPorDias } from '../../src/data/plantillas-rutinas.js'
+import {
+  EQUIPOS,
+  GUIA_NOVATO,
+  PLANTILLAS,
+  plantillasFiltradas,
+  plantillasPorDias,
+} from '../../src/data/plantillas-rutinas.js'
 
 describe('plantillas de rutinas para novatos', () => {
   it('todos los ejercicios de todas las plantillas existen en el seed', () => {
@@ -14,12 +20,22 @@ describe('plantillas de rutinas para novatos', () => {
     }
   })
 
-  it('hay al menos 2 opciones por cada frecuencia de 2 a 5 días', () => {
+  it('hay al menos 2 opciones de gimnasio por cada frecuencia de 2 a 5 días', () => {
     for (const dias of [2, 3, 4, 5]) {
-      const opciones = plantillasPorDias(dias)
+      const opciones = plantillasFiltradas(dias, 'gym')
       expect(opciones.length).toBeGreaterThanOrEqual(2)
-      for (const p of opciones) expect(p.dias.length).toBe(dias)
+      for (const p of plantillasPorDias(dias)) expect(p.dias.length).toBe(dias)
     }
+  })
+
+  it('hay opciones sin gimnasio (casa y calistenia) para 2 y 3 días', () => {
+    for (const equipo of ['casa', 'calistenia']) {
+      for (const dias of [2, 3]) {
+        expect(plantillasFiltradas(dias, equipo).length).toBeGreaterThanOrEqual(1)
+      }
+    }
+    const validos = new Set(EQUIPOS.map(([id]) => id))
+    for (const p of PLANTILLAS) expect(validos.has(p.equipo || 'gym')).toBe(true)
   })
 
   it('cada plantilla trae explicación, consejo y objetivos completos', () => {

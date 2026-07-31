@@ -3,7 +3,7 @@ import FichaEjercicio from '../components/FichaEjercicio.jsx'
 import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
 import { GRUPOS } from '../data/ejercicios.js'
-import { GUIA_NOVATO, plantillasPorDias } from '../data/plantillas-rutinas.js'
+import { EQUIPOS, GUIA_NOVATO, plantillasFiltradas } from '../data/plantillas-rutinas.js'
 
 const NOMBRE_MEDIDA = {
   peso_reps: 'peso × reps',
@@ -169,6 +169,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
   const [diaId, setDiaId] = useState(null)
   const [verBiblioteca, setVerBiblioteca] = useState(false)
   const [verPlantillas, setVerPlantillas] = useState(false)
+  const [equipoFiltro, setEquipoFiltro] = useState('gym')
   const [diasFiltro, setDiasFiltro] = useState(() =>
     Math.min(5, Math.max(2, estado.ajustes.diasPlanificados.length || 3)))
   const [modal, setModal] = useState(null)
@@ -333,7 +334,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
 
   // ---------- Rutinas recomendadas (novatos) ----------
   if (verPlantillas) {
-    const opciones = plantillasPorDias(diasFiltro)
+    const opciones = plantillasFiltradas(diasFiltro, equipoFiltro)
     const nombreDe = (id) => {
       const ej = estado.ejercicios.find((x) => x.id === id)
       return ej ? ej.nombre : id
@@ -359,6 +360,17 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
         </div>
 
         <div className="rut-chips rut-chips-dias">
+          {EQUIPOS.map(([id, nombre]) => (
+            <button
+              key={id}
+              className={equipoFiltro === id ? 'chip chip-activo' : 'chip'}
+              onClick={() => setEquipoFiltro(id)}
+            >
+              {nombre}
+            </button>
+          ))}
+        </div>
+        <div className="rut-chips rut-chips-dias">
           {[2, 3, 4, 5].map((n) => (
             <button
               key={n}
@@ -369,6 +381,16 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
             </button>
           ))}
         </div>
+
+        {opciones.length === 0 && (
+          <div className="panel rut-vacio-panel">
+            <p>Sin gimnasio, con {diasFiltro} días lo honesto es otra cosa.</p>
+            <p className="texto-suave">
+              Usa el ciclo de 3 días y repítelo; los días extra, paseo largo o
+              cardio suave. Más días no es mejor: la mejora llega al recuperarte.
+            </p>
+          </div>
+        )}
 
         {opciones.map((p) => (
           <section key={p.id} className="panel rut-plantilla">

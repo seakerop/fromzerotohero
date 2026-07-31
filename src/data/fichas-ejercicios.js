@@ -425,6 +425,101 @@ export const FICHAS_EJERCICIOS = {
     claves: ['Postura erguida, apoya la planta entera del pie', 'Las manos rozan la barandilla, no cargan tu peso'],
     error: 'Colgarse de la barandilla: el peso lo llevan las piernas.',
   },
+
+  // --- En casa y calistenia ---
+  'sentadilla-aire': {
+    musculos: 'Cuádriceps, glúteo y movilidad',
+    claves: [
+      'Igual que con barra: pies a la anchura de hombros, rodillas siguiendo los pies',
+      'Baja al menos al paralelo; brazos al frente de contrapeso',
+      'Cuando 3×20 sea fácil, pasa a zancadas o búlgaras',
+    ],
+    error: 'Hacerlas rápido a medias: lento y profundo vale el doble.',
+  },
+  'zancadas-sin-peso': {
+    musculos: 'Cuádriceps, glúteo y equilibrio',
+    claves: [
+      'Paso largo, rodilla trasera casi al suelo, torso erguido',
+      'Alterna piernas; el número de la serie es por pierna',
+    ],
+    error: 'Pasos cortos con la rodilla delantera pasadísima de la punta del pie.',
+  },
+  'puente-gluteo': {
+    musculos: 'Glúteo y femoral',
+    claves: [
+      'Tumbado, talones cerca del culo: sube la cadera apretando el glúteo',
+      'Arriba, línea recta rodilla-cadera-hombro; aguanta 1-2 segundos',
+      'Más difícil: a una pierna',
+    ],
+    error: 'Empujar con la lumbar arqueando en vez de apretar el glúteo.',
+  },
+  'flexiones-inclinadas': {
+    musculos: 'Pecho, tríceps y core',
+    claves: [
+      'Manos en mesa, encimera o pared: cuanto más alto el apoyo, más fácil',
+      'Cuerpo en tabla siempre, codos a ~45°',
+      'Cuando 3×12 sea fácil, baja el apoyo (silla → suelo)',
+    ],
+    error: 'Doblar la cadera: es una flexión, no una reverencia.',
+  },
+  'pike-flexiones': {
+    musculos: 'Hombro y tríceps',
+    claves: [
+      'En V invertida (culo arriba), la cabeza baja HACIA el suelo entre las manos',
+      'Es el press de hombro de la calistenia: codos hacia atrás, no en cruz',
+    ],
+    error: 'Convertirla en flexión normal por miedo a cargar el hombro: mantén la V.',
+  },
+  'fondos-silla': {
+    musculos: 'Tríceps y pecho inferior',
+    claves: [
+      'Manos al borde de una silla firme, piernas estiradas al frente',
+      'Baja hasta codos a 90°, hombros LEJOS de las orejas',
+      'Más fácil: rodillas dobladas; más difícil: pies en otra silla',
+    ],
+    error: 'Bajar de más con los hombros encogidos: ahí protesta el hombro.',
+  },
+  'remo-invertido': {
+    musculos: 'Espalda, bíceps y agarre',
+    claves: [
+      'Bajo una mesa robusta o barra baja: cuerpo en tabla, tira del pecho hacia el borde',
+      'Cuanto más horizontal tu cuerpo, más difícil',
+      'Es EL tirón de casa: la espalda no se entrena sola con flexiones',
+    ],
+    error: 'Dar tirones con la cadera en vez de tirar con la espalda.',
+  },
+  abdominales: {
+    musculos: 'Recto abdominal',
+    claves: [
+      'Enrolla la columna despacio: los hombros despegan, la lumbar se queda',
+      'Manos en el pecho o sienes, nunca tirando del cuello',
+    ],
+    error: 'Tirarse del cuello y subir entero como una tabla.',
+  },
+  superman: {
+    musculos: 'Lumbar, glúteo y espalda alta',
+    claves: [
+      'Boca abajo, despega brazos y piernas A LA VEZ, sin prisa',
+      'Aguanta 1-2 segundos arriba mirando al suelo',
+    ],
+    error: 'Levantar la cabeza mirando al frente: cuello sufriendo gratis.',
+  },
+  burpees: {
+    musculos: 'Cardio de cuerpo completo',
+    claves: [
+      'Ritmo constante vale más que velocidad: técnica limpia en cada bajada',
+      'Versión suave: sin salto y sin flexión, solo bajar-apoyar-subir',
+    ],
+    error: 'Dejar caer la cadera en la parte de flexión cuando llega el cansancio.',
+  },
+  escaladores: {
+    musculos: 'Core, hombro y cardio',
+    claves: [
+      'Posición de tabla firme: la cadera NO rebota',
+      'Rodillas al pecho alternando; el número de la serie es por pierna',
+    ],
+    error: 'Hacerlos a toda velocidad con el culo en alto: tabla primero, ritmo después.',
+  },
 }
 
 export function fichaDeEjercicio(id) {
