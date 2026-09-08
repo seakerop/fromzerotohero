@@ -18,6 +18,14 @@ export default function FichaEjercicio({ ejercicio, abierto, onCerrar }) {
         </p>
         {ficha ? (
           <>
+            <img
+              key={ejercicio.id}
+              className="fej-dibujo"
+              src={`img/ejercicios/${ejercicio.id}.webp`}
+              alt=""
+              loading="lazy"
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
+            />
             <p className="fej-musculos"><strong className="oro">Trabaja:</strong> {ficha.musculos}</p>
             <ul className="fej-claves">
               {ficha.claves.map((clave, i) => (

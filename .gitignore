@@ -5,3 +5,6 @@ dist/
 
 # spec interna de desarrollo
 CONTRACT.md
+
+# arte generado pendiente de revisión (se moverá a public/ tras el QA)
+arte/
