@@ -51,6 +51,19 @@
   margin-bottom: 10px;
 }
 .rut-ejercicio-nombre { font-weight: 700; }
+.rut-ejercicio-titular { flex: 1; min-width: 0; }
+
+/* Miniatura del dibujo del ejercicio: siempre visible, sutil */
+.mini-ej {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--borde);
+  background: #0c0e13;
+  object-fit: cover;
+  flex-shrink: 0;
+  align-self: center;
+}
 .rut-quitar {
   min-width: 44px;
   min-height: 44px;

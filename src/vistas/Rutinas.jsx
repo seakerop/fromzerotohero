@@ -36,6 +36,20 @@ export function nombreGrupo(grupoId) {
   return g ? g.nombre : grupoId
 }
 
+// Miniatura del dibujo del ejercicio; se oculta sola si no hay imagen
+// (ejercicios personalizados). Siempre visible, sin necesidad de abrir nada.
+export function MiniEjercicio({ id }) {
+  return (
+    <img
+      className="mini-ej"
+      src={`img/ejercicios/${id}.webp`}
+      alt=""
+      loading="lazy"
+      onError={(e) => { e.currentTarget.style.display = 'none' }}
+    />
+  )
+}
+
 // Buscador de biblioteca con filtro por grupo. Lo reutiliza Entreno para
 // añadir ejercicios sobre la marcha (por eso va exportado).
 export function SelectorEjercicios({ ejercicios, alElegir, alBorrar }) {
@@ -104,6 +118,7 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar }) {
       <div className="rut-picker-lista">
         {filtrados.map((ej) => (
           <div className="rut-picker-item" key={ej.id}>
+            <MiniEjercicio id={ej.id} />
             <Cuerpo
               className="rut-picker-elegir"
               onClick={alElegir ? () => alElegir(ej) : undefined}
@@ -202,6 +217,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
   const [verBiblioteca, setVerBiblioteca] = useState(false)
   const [verPlantillas, setVerPlantillas] = useState(false)
   const [equipoFiltro, setEquipoFiltro] = useState('gym')
+  const [fichaDia, setFichaDia] = useState(null)
   const [diasFiltro, setDiasFiltro] = useState(() =>
     Math.min(5, Math.max(2, estado.ajustes.diasPlanificados.length || 3)))
   const [modal, setModal] = useState(null)
@@ -509,12 +525,20 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
           return (
             <div className="panel rut-ejercicio" key={obj.ejercicioId}>
               <div className="rut-ejercicio-cab">
-                <div>
+                <MiniEjercicio id={ej.id} />
+                <div className="rut-ejercicio-titular">
                   <div className="rut-ejercicio-nombre">{ej.nombre}</div>
                   <div className="texto-suave rut-picker-meta">
                     {nombreGrupo(ej.grupo)} · {NOMBRE_MEDIDA[ej.medida] || ej.medida}
                   </div>
                 </div>
+                <button
+                  className="rut-info"
+                  aria-label={`Ver técnica de ${ej.nombre}`}
+                  onClick={() => setFichaDia(ej)}
+                >
+                  ⓘ
+                </button>
                 <span className="ent-mover">
                   <button
                     type="button"
@@ -593,6 +617,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
         <button className="rut-borrar-enlace" onClick={() => setModal({ tipo: 'borrar-dia' })}>
           Borrar este día
         </button>
+        <FichaEjercicio ejercicio={fichaDia} abierto={Boolean(fichaDia)} onCerrar={() => setFichaDia(null)} />
         {modal && modal.tipo === 'picker' && (
           <Modal titulo="Añadir ejercicio" abierto onCerrar={() => setModal(null)}>
             <SelectorEjercicios ejercicios={estado.ejercicios} alElegir={anadirEjercicioAlDia} />
