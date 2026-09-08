@@ -34,7 +34,7 @@ const solo = leerArg('--solo')
 const limite = Number(leerArg('--limite')) || Infinity
 const modelo = leerArg('--modelo') || process.env.GEMINI_MODEL || 'gemini-2.5-flash-image'
 
-const PAUSA_MS = 7000 // free tier: ~10 peticiones/minuto
+const PAUSA_MS = Number(process.env.GEMINI_PAUSA_MS) || 7000 // free tier: ~10 peticiones/minuto
 const ESPERAS_REINTENTO_S = [20, 45, 90, 180]
 
 function leerClave() {
