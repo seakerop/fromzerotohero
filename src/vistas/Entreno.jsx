@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Modal from '../components/Modal.jsx'
+import MiniEjercicio from '../components/MiniEjercicio.jsx'
 import Stepper from '../components/Stepper.jsx'
 import FichaEjercicio from '../components/FichaEjercicio.jsx'
 import Temporizador, { desbloquearAudio } from '../components/Temporizador.jsx'
@@ -126,6 +127,7 @@ function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar,
     <section className="panel ent-ejercicio">
       <FichaEjercicio ejercicio={ej} abierto={verFicha} onCerrar={() => setVerFicha(false)} />
       <header className="ent-ejercicio-cab">
+        <MiniEjercicio id={ej.id} />
         <h3 className="ent-ejercicio-nombre">{ej.nombre}</h3>
         <button
           className="rut-info"

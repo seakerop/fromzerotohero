@@ -327,5 +327,8 @@
 .prog-sesion-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 15px; }
 .prog-sesion-meta { font-size: 13px; }
 .prog-detalle { display: flex; flex-direction: column; gap: 10px; }
-.prog-detalle-ej { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.prog-detalle-ej { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.prog-detalle-ej-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.prog-fuerza-cab { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.prog-fuerza-cab .prog-resumen { flex: 1; margin: 0; }
 .prog-detalle-xp { margin: 4px 0 0; font-size: 13px; }

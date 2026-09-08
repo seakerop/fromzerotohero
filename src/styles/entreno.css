@@ -64,6 +64,16 @@
   flex-shrink: 0;
   align-self: center;
 }
+.mini-ej-chica { width: 32px; height: 32px; border-radius: 8px; }
+.tira-minis { display: flex; flex-wrap: wrap; gap: 4px; }
+.rut-dia-izq {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  min-width: 0;
+  text-align: left;
+}
 .rut-quitar {
   min-width: 44px;
   min-height: 44px;
@@ -162,12 +172,12 @@ button.rut-picker-elegir:active { border-color: var(--oro); transform: scale(0.9
 .ent-ejercicio-cab {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 6px;
 }
-.ent-ejercicio-nombre { font-size: 18px; }
+.ent-ejercicio-nombre { font-size: 18px; flex: 1; min-width: 0; }
 .ent-objetivo {
   font-size: 13px;
   color: var(--texto-suave);

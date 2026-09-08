@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import FichaEjercicio from '../components/FichaEjercicio.jsx'
+import MiniEjercicio from '../components/MiniEjercicio.jsx'
 import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
 import { EQUIPAMIENTO, GRUPOS } from '../data/ejercicios.js'
@@ -36,19 +37,6 @@ export function nombreGrupo(grupoId) {
   return g ? g.nombre : grupoId
 }
 
-// Miniatura del dibujo del ejercicio; se oculta sola si no hay imagen
-// (ejercicios personalizados). Siempre visible, sin necesidad de abrir nada.
-export function MiniEjercicio({ id }) {
-  return (
-    <img
-      className="mini-ej"
-      src={`img/ejercicios/${id}.webp`}
-      alt=""
-      loading="lazy"
-      onError={(e) => { e.currentTarget.style.display = 'none' }}
-    />
-  )
-}
 
 // Buscador de biblioteca con filtro por grupo. Lo reutiliza Entreno para
 // añadir ejercicios sobre la marcha (por eso va exportado).
@@ -448,6 +436,11 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
             {p.dias.map((dia, i) => (
               <div key={i} className="rut-pl-dia">
                 <strong>{dia.nombre}</strong>
+                <span className="tira-minis">
+                  {dia.ejercicios.slice(0, 8).map((e) => (
+                    <MiniEjercicio key={e.ejercicioId} chica id={e.ejercicioId} />
+                  ))}
+                </span>
                 <span className="texto-suave rut-pl-ejercicios">
                   {dia.ejercicios.map((e) => nombreDe(e.ejercicioId)).join(' · ')}
                 </span>
@@ -658,7 +651,16 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
         )}
         {rutina.dias.map((d) => (
           <button key={d.id} className="rut-dia" onClick={() => setDiaId(d.id)}>
-            <span className="rut-dia-nombre">{d.nombre || 'Día'}</span>
+            <span className="rut-dia-izq">
+              <span className="rut-dia-nombre">{d.nombre || 'Día'}</span>
+              {d.ejercicios.length > 0 && (
+                <span className="tira-minis">
+                  {d.ejercicios.slice(0, 8).map((x) => (
+                    <MiniEjercicio key={x.ejercicioId} chica id={x.ejercicioId} />
+                  ))}
+                </span>
+              )}
+            </span>
             <span className="texto-suave rut-dia-meta">
               {d.ejercicios.length} ejercicio{d.ejercicios.length === 1 ? '' : 's'} ›
             </span>

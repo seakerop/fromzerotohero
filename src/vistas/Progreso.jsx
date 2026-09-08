@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import FichaEjercicio from '../components/FichaEjercicio.jsx'
 import GraficaLinea from '../components/GraficaLinea.jsx'
+import MiniEjercicio from '../components/MiniEjercicio.jsx'
 import Modal from '../components/Modal.jsx'
 import { claveDia, formatearFecha } from '../engine/fechas.js'
 import { borrarSesion, historicoEjercicio, pesosConMedia, progresoEjercicio, volumenSemanal } from '../engine/motor.js'
@@ -54,6 +56,7 @@ function TabFuerza({ estado }) {
   }, [estado.sesiones, estado.ejercicios])
 
   const [elegidoId, setElegidoId] = useState(null)
+  const [verFicha, setVerFicha] = useState(false)
   const elegido = conDatos.find((e) => e.id === elegidoId) || conDatos[0]
 
   if (!elegido) {
@@ -119,13 +122,20 @@ function TabFuerza({ estado }) {
           <option key={e.id} value={e.id}>{e.nombre}</option>
         ))}
       </select>
-      <div className="prog-resumen">
-        <span className="chip">Sesiones: {h.vecesHecho}</span>
-        {h.mejorPesoKg != null && <span className="chip">Mejor: {fmtNum(h.mejorPesoKg)} kg</span>}
-        {h.mejor1rmKg != null && <span className="chip">e1RM: {fmtNum(h.mejor1rmKg)} kg</span>}
-        {h.mejorReps != null && <span className="chip">Mejor: {h.mejorReps} reps</span>}
-        {h.mejorMinutos != null && <span className="chip">Mejor: {h.mejorMinutos} min</span>}
+      <div className="prog-fuerza-cab">
+        <MiniEjercicio id={elegido.id} />
+        <div className="prog-resumen">
+          <span className="chip">Sesiones: {h.vecesHecho}</span>
+          {h.mejorPesoKg != null && <span className="chip">Mejor: {fmtNum(h.mejorPesoKg)} kg</span>}
+          {h.mejor1rmKg != null && <span className="chip">e1RM: {fmtNum(h.mejor1rmKg)} kg</span>}
+          {h.mejorReps != null && <span className="chip">Mejor: {h.mejorReps} reps</span>}
+          {h.mejorMinutos != null && <span className="chip">Mejor: {h.mejorMinutos} min</span>}
+        </div>
+        <button className="rut-info" aria-label={`Ver técnica de ${elegido.nombre}`} onClick={() => setVerFicha(true)}>
+          ⓘ
+        </button>
       </div>
+      <FichaEjercicio ejercicio={elegido} abierto={verFicha} onCerrar={() => setVerFicha(false)} />
       <div className="panel prog-grafica">
         <GraficaLinea series={series} unidad={unidad} alto={190} />
       </div>
@@ -608,10 +618,13 @@ function TabDiario({ estado, actualizarEstado, avisar }) {
           <div className="prog-detalle">
             {abierta.ejercicios.map((ej, i) => (
               <div key={i} className="prog-detalle-ej">
-                <strong>{nombreDe(ej.ejercicioId)}</strong>
-                <span className="texto-suave">
-                  {ej.series.map((se) => (se.pesoKg > 0 ? `${fmtNum(se.pesoKg)}×${se.reps}` : String(se.reps))).join(' · ')}
-                </span>
+                <MiniEjercicio chica id={ej.ejercicioId} />
+                <div className="prog-detalle-ej-texto">
+                  <strong>{nombreDe(ej.ejercicioId)}</strong>
+                  <span className="texto-suave">
+                    {ej.series.map((se) => (se.pesoKg > 0 ? `${fmtNum(se.pesoKg)}×${se.reps}` : String(se.reps))).join(' · ')}
+                  </span>
+                </div>
               </div>
             ))}
             <p className="texto-suave prog-detalle-xp">+{abierta.xpGanado} XP{abierta.duracionSeg > 0 ? ` · ${Math.round(abierta.duracionSeg / 60)} min` : ''}</p>
