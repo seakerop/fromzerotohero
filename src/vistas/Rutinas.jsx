@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import FichaEjercicio from '../components/FichaEjercicio.jsx'
 import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
-import { GRUPOS } from '../data/ejercicios.js'
+import { EQUIPAMIENTO, GRUPOS } from '../data/ejercicios.js'
 import { EQUIPOS, GUIA_NOVATO, plantillasFiltradas } from '../data/plantillas-rutinas.js'
 
 const NOMBRE_MEDIDA = {
@@ -41,16 +41,19 @@ export function nombreGrupo(grupoId) {
 export function SelectorEjercicios({ ejercicios, alElegir, alBorrar }) {
   const [busqueda, setBusqueda] = useState('')
   const [grupo, setGrupo] = useState('todos')
+  const [equipo, setEquipo] = useState('todos')
   const [ficha, setFicha] = useState(null)
 
   const filtrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
     return ejercicios.filter((ej) => {
       if (grupo !== 'todos' && ej.grupo !== grupo) return false
+      // Sin equipo declarado (personalizados antiguos) pasa cualquier filtro.
+      if (equipo !== 'todos' && ej.equipo && ej.equipo !== equipo) return false
       if (q && !ej.nombre.toLowerCase().includes(q)) return false
       return true
     })
-  }, [ejercicios, busqueda, grupo])
+  }, [ejercicios, busqueda, grupo, equipo])
 
   const Cuerpo = alElegir ? 'button' : 'div'
 
@@ -78,6 +81,23 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar }) {
             onClick={() => setGrupo(g.id)}
           >
             {g.nombre}
+          </button>
+        ))}
+      </div>
+      <div className="rut-chips">
+        <button
+          className={'chip' + (equipo === 'todos' ? ' chip-activo' : '')}
+          onClick={() => setEquipo('todos')}
+        >
+          Todo el material
+        </button>
+        {EQUIPAMIENTO.map((eq) => (
+          <button
+            key={eq.id}
+            className={'chip' + (equipo === eq.id ? ' chip-activo' : '')}
+            onClick={() => setEquipo(eq.id)}
+          >
+            {eq.nombre}
           </button>
         ))}
       </div>
@@ -124,6 +144,7 @@ function FormNuevoEjercicio({ alCrear }) {
   const [nombre, setNombre] = useState('')
   const [grupo, setGrupo] = useState(GRUPOS[0].id)
   const [medida, setMedida] = useState('peso_reps')
+  const [equipo, setEquipo] = useState('mancuerna')
 
   return (
     <div className="rut-form">
@@ -157,7 +178,18 @@ function FormNuevoEjercicio({ alCrear }) {
         <option value="reps">Solo repeticiones</option>
         <option value="tiempo">Tiempo (minutos)</option>
       </select>
-      <button className="btn btn-primario rut-boton-ancho" onClick={() => alCrear({ nombre, grupo, medida })}>
+      <label className="etiqueta" htmlFor="rut-nuevo-equipo">Material</label>
+      <select
+        id="rut-nuevo-equipo"
+        className="input"
+        value={equipo}
+        onChange={(ev) => setEquipo(ev.target.value)}
+      >
+        {EQUIPAMIENTO.map((eq) => (
+          <option key={eq.id} value={eq.id}>{eq.nombre}</option>
+        ))}
+      </select>
+      <button className="btn btn-primario rut-boton-ancho" onClick={() => alCrear({ nombre, grupo, medida, equipo })}>
         Añadir a la biblioteca
       </button>
     </div>
@@ -290,7 +322,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
     })
   }
 
-  function crearEjercicio({ nombre, grupo, medida }) {
+  function crearEjercicio({ nombre, grupo, medida, equipo }) {
     const limpio = nombre.trim()
     if (!limpio) {
       avisar('Ponle un nombre al ejercicio', 'error')
@@ -299,7 +331,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
     const id = idUnico(limpio, estado.ejercicios)
     actualizarEstado((e) => ({
       ...e,
-      ejercicios: [...e.ejercicios, { id, nombre: limpio, grupo, medida, personalizado: true }],
+      ejercicios: [...e.ejercicios, { id, nombre: limpio, grupo, medida, equipo, personalizado: true }],
     }))
     setModal(null)
     avisar(`«${limpio}» añadido a tu biblioteca`)

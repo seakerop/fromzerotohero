@@ -8,9 +8,20 @@ import { EJERCICIOS_SEED } from './data/ejercicios.js'
 // La biblioteca seed crece con las versiones: fusiona en bibliotecas ya
 // creadas los ejercicios nuevos que falten (por id; nunca pisa los tuyos).
 function fusionarSeed(e) {
-  const faltan = EJERCICIOS_SEED.filter((s) => !e.ejercicios.some((x) => x.id === s.id))
-  if (faltan.length === 0) return e
-  return { ...e, ejercicios: [...e.ejercicios, ...faltan] }
+  const porId = new Map(EJERCICIOS_SEED.map((s) => [s.id, s]))
+  // Bibliotecas antiguas: rellenar el equipo del seed en entradas que no lo traigan.
+  let cambiado = false
+  const ejercicios = e.ejercicios.map((x) => {
+    const seed = porId.get(x.id)
+    if (seed && !x.equipo && seed.equipo) {
+      cambiado = true
+      return { ...x, equipo: seed.equipo }
+    }
+    return x
+  })
+  const faltan = EJERCICIOS_SEED.filter((s) => !ejercicios.some((x) => x.id === s.id))
+  if (!cambiado && faltan.length === 0) return e
+  return { ...e, ejercicios: [...ejercicios, ...faltan] }
 }
 import TabBar from './components/TabBar.jsx'
 import Toasts from './components/Toasts.jsx'
