@@ -79,10 +79,11 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
   const pautaSupl = (estado.suplementos && estado.suplementos.pauta) || []
   const tomas = (estado.suplementos && estado.suplementos.tomas) || {}
 
-  // «Hoy toca»: si hoy es día planificado y hay rutina, el siguiente día en
-  // la rotación (el que va después del último entrenado). Solo sugerencia.
+  // «Hoy toca» / «Próxima gesta»: el siguiente día de la rutina en rotación
+  // (el que va después del último entrenado). En días planificados anima;
+  // en días de descanso solo informa — nunca empuja.
   let hoyToca = null
-  if (!estado.sesionActiva && estado.ajustes.diasPlanificados.includes(diaISO(hoy))) {
+  if (!estado.sesionActiva) {
     const ultima = [...estado.sesiones].reverse().find((s) => s.rutinaId)
     let rutina = (ultima && estado.rutinas.find((r) => r.id === ultima.rutinaId)) || null
     if (!rutina || rutina.dias.length === 0) rutina = estado.rutinas.find((r) => r.dias.length > 0) || null
@@ -92,7 +93,9 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
         const i = rutina.dias.findIndex((d) => d.id === ultima.diaId)
         if (i >= 0) dia = rutina.dias[(i + 1) % rutina.dias.length]
       }
-      if (dia.ejercicios.length > 0) hoyToca = { dia }
+      if (dia.ejercicios.length > 0) {
+        hoyToca = { dia, esHoy: estado.ajustes.diasPlanificados.includes(diaISO(hoy)) }
+      }
     }
   }
 
@@ -289,7 +292,7 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
 
       {hoyToca && (
         <>
-          <h2 className="titulo-seccion titulo-bosque">Hoy toca</h2>
+          <h2 className="titulo-seccion titulo-bosque">{hoyToca.esHoy ? 'Hoy toca' : 'Próxima gesta'}</h2>
           <button type="button" className="panel panel-acento-bosque home-hoytoca" onClick={() => irA('entreno')}>
             <span className="tira-minis">
               {hoyToca.dia.ejercicios.slice(0, 8).map((x) => (
@@ -298,7 +301,9 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
             </span>
             <span className="texto-suave home-hoytoca-texto">
               {hoyToca.dia.nombre || 'Entreno'} · {hoyToca.dia.ejercicios.length}{' '}
-              {hoyToca.dia.ejercicios.length === 1 ? 'gesta te espera' : 'gestas te esperan'}
+              {hoyToca.dia.ejercicios.length === 1
+                ? (hoyToca.esHoy ? 'gesta te espera hoy' : 'gesta para cuando vuelvas')
+                : (hoyToca.esHoy ? 'gestas te esperan hoy' : 'gestas para cuando vuelvas')}
             </span>
           </button>
         </>
