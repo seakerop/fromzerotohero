@@ -79,7 +79,7 @@ function TabFuerza({ estado }) {
       },
       {
         nombre: 'e1RM',
-        color: 'var(--azul)',
+        color: 'var(--plata)',
         puntos: datos.filter((d) => d.e1rmKg != null).map((d) => ({ x: d.fecha, y: d.e1rmKg })),
       },
     ]
@@ -168,6 +168,7 @@ function TabVolumen({ estado }) {
           role="img"
           aria-label="Volumen semanal en kilos"
         >
+          <line x1={ML} y1={ALTO - MB} x2={ANCHO - MR} y2={ALTO - MB} stroke="var(--borde)" strokeWidth="1" />
           {semanas.map((s, i) => {
             const altoBarra = ((ALTO - MT - MB) * s.kg) / max
             const x = ML + i * banda + (banda - anchoBarra) / 2
