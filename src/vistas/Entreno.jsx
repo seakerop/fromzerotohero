@@ -328,10 +328,24 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
   function editarSerie(iEj, iSerie, cambio) {
     editarSesion((s) => ({
       ...s,
-      ejercicios: s.ejercicios.map((ej, i) => (i !== iEj ? ej : {
-        ...ej,
-        series: ej.series.map((se, j) => (j !== iSerie ? se : { ...se, ...cambio })),
-      })),
+      ejercicios: s.ejercicios.map((ej, i) => {
+        if (i !== iEj) return ej
+        // Cascada de peso: al cambiar una serie, las de DEBAJO que sigan
+        // «intactas» (a 0 o con el mismo peso que tenía esta) la acompañan.
+        // Nunca toca series ya marcadas ✓ ni valores distintos puestos a mano.
+        const pesoAnterior = ej.series[iSerie].pesoKg
+        const cascada = cambio.pesoKg != null
+        return {
+          ...ej,
+          series: ej.series.map((se, j) => {
+            if (j === iSerie) return { ...se, ...cambio }
+            if (cascada && j > iSerie && !se.hecha && (se.pesoKg === 0 || se.pesoKg === pesoAnterior)) {
+              return { ...se, pesoKg: cambio.pesoKg }
+            }
+            return se
+          }),
+        }
+      }),
     }))
   }
 

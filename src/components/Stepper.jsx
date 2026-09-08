@@ -1,13 +1,16 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // Stepper con REPETICIÓN: un toque cambia un paso; mantener pulsado repite
 // (400 ms de espera y luego ~11 pasos/segundo). Sin onClick para no duplicar
-// el primer paso con el pointerdown.
+// el primer paso con el pointerdown. El VALOR central es tocable: se abre un
+// campo numérico para teclear directamente (p. ej. 42,5) sin dar 17 toques.
 export default function Stepper({ valor, paso = 1, min = 0, max = Infinity, unidad = '', onCambiar, grande = false }) {
   const decimales = (String(paso).split('.')[1] || '').length
   const valorRef = useRef(valor)
   valorRef.current = valor
   const timers = useRef({ retardo: null, intervalo: null })
+  const [editando, setEditando] = useState(false)
+  const [borrador, setBorrador] = useState('')
 
   function aplicarPaso(direccion) {
     const actual = valorRef.current
@@ -39,6 +42,14 @@ export default function Stepper({ valor, paso = 1, min = 0, max = Infinity, unid
 
   useEffect(() => soltar, [])
 
+  function confirmarEdicion() {
+    setEditando(false)
+    const n = Number(borrador.replace(',', '.'))
+    if (!Number.isFinite(n)) return
+    const nuevo = Math.min(max, Math.max(min, Number(n.toFixed(2))))
+    if (nuevo !== valorRef.current) onCambiar(nuevo)
+  }
+
   const texto = Number(valor).toLocaleString('es-ES', { maximumFractionDigits: Math.max(decimales, 2) })
 
   const props = (direccion) => ({
@@ -66,10 +77,36 @@ export default function Stepper({ valor, paso = 1, min = 0, max = Infinity, unid
   return (
     <div className={grande ? 'stepper stepper-grande' : 'stepper'}>
       <button {...props(-1)}>−</button>
-      <div className="stepper-valor">
-        {texto}
-        {unidad ? <span className="stepper-unidad">{unidad}</span> : null}
-      </div>
+      {editando ? (
+        <input
+          className="stepper-valor stepper-entrada"
+          type="text"
+          inputMode="decimal"
+          autoFocus
+          value={borrador}
+          onChange={(e) => setBorrador(e.target.value)}
+          onFocus={(e) => e.target.select()}
+          onBlur={confirmarEdicion}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.currentTarget.blur()
+            if (e.key === 'Escape') setEditando(false)
+          }}
+          aria-label={`Escribir valor${unidad ? ` en ${unidad}` : ''}`}
+        />
+      ) : (
+        <button
+          type="button"
+          className="stepper-valor stepper-valor-toca"
+          onClick={() => {
+            setBorrador(String(valor).replace('.', ','))
+            setEditando(true)
+          }}
+          aria-label={`Editar valor: ${texto}${unidad ? ` ${unidad}` : ''}`}
+        >
+          {texto}
+          {unidad ? <span className="stepper-unidad">{unidad}</span> : null}
+        </button>
+      )}
       <button {...props(1)}>+</button>
     </div>
   )

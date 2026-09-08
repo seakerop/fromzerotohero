@@ -212,6 +212,27 @@
   font-weight: 600;
   color: var(--texto-suave);
 }
+.stepper-valor-toca {
+  background: none;
+  border: none;
+  border-radius: 10px;
+  padding: 6px 2px;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.stepper-valor-toca:active { background: var(--borde); }
+.stepper-entrada {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--oro);
+  border-radius: 10px;
+  padding: 6px 2px;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  width: 100%;
+}
 .stepper-grande .stepper-btn { width: 58px; height: 58px; min-width: 58px; font-size: 26px; border-radius: 14px; }
 .stepper-grande .stepper-valor { font-size: 24px; }
 
