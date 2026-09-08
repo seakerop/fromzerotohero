@@ -173,6 +173,13 @@
   border: 1px solid var(--borde);
   overflow: hidden;
 }
+.statbarra-forja .statbarra-relleno { background: linear-gradient(90deg, var(--forja), var(--forja-claro)); }
+.statbarra-forja .statbarra-valor { color: var(--forja-claro); }
+.statbarra-bosque .statbarra-relleno { background: linear-gradient(90deg, var(--bosque), var(--bosque-claro)); }
+.statbarra-bosque .statbarra-valor { color: var(--bosque-claro); }
+.statbarra-acero .statbarra-relleno { background: linear-gradient(90deg, var(--acero), var(--acero-claro)); }
+.statbarra-acero .statbarra-valor { color: var(--acero-claro); }
+
 .statbarra-relleno {
   height: 100%;
   border-radius: 999px;
@@ -476,6 +483,33 @@
   border-color: var(--oro);
   background: rgba(217, 164, 65, 0.12);
   color: var(--oro-claro);
+}
+
+/* Racha en brasas (tema B) */
+.panel-acento-brasa .home-racha-num { color: var(--forja-claro); }
+.panel-acento-brasa .home-dia-hecho {
+  border-color: var(--forja);
+  background: rgba(198, 95, 74, 0.14);
+  color: var(--forja-claro);
+}
+
+/* «Hoy toca»: el día que sigue, con sus gestas a la vista */
+.home-hoytoca {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  width: 100%;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+.home-hoytoca:active { transform: scale(0.99); }
+.home-hoytoca-texto { font-size: 13.5px; }
+.home-meta {
+  border-color: rgba(116, 194, 148, 0.45);
+  color: #9fd4b5;
 }
 .home-dia-hoy { outline: 2px solid var(--azul); outline-offset: 1px; }
 .home-dia-marca { height: 15px; font-size: 11px; line-height: 15px; }

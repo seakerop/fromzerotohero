@@ -15,6 +15,13 @@
   --rojo: #f87171;
   --azul: #60a5fa;
   --plata: #aeb8cf;
+  /* Tema B · Color de aventura: acentos por zona, el oro sigue de hilo */
+  --forja: #c65f4a;
+  --forja-claro: #e08a6d;
+  --bosque: #4a9a6d;
+  --bosque-claro: #74c294;
+  --acero: #5f7fd9;
+  --acero-claro: #8aa6ef;
   --radio: 10px;
   --sombra: 0 6px 16px rgba(0, 0, 0, 0.4);
   --fuente-titulo: Georgia, 'Times New Roman', serif;
@@ -26,7 +33,7 @@
 html { -webkit-text-size-adjust: 100%; }
 
 body {
-  background: linear-gradient(170deg, #10131d 0%, #0b0d15 55%, #0a0c13 100%) fixed var(--bg);
+  background: linear-gradient(165deg, #131022 0%, #0b0d16 50%, #0d1420 100%) fixed var(--bg);
   color: var(--texto);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 16px;
@@ -80,6 +87,18 @@ h1, h2, h3 { line-height: 1.2; }
 }
 .panel::before { top: -2px; left: -2px; border-right: none; border-bottom: none; border-top-left-radius: 4px; }
 .panel::after { bottom: -2px; right: -2px; border-left: none; border-top: none; border-bottom-right-radius: 4px; }
+
+/* Acentos por zona (tema B): borde superior + esquinas del color de la zona */
+.panel-acento-oro { border-top: 2px solid var(--oro); background: linear-gradient(180deg, rgba(217, 164, 65, 0.08), #141726 60%); }
+.panel-acento-brasa { border-top: 2px solid var(--forja); background: linear-gradient(180deg, rgba(198, 95, 74, 0.09), #141726 60%); }
+.panel-acento-brasa::before, .panel-acento-brasa::after { border-color: var(--forja); }
+.panel-acento-acero { border-top: 2px solid var(--acero); background: linear-gradient(180deg, rgba(95, 127, 217, 0.08), #141726 60%); }
+.panel-acento-acero::before, .panel-acento-acero::after { border-color: var(--acero); }
+.panel-acento-bosque { border-top: 2px solid var(--bosque); background: linear-gradient(180deg, rgba(74, 154, 109, 0.08), #141726 60%); }
+.panel-acento-bosque::before, .panel-acento-bosque::after { border-color: var(--bosque); }
+.titulo-brasa { color: var(--forja-claro); }
+.titulo-acero { color: var(--acero-claro); }
+.titulo-bosque { color: var(--bosque-claro); }
 
 .titulo-seccion {
   font-family: var(--fuente-titulo);

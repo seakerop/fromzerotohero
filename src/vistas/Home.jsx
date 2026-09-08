@@ -20,6 +20,7 @@ import {
 } from '../engine/motor.js'
 import { logroPorId } from '../data/logros.js'
 import { medidaDeMeta, metaMasCercana, nombreDeMeta } from '../engine/metas.js'
+import MiniEjercicio from '../components/MiniEjercicio.jsx'
 import { suplementoPorId } from '../data/suplementos.js'
 
 const LETRAS_DIA = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
@@ -77,6 +78,23 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
   // Suplementación: seguimiento informativo puro, SIN XP (como la báscula).
   const pautaSupl = (estado.suplementos && estado.suplementos.pauta) || []
   const tomas = (estado.suplementos && estado.suplementos.tomas) || {}
+
+  // «Hoy toca»: si hoy es día planificado y hay rutina, el siguiente día en
+  // la rotación (el que va después del último entrenado). Solo sugerencia.
+  let hoyToca = null
+  if (!estado.sesionActiva && estado.ajustes.diasPlanificados.includes(diaISO(hoy))) {
+    const ultima = [...estado.sesiones].reverse().find((s) => s.rutinaId)
+    let rutina = (ultima && estado.rutinas.find((r) => r.id === ultima.rutinaId)) || null
+    if (!rutina || rutina.dias.length === 0) rutina = estado.rutinas.find((r) => r.dias.length > 0) || null
+    if (rutina) {
+      let dia = rutina.dias[0]
+      if (ultima && ultima.rutinaId === rutina.id) {
+        const i = rutina.dias.findIndex((d) => d.id === ultima.diaId)
+        if (i >= 0) dia = rutina.dias[(i + 1) % rutina.dias.length]
+      }
+      if (dia.ejercicios.length > 0) hoyToca = { dia }
+    }
+  }
 
   // Meta activa más cercana a cumplirse: una línea serena, sin cuenta atrás.
   const cercana = metaMasCercana(estado)
@@ -196,7 +214,7 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
         </div>
       )}
 
-      <section className="panel">
+      <section className="panel panel-acento-oro">
         <div className="home-carta">
           <button
             type="button"
@@ -269,15 +287,32 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
         </Modal>
       )}
 
-      <h2 className="titulo-seccion">Atributos</h2>
-      <section className="panel">
-        <StatBarra nombre="Fuerza" icono="⚔️" valor={stats.fuerza} />
-        <StatBarra nombre="Resistencia" icono="🏃" valor={stats.resistencia} />
-        <StatBarra nombre="Constancia" icono="🧭" valor={stats.constancia} />
+      {hoyToca && (
+        <>
+          <h2 className="titulo-seccion titulo-bosque">Hoy toca</h2>
+          <button type="button" className="panel panel-acento-bosque home-hoytoca" onClick={() => irA('entreno')}>
+            <span className="tira-minis">
+              {hoyToca.dia.ejercicios.slice(0, 8).map((x) => (
+                <MiniEjercicio key={x.ejercicioId} chica id={x.ejercicioId} />
+              ))}
+            </span>
+            <span className="texto-suave home-hoytoca-texto">
+              {hoyToca.dia.nombre || 'Entreno'} · {hoyToca.dia.ejercicios.length}{' '}
+              {hoyToca.dia.ejercicios.length === 1 ? 'gesta te espera' : 'gestas te esperan'}
+            </span>
+          </button>
+        </>
+      )}
+
+      <h2 className="titulo-seccion titulo-acero">Atributos</h2>
+      <section className="panel panel-acento-acero">
+        <StatBarra nombre="Fuerza" icono="⚔️" valor={stats.fuerza} tono="forja" />
+        <StatBarra nombre="Resistencia" icono="🏃" valor={stats.resistencia} tono="bosque" />
+        <StatBarra nombre="Constancia" icono="🧭" valor={stats.constancia} tono="acero" />
       </section>
 
-      <h2 className="titulo-seccion">Racha</h2>
-      <section className="panel">
+      <h2 className="titulo-seccion titulo-brasa">Racha</h2>
+      <section className="panel panel-acento-brasa">
         <div className="home-racha-cab">
           <span className="home-racha-num"><IconoRacha tam={20} /> {racha}</span>
           <span>{racha === 1 ? 'día de racha' : 'días de racha'}</span>
