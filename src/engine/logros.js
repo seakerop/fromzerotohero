@@ -52,6 +52,35 @@ function huboRetorno(estado) {
   return s.some((sesion, i) => i > 0 && diasEntre(s[i - 1].fecha, sesion.fecha) >= 8)
 }
 
+// Kilos totales movidos: suma peso × reps de las series HECHAS de todas las
+// sesiones guardadas (las series a peso 0 no aportan).
+export function volumenTotal(estado) {
+  let kg = 0
+  for (const s of estado.sesiones) {
+    for (const ej of s.ejercicios) {
+      for (const se of ej.series) {
+        if (se.hecha && se.pesoKg > 0) kg += se.pesoKg * se.reps
+      }
+    }
+  }
+  return kg
+}
+
+// Ejercicios distintos con al menos una serie hecha en alguna sesión.
+export function ejerciciosDistintos(estado) {
+  const ids = new Set()
+  for (const s of estado.sesiones) {
+    for (const ej of s.ejercicios) {
+      if (ej.series.some((se) => se.hecha)) ids.add(ej.ejercicioId)
+    }
+  }
+  return ids.size
+}
+
+function metasCumplidas(estado) {
+  return (estado.metas || []).filter((m) => m.cumplidaEl).length
+}
+
 const CONDICIONES = {
   primer_paso: (e) => Boolean(e.perfil),
   cruzar_umbral: (e) => e.progreso.contadores.sesionesTotales >= 1,
@@ -68,6 +97,21 @@ const CONDICIONES = {
   el_espejo: (e) => e.cuerpo.fotos.length >= 1,
   cronista: (e) => diasDeAccion(e) >= 30,
   hero: (e) => nivelDesdeXp(e.progreso.xp).nivel >= NIVEL_MAX,
+  cien_gestas: (e) => e.progreso.contadores.sesionesTotales >= 100,
+  racha_25: (e) => e.progreso.rachaMejor >= 25,
+  racha_50: (e) => e.progreso.rachaMejor >= 50,
+  pr_25: (e) => e.progreso.contadores.prsTotales >= 25,
+  pr_50: (e) => e.progreso.contadores.prsTotales >= 50,
+  estacion_entera: (e) => diasDeAccion(e) >= 90,
+  vuelta_al_sol: (e) => diasDeAccion(e) >= 365,
+  diez_toneladas: (e) => volumenTotal(e) >= 10000,
+  cien_toneladas: (e) => volumenTotal(e) >= 100000,
+  arsenal: (e) => ejerciciosDistintos(e) >= 15,
+  maestro_armas: (e) => ejerciciosDistintos(e) >= 30,
+  forjador: (e) => e.ejercicios.some((x) => x.personalizado),
+  pacto_sellado: (e) => Boolean(e.pacto && e.pacto.nombre),
+  primera_meta: (e) => metasCumplidas(e) >= 1,
+  cinco_metas: (e) => metasCumplidas(e) >= 5,
 }
 
 // Ids de logros cuya condición se cumple y aún no están conseguidos,

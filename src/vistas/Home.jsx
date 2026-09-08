@@ -19,6 +19,7 @@ import {
   siguienteEtapaArbol,
 } from '../engine/motor.js'
 import { logroPorId } from '../data/logros.js'
+import { medidaDeMeta, metaMasCercana, nombreDeMeta } from '../engine/metas.js'
 import { suplementoPorId } from '../data/suplementos.js'
 
 const LETRAS_DIA = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
@@ -76,6 +77,19 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
   // Suplementación: seguimiento informativo puro, SIN XP (como la báscula).
   const pautaSupl = (estado.suplementos && estado.suplementos.pauta) || []
   const tomas = (estado.suplementos && estado.suplementos.tomas) || {}
+
+  // Meta activa más cercana a cumplirse: una línea serena, sin cuenta atrás.
+  const cercana = metaMasCercana(estado)
+  let lineaMeta = null
+  if (cercana) {
+    const nombreMeta = nombreDeMeta(estado, cercana.meta)
+    if (cercana.st.actual == null) {
+      lineaMeta = `🎯 Meta en marcha: ${nombreMeta}`
+    } else {
+      const falta = Math.round(Math.abs(cercana.meta.objetivo - cercana.st.actual) * 10) / 10
+      lineaMeta = `🎯 A ${String(falta).replace('.', ',')} ${medidaDeMeta(estado, cercana.meta)} de tu meta: ${nombreMeta}`
+    }
+  }
   const tomasHoy = tomas[hoy] || []
   const adherencia = pautaSupl.length > 0
     ? Array.from({ length: 7 }, (_, i) => {
@@ -294,6 +308,12 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
           <p className="home-vacio">Elige tus días de entreno en Ajustes para encender la racha.</p>
         )}
       </section>
+
+      {lineaMeta && (
+        <button type="button" className="home-meta" onClick={() => irA('progreso')}>
+          {lineaMeta}
+        </button>
+      )}
 
       <button type="button" className="btn btn-primario btn-grande home-entrenar" onClick={() => irA('entreno')}>
         <IconoEntreno tam={20} /> {estado.sesionActiva ? 'Continuar entreno' : 'Entrenar'}

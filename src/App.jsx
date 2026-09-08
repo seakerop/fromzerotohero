@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { aplicar, crearEstadoInicial, diasCamino } from './engine/motor.js'
 import { claveDia, diasEntre } from './engine/fechas.js'
+import { metasRecienCumplidas, nombreDeMeta } from './engine/metas.js'
 import { cargarEstado, guardarEstado } from './db/db.js'
 import { estacionDeMes, momentosEntre, MENSAJES_ESTACION } from './components/Avatar.jsx'
 import { EJERCICIOS_SEED } from './data/ejercicios.js'
@@ -120,6 +121,24 @@ export default function App() {
     clearTimeout(timerGuardado.current)
     timerGuardado.current = setTimeout(() => guardarEstado(estado), 300)
     return () => clearTimeout(timerGuardado.current)
+  }, [estado])
+
+  // Sella las metas cuya condición ya se cumple (capa UI, sin XP propio: el
+  // logro de metas caerá con el siguiente evento del motor). El sellado
+  // escribe estado una sola vez; al no quedar metas sin sellar, no re-entra.
+  useEffect(() => {
+    if (!estado || !estado.perfil) return
+    const nuevas = metasRecienCumplidas(estado)
+    if (nuevas.length === 0) return
+    const hoy = claveDia()
+    for (const id of nuevas) {
+      const meta = estado.metas.find((m) => m.id === id)
+      avisar(`🎯 Meta cumplida: ${nombreDeMeta(estado, meta)}`, 'logro')
+    }
+    setEstado((prev) => ({
+      ...prev,
+      metas: prev.metas.map((m) => (nuevas.includes(m.id) ? { ...m, cumplidaEl: hoy } : m)),
+    }))
   }, [estado])
 
   function avisar(texto, tipo = 'info') {

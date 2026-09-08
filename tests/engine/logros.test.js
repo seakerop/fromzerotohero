@@ -38,12 +38,16 @@ function idsDeLogros(resultados) {
 }
 
 describe('catálogo', () => {
-  it('tiene los 15 logros del contrato con XP exacto', () => {
+  it('tiene los 30 logros del contrato con XP exacto', () => {
     const esperado = {
       primer_paso: 25, cruzar_umbral: 30, diez_pruebas: 50, veinticinco_batallas: 75,
       cincuenta_gestas: 150, primera_semana: 30, mes_camino: 100, mas_fuerte: 40,
       rompe_limites: 80, el_retorno: 60, imparable: 60, camino_diario: 50,
       el_espejo: 25, cronista: 50, hero: 200,
+      cien_gestas: 150, racha_25: 90, racha_50: 140, pr_25: 100, pr_50: 150,
+      estacion_entera: 90, vuelta_al_sol: 200, diez_toneladas: 70, cien_toneladas: 180,
+      arsenal: 50, maestro_armas: 100, forjador: 25, pacto_sellado: 40,
+      primera_meta: 50, cinco_metas: 100,
     }
     expect(LOGROS.map((l) => l.id)).toEqual(Object.keys(esperado))
     for (const l of LOGROS) {

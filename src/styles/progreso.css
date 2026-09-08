@@ -198,60 +198,96 @@
   border-radius: 10px;
 }
 
-/* ---- pestaña Logros ---- */
+/* ---- pestaña Metas ---- */
+.meta { margin-bottom: 10px; }
+.meta-cab { display: flex; align-items: center; gap: 10px; }
+.meta-emoji {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--borde);
+  background: #0c0e13;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.meta-titular { flex: 1; min-width: 0; }
+.meta-nombre { font-weight: 700; font-size: 15px; }
+.meta-detalle { font-size: 12.5px; }
+.meta-hz { font-size: 11px; flex-shrink: 0; border: 1px solid var(--borde); border-radius: 999px; padding: 3px 8px; }
+.meta-barra {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--borde);
+  overflow: hidden;
+  margin-top: 10px;
+}
+.meta-barra-relleno {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--oro), var(--oro-claro));
+  transition: width 0.4s ease;
+}
+.meta-pct { font-size: 12px; margin-top: 5px; text-align: right; }
+.meta-cumplida { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; opacity: 0.85; }
+.meta-cumplida-icono { font-size: 20px; }
+.meta-form { display: flex; flex-direction: column; gap: 10px; }
+.meta-form-ej { display: flex; align-items: center; gap: 10px; }
+.meta-form-ej .input { flex: 1; }
+
+/* ---- pestaña Logros: medallones ---- */
+.logros-resumen { text-align: center; margin-bottom: 12px; }
+.logros-resumen-num { font-size: 26px; font-weight: 700; font-family: var(--fuente-titulo); }
+.logros-resumen-texto { font-size: 13px; margin-bottom: 8px; }
 .prog-logros {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-top: 12px;
 }
-
-.prog-logro {
+.logro {
   background: var(--panel);
   border: 1px solid var(--borde);
   border-radius: var(--radio);
-  padding: 14px 10px;
+  padding: 14px 10px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   text-align: center;
 }
-
-.prog-logro-icono {
-  font-size: 30px;
-  line-height: 1;
+.logro-sello {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  border: 2px solid var(--borde);
+  background: rgba(255, 255, 255, 0.03);
 }
-
-.prog-logro-nombre {
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.prog-logro-detalle {
-  font-size: 12px;
-  color: var(--texto-suave);
-}
-
-.prog-logro-xp {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--oro);
-  margin-top: auto;
-}
-
-.prog-logro-si {
+.logro-nombre { font-weight: 700; font-size: 13.5px; line-height: 1.2; }
+.logro-desc { font-size: 11.5px; line-height: 1.35; }
+.logro-fecha { font-size: 12px; font-weight: 600; color: var(--oro-claro); margin-top: auto; }
+.logro-pista { font-size: 11.5px; margin-top: auto; }
+.logro-avance { width: 80%; height: 5px; margin-top: auto; }
+.logro-avance + .logro-pista { margin-top: 0; }
+.logro-xp { font-size: 11.5px; font-weight: 600; color: var(--oro); }
+.logro-si {
   border-color: rgba(217, 164, 65, 0.55);
-  background: linear-gradient(180deg, rgba(217, 164, 65, 0.1), var(--panel));
+  background: linear-gradient(180deg, rgba(217, 164, 65, 0.12), var(--panel));
 }
-
-.prog-logro-no {
-  opacity: 0.55;
+.logro-si .logro-sello {
+  border-color: var(--oro);
+  background: radial-gradient(circle, rgba(217, 164, 65, 0.22), rgba(217, 164, 65, 0.05));
+  box-shadow: 0 0 14px rgba(217, 164, 65, 0.25);
 }
-
-.prog-logro-no .prog-logro-icono {
-  filter: grayscale(1);
-}
+.logro-no { opacity: 0.6; }
+.logro-no .logro-sello { filter: grayscale(1); }
 
 /* ---- modales (Progreso y Ajustes) ---- */
 .prog-acciones-modal,

@@ -212,6 +212,21 @@
   font-weight: 600;
   color: var(--texto-suave);
 }
+/* Línea serena de la meta más cercana en Home */
+.home-meta {
+  width: 100%;
+  background: none;
+  border: 1px dashed var(--borde);
+  border-radius: 12px;
+  padding: 11px 13px;
+  margin-top: 12px;
+  font-size: 13.5px;
+  color: var(--texto-suave);
+  text-align: left;
+  cursor: pointer;
+}
+.home-meta:active { border-color: var(--oro); color: var(--oro-claro); }
+
 .stepper-valor-toca {
   background: none;
   border: none;

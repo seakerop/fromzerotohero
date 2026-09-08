@@ -5,7 +5,10 @@ import MiniEjercicio from '../components/MiniEjercicio.jsx'
 import Modal from '../components/Modal.jsx'
 import { claveDia, formatearFecha } from '../engine/fechas.js'
 import { borrarSesion, historicoEjercicio, pesosConMedia, progresoEjercicio, volumenSemanal } from '../engine/motor.js'
+import { ejerciciosDistintos, volumenTotal } from '../engine/logros.js'
+import { estadoDeMeta, HORIZONTES, medidaDeMeta, nombreDeMeta, pesoReferencia, valorActualDeMeta } from '../engine/metas.js'
 import { LOGROS } from '../data/logros.js'
+import { diasDeAccion } from '../engine/arbol.js'
 import { guardarFoto, cargarFoto, borrarFoto } from '../db/fotos.js'
 
 const PESTANAS = [
@@ -13,6 +16,7 @@ const PESTANAS = [
   ['fuerza', 'Fuerza'],
   ['volumen', 'Volumen'],
   ['cuerpo', 'Cuerpo'],
+  ['metas', 'Metas'],
   ['logros', 'Logros'],
 ]
 
@@ -526,27 +530,279 @@ function TabCuerpo({ estado, aplicarEvento, actualizarEstado, avisar }) {
   )
 }
 
+function TabMetas({ estado, actualizarEstado, avisar }) {
+  const [crear, setCrear] = useState(false)
+  const [aBorrar, setABorrar] = useState(null)
+  const [tipo, setTipo] = useState('marca')
+  const [ejercicioId, setEjercicioId] = useState('')
+  const [valorTxt, setValorTxt] = useState('')
+  const [horizonte, setHorizonte] = useState('medio')
+
+  const metas = estado.metas || []
+  const activas = metas
+    .filter((m) => !m.cumplidaEl)
+    .map((m) => ({ m, st: estadoDeMeta(estado, m) }))
+    .sort((a, b) => b.st.pct - a.st.pct)
+  const cumplidas = metas.filter((m) => m.cumplidaEl).slice().reverse()
+  const ejercicios = [...estado.ejercicios].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+
+  function cerrarForm() {
+    setCrear(false)
+    setValorTxt('')
+    setEjercicioId('')
+  }
+
+  function crearMeta() {
+    const objetivo = Number(valorTxt.replace(',', '.'))
+    if (!Number.isFinite(objetivo) || objetivo <= 0) {
+      avisar('Pon un valor objetivo válido', 'error')
+      return
+    }
+    let inicial = 0
+    if (tipo === 'marca') {
+      if (!ejercicioId) {
+        avisar('Elige un ejercicio', 'error')
+        return
+      }
+      inicial = valorActualDeMeta(estado, { tipo: 'marca', ejercicioId }) || 0
+      if (objetivo <= inicial) {
+        avisar(`Ya estás en ${fmtNum(inicial)}: apunta más alto`, 'error')
+        return
+      }
+    } else if (tipo === 'peso') {
+      const ref = pesoReferencia(estado)
+      if (ref == null) {
+        avisar('Registra tu peso al menos una vez primero (pestaña Cuerpo)', 'error')
+        return
+      }
+      if (objetivo === ref) {
+        avisar('Ya estás ahí 😄', 'error')
+        return
+      }
+      inicial = ref
+    } else {
+      inicial = estado.progreso.contadores.sesionesTotales
+      if (objetivo <= inicial) {
+        avisar(`Ya llevas ${inicial} sesiones: apunta más alto`, 'error')
+        return
+      }
+    }
+    const meta = {
+      id: `meta-${Date.now()}`,
+      tipo,
+      ejercicioId: tipo === 'marca' ? ejercicioId : undefined,
+      objetivo,
+      inicial,
+      horizonte,
+      creadaEl: claveDia(),
+      cumplidaEl: null,
+    }
+    actualizarEstado((e) => ({ ...e, metas: [...(e.metas || []), meta] }))
+    cerrarForm()
+    avisar(`🎯 Meta en marcha: ${nombreDeMeta(estado, meta)}`)
+  }
+
+  function borrarMeta(id) {
+    actualizarEstado((e) => ({ ...e, metas: (e.metas || []).filter((m) => m.id !== id) }))
+    setABorrar(null)
+  }
+
+  const nombreHorizonte = (hz) => (HORIZONTES.find(([id]) => id === hz) || [])[1] || hz
+
+  return (
+    <>
+      {activas.length === 0 && cumplidas.length === 0 && (
+        <div className="panel prog-vacio">
+          <p>Sin metas todavía.</p>
+          <p className="texto-suave">
+            Una meta se mide sola contra lo que ya registras: una marca en un
+            ejercicio, tu peso, o un número de sesiones. Sin fechas límite: te espera.
+          </p>
+        </div>
+      )}
+      {activas.map(({ m, st }) => (
+        <div key={m.id} className="panel meta">
+          <div className="meta-cab">
+            {m.tipo === 'marca' && <MiniEjercicio id={m.ejercicioId} />}
+            {m.tipo !== 'marca' && <div className="meta-emoji">{m.tipo === 'peso' ? '⚖️' : '⚔️'}</div>}
+            <div className="meta-titular">
+              <div className="meta-nombre">{nombreDeMeta(estado, m)}</div>
+              <div className="texto-suave meta-detalle">
+                {st.actual != null
+                  ? `${fmtNum(m.inicial)} → ${fmtNum(m.objetivo)} ${medidaDeMeta(estado, m)} · ahora: ${fmtNum(st.actual)}`
+                  : 'Aún sin datos: se medirá sola con tus registros'}
+              </div>
+            </div>
+            <span className="meta-hz texto-suave">{nombreHorizonte(m.horizonte)}</span>
+            <button className="rut-quitar" aria-label="Borrar meta" onClick={() => setABorrar(m)}>✕</button>
+          </div>
+          <div className="meta-barra" role="img" aria-label={`${st.pct}% del camino`}>
+            <div className="meta-barra-relleno" style={{ width: `${st.pct}%` }} />
+          </div>
+          <div className="texto-suave meta-pct">{st.pct}% del camino</div>
+        </div>
+      ))}
+      <button className="btn btn-primario rut-boton-ancho" onClick={() => setCrear(true)}>
+        ＋ Nueva meta
+      </button>
+      {cumplidas.length > 0 && (
+        <>
+          <h2 className="titulo-seccion">Cumplidas</h2>
+          {cumplidas.map((m) => (
+            <div key={m.id} className="panel meta-cumplida">
+              <span className="meta-cumplida-icono">🎯</span>
+              <div className="meta-titular">
+                <div className="meta-nombre">{nombreDeMeta(estado, m)}</div>
+                <div className="texto-suave meta-detalle">Cumplida · {formatearFecha(m.cumplidaEl)}</div>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+      <p className="texto-suave prog-nota">
+        Las metas no dan XP ni tienen fecha límite: te esperan. La de peso
+        corporal es información, como la báscula — se mide sobre tu media de 7
+        registros y aquí nada se pone en rojo.
+      </p>
+      {crear && (
+        <Modal titulo="Nueva meta" abierto onCerrar={cerrarForm}>
+          <div className="meta-form">
+            <label className="etiqueta">Qué quieres medir</label>
+            <div className="rut-chips">
+              {[['marca', 'Marca en ejercicio'], ['peso', 'Peso corporal'], ['sesiones', 'Sesiones totales']].map(([id, nombre]) => (
+                <button
+                  key={id}
+                  className={'chip' + (tipo === id ? ' chip-activo' : '')}
+                  onClick={() => setTipo(id)}
+                >
+                  {nombre}
+                </button>
+              ))}
+            </div>
+            {tipo === 'marca' && (
+              <>
+                <label className="etiqueta" htmlFor="meta-ej">Ejercicio</label>
+                <div className="meta-form-ej">
+                  {ejercicioId && <MiniEjercicio id={ejercicioId} />}
+                  <select
+                    id="meta-ej"
+                    className="input"
+                    value={ejercicioId}
+                    onChange={(ev) => setEjercicioId(ev.target.value)}
+                  >
+                    <option value="">Elige un ejercicio…</option>
+                    {ejercicios.map((e) => (
+                      <option key={e.id} value={e.id}>{e.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+            <label className="etiqueta" htmlFor="meta-valor">
+              {tipo === 'peso' ? 'Peso objetivo (kg)' : tipo === 'sesiones' ? 'Sesiones totales objetivo' : 'Valor objetivo'}
+            </label>
+            <input
+              id="meta-valor"
+              className="input"
+              type="text"
+              inputMode="decimal"
+              placeholder={tipo === 'sesiones' ? 'p. ej. 50' : 'p. ej. 80'}
+              value={valorTxt}
+              onChange={(ev) => setValorTxt(ev.target.value)}
+            />
+            <label className="etiqueta">Horizonte</label>
+            <div className="rut-chips">
+              {HORIZONTES.map(([id, nombre]) => (
+                <button
+                  key={id}
+                  className={'chip' + (horizonte === id ? ' chip-activo' : '')}
+                  onClick={() => setHorizonte(id)}
+                >
+                  {nombre}
+                </button>
+              ))}
+            </div>
+            <button className="btn btn-primario rut-boton-ancho" onClick={crearMeta}>
+              Forjar la meta
+            </button>
+          </div>
+        </Modal>
+      )}
+      {aBorrar && (
+        <Modal titulo="Borrar meta" abierto onCerrar={() => setABorrar(null)}>
+          <p>¿Borrar «{nombreDeMeta(estado, aBorrar)}»? Solo desaparece la meta; tus datos no se tocan.</p>
+          <div className="fila rut-modal-botones">
+            <button className="btn" onClick={() => setABorrar(null)}>Cancelar</button>
+            <button className="btn btn-peligro" onClick={() => borrarMeta(aBorrar.id)}>Borrar</button>
+          </div>
+        </Modal>
+      )}
+    </>
+  )
+}
+
+// Pistas de avance para logros contables: [llevas, de]. Transparencia > misterio.
+const PISTAS_LOGRO = {
+  diez_pruebas: (e) => [e.progreso.contadores.sesionesTotales, 10],
+  veinticinco_batallas: (e) => [e.progreso.contadores.sesionesTotales, 25],
+  cincuenta_gestas: (e) => [e.progreso.contadores.sesionesTotales, 50],
+  cien_gestas: (e) => [e.progreso.contadores.sesionesTotales, 100],
+  mas_fuerte: (e) => [e.progreso.contadores.prsTotales, 1],
+  rompe_limites: (e) => [e.progreso.contadores.prsTotales, 10],
+  pr_25: (e) => [e.progreso.contadores.prsTotales, 25],
+  pr_50: (e) => [e.progreso.contadores.prsTotales, 50],
+  imparable: (e) => [e.progreso.rachaMejor, 10],
+  racha_25: (e) => [e.progreso.rachaMejor, 25],
+  racha_50: (e) => [e.progreso.rachaMejor, 50],
+  cronista: (e) => [diasDeAccion(e), 30],
+  estacion_entera: (e) => [diasDeAccion(e), 90],
+  vuelta_al_sol: (e) => [diasDeAccion(e), 365],
+  diez_toneladas: (e) => [Math.round(volumenTotal(e)), 10000],
+  cien_toneladas: (e) => [Math.round(volumenTotal(e)), 100000],
+  arsenal: (e) => [ejerciciosDistintos(e), 15],
+  maestro_armas: (e) => [ejerciciosDistintos(e), 30],
+  cinco_metas: (e) => [(e.metas || []).filter((m) => m.cumplidaEl).length, 5],
+}
+
 function TabLogros({ estado }) {
   const conseguidos = estado.progreso.logros
   const total = LOGROS.length
   const cuantos = LOGROS.filter((l) => conseguidos[l.id]).length
+  // Los forjados primero (por orden del catálogo), luego los que esperan.
+  const ordenados = [...LOGROS.filter((l) => conseguidos[l.id]), ...LOGROS.filter((l) => !conseguidos[l.id])]
 
   return (
     <>
-      <p className="texto-suave prog-nota">
-        {cuantos} de {total} conseguidos. Cada uno cuenta una parte de tu viaje.
-      </p>
+      <div className="panel logros-resumen">
+        <div className="logros-resumen-num">{cuantos} <span className="texto-suave">de {total}</span></div>
+        <div className="logros-resumen-texto texto-suave">logros forjados</div>
+        <div className="meta-barra">
+          <div className="meta-barra-relleno" style={{ width: `${Math.round((cuantos / total) * 100)}%` }} />
+        </div>
+      </div>
       <div className="prog-logros">
-        {LOGROS.map((l) => {
+        {ordenados.map((l) => {
           const fecha = conseguidos[l.id]
+          const pista = !fecha && PISTAS_LOGRO[l.id] ? PISTAS_LOGRO[l.id](estado) : null
+          const avancePct = pista ? Math.min(100, Math.round((pista[0] / pista[1]) * 100)) : null
           return (
-            <div key={l.id} className={fecha ? 'prog-logro prog-logro-si' : 'prog-logro prog-logro-no'}>
-              <div className="prog-logro-icono">{l.icono}</div>
-              <div className="prog-logro-nombre">{l.nombre}</div>
-              <div className="prog-logro-detalle">
-                {fecha ? `Conseguido · ${formatearFecha(fecha)}` : l.descripcion}
-              </div>
-              <div className="prog-logro-xp">+{l.xp} XP</div>
+            <div key={l.id} className={fecha ? 'logro logro-si' : 'logro logro-no'}>
+              <div className="logro-sello">{l.icono}</div>
+              <div className="logro-nombre">{l.nombre}</div>
+              <div className="logro-desc texto-suave">{l.descripcion}</div>
+              {fecha ? (
+                <div className="logro-fecha">✓ {formatearFecha(fecha)}</div>
+              ) : pista ? (
+                <>
+                  <div className="meta-barra logro-avance">
+                    <div className="meta-barra-relleno" style={{ width: `${avancePct}%` }} />
+                  </div>
+                  <div className="logro-pista texto-suave">{fmtNum(pista[0])} / {fmtNum(pista[1])}</div>
+                </>
+              ) : (
+                <div className="logro-pista texto-suave">Te espera en el camino</div>
+              )}
+              <div className="logro-xp">+{l.xp} XP</div>
             </div>
           )
         })}
@@ -678,6 +934,9 @@ export default function Progreso({ estado, actualizarEstado, aplicarEvento, avis
           actualizarEstado={actualizarEstado}
           avisar={avisar}
         />
+      )}
+      {pestana === 'metas' && (
+        <TabMetas estado={estado} actualizarEstado={actualizarEstado} avisar={avisar} />
       )}
       {pestana === 'logros' && <TabLogros estado={estado} />}
     </div>
