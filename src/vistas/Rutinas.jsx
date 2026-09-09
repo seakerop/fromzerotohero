@@ -282,6 +282,23 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
     avisar('Día borrado')
   }
 
+  // Desde la lista de días de la rutina, sin tener que entrar en el día.
+  function borrarDiaDeLista(diaId) {
+    editarRutina(rutina.id, (r) => ({ ...r, dias: r.dias.filter((d) => d.id !== diaId) }))
+    setModal(null)
+    avisar('Día borrado')
+  }
+
+  function moverDia(indice, dir) {
+    const j = indice + dir
+    editarRutina(rutina.id, (r) => {
+      if (j < 0 || j >= r.dias.length) return r
+      const dias = [...r.dias]
+      ;[dias[indice], dias[j]] = [dias[j], dias[indice]]
+      return { ...r, dias }
+    })
+  }
+
   function anadirEjercicioAlDia(ej) {
     if (dia.ejercicios.some((x) => x.ejercicioId === ej.id)) {
       avisar('Ese ejercicio ya está en este día')
@@ -525,14 +542,14 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
                     {nombreGrupo(ej.grupo)} · {NOMBRE_MEDIDA[ej.medida] || ej.medida}
                   </div>
                 </div>
-                <button
-                  className="rut-info"
-                  aria-label={`Ver técnica de ${ej.nombre}`}
-                  onClick={() => setFichaDia(ej)}
-                >
-                  ⓘ
-                </button>
-                <span className="ent-mover">
+                <span className="rut-ejercicio-acciones">
+                  <button
+                    className="rut-info"
+                    aria-label={`Ver técnica de ${ej.nombre}`}
+                    onClick={() => setFichaDia(ej)}
+                  >
+                    ⓘ
+                  </button>
                   <button
                     type="button"
                     className="ent-mover-btn"
@@ -551,14 +568,14 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
                   >
                     ↓
                   </button>
+                  <button
+                    className="rut-quitar"
+                    aria-label={`Quitar ${ej.nombre}`}
+                    onClick={() => quitarDelDia(obj.ejercicioId)}
+                  >
+                    ✕
+                  </button>
                 </span>
-                <button
-                  className="rut-quitar"
-                  aria-label={`Quitar ${ej.nombre}`}
-                  onClick={() => quitarDelDia(obj.ejercicioId)}
-                >
-                  ✕
-                </button>
               </div>
               <div className="rut-objetivos">
                 <div className="rut-objetivo">
@@ -649,22 +666,51 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
         {rutina.dias.length === 0 && (
           <p className="texto-suave rut-vacio">Una rutina se forja día a día. Crea el primero.</p>
         )}
-        {rutina.dias.map((d) => (
-          <button key={d.id} className="rut-dia" onClick={() => setDiaId(d.id)}>
-            <span className="rut-dia-izq">
-              <span className="rut-dia-nombre">{d.nombre || 'Día'}</span>
-              {d.ejercicios.length > 0 && (
-                <span className="tira-minis">
-                  {d.ejercicios.slice(0, 8).map((x) => (
-                    <MiniEjercicio key={x.ejercicioId} chica id={x.ejercicioId} />
-                  ))}
+        {rutina.dias.map((d, indice) => (
+          <div key={d.id} className="rut-dia-fila">
+            <button className="rut-dia" onClick={() => setDiaId(d.id)}>
+              <span className="rut-dia-izq">
+                <span className="rut-dia-nombre">{d.nombre || 'Día'}</span>
+                {d.ejercicios.length > 0 && (
+                  <span className="tira-minis">
+                    {d.ejercicios.slice(0, 8).map((x) => (
+                      <MiniEjercicio key={x.ejercicioId} chica id={x.ejercicioId} />
+                    ))}
+                  </span>
+                )}
+                <span className="texto-suave rut-dia-meta">
+                  {d.ejercicios.length} ejercicio{d.ejercicios.length === 1 ? '' : 's'} ›
                 </span>
-              )}
+              </span>
+            </button>
+            <span className="rut-dia-acciones">
+              <button
+                type="button"
+                className="ent-mover-btn"
+                disabled={indice === 0}
+                onClick={() => moverDia(indice, -1)}
+                aria-label={`Subir ${d.nombre || 'día'}`}
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                className="ent-mover-btn"
+                disabled={indice === rutina.dias.length - 1}
+                onClick={() => moverDia(indice, 1)}
+                aria-label={`Bajar ${d.nombre || 'día'}`}
+              >
+                ↓
+              </button>
+              <button
+                className="rut-quitar"
+                aria-label={`Borrar ${d.nombre || 'día'}`}
+                onClick={() => setModal({ tipo: 'borrar-dia-lista', dia: d })}
+              >
+                ✕
+              </button>
             </span>
-            <span className="texto-suave rut-dia-meta">
-              {d.ejercicios.length} ejercicio{d.ejercicios.length === 1 ? '' : 's'} ›
-            </span>
-          </button>
+          </div>
         ))}
         <button className="btn rut-boton-ancho" onClick={crearDia}>＋ Añadir día</button>
         <button
@@ -680,6 +726,15 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
         <button className="rut-borrar-enlace" onClick={() => setModal({ tipo: 'borrar-rutina' })}>
           Borrar rutina
         </button>
+        {modal && modal.tipo === 'borrar-dia-lista' && (
+          <Modal titulo="Borrar día" abierto onCerrar={() => setModal(null)}>
+            <p>¿Borrar «{modal.dia.nombre || 'este día'}» de la rutina? Tus sesiones ya registradas no se tocan.</p>
+            <div className="fila rut-modal-botones">
+              <button className="btn" onClick={() => setModal(null)}>Cancelar</button>
+              <button className="btn btn-peligro" onClick={() => borrarDiaDeLista(modal.dia.id)}>Borrar</button>
+            </div>
+          </Modal>
+        )}
         {modal && modal.tipo === 'borrar-rutina' && (
           <Modal titulo="Borrar rutina" abierto onCerrar={() => setModal(null)}>
             <p>

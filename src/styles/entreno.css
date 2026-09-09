@@ -74,6 +74,22 @@
   min-width: 0;
   text-align: left;
 }
+/* Fila de día en la rutina: abrir + reordenar + borrar sin entrar */
+.rut-dia-fila { display: flex; align-items: stretch; gap: 8px; margin-bottom: 8px; }
+.rut-dia-fila .rut-dia { flex: 1; min-width: 0; margin-bottom: 0; }
+.rut-dia-acciones { display: flex; flex-direction: column; justify-content: center; gap: 6px; flex-shrink: 0; }
+.rut-dia-acciones .ent-mover-btn { min-height: 36px; min-width: 44px; }
+.rut-dia-acciones .rut-quitar { min-height: 36px; }
+
+/* Acciones del ejercicio en el editor de día: en fila propia si no caben */
+.rut-ejercicio-cab { flex-wrap: wrap; }
+.rut-ejercicio-acciones {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
 .rut-quitar {
   min-width: 44px;
   min-height: 44px;
