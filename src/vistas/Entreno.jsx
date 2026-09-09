@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Modal from '../components/Modal.jsx'
+import EstadisticasEjercicio from '../components/EstadisticasEjercicio.jsx'
+import { IconoProgreso } from '../components/Iconos.jsx'
 import MiniEjercicio from '../components/MiniEjercicio.jsx'
 import Stepper from '../components/Stepper.jsx'
 import FichaEjercicio from '../components/FichaEjercicio.jsx'
@@ -117,6 +119,7 @@ function Premio({ r }) {
 
 function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar, alAnadirSerie, alMover }) {
   const [verFicha, setVerFicha] = useState(false)
+  const [verStats, setVerStats] = useState(false)
   const ej = estado.ejercicios.find((x) => x.id === ejS.ejercicioId) ||
     { id: ejS.ejercicioId, nombre: ejS.ejercicioId, medida: 'peso_reps' }
   const h = historicoEjercicio(estado, ejS.ejercicioId)
@@ -126,6 +129,7 @@ function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar,
   return (
     <section className="panel ent-ejercicio">
       <FichaEjercicio ejercicio={ej} abierto={verFicha} onCerrar={() => setVerFicha(false)} />
+      <EstadisticasEjercicio estado={estado} ejercicio={ej} abierto={verStats} onCerrar={() => setVerStats(false)} />
       <header className="ent-ejercicio-cab">
         <MiniEjercicio id={ej.id} />
         <h3 className="ent-ejercicio-nombre">{ej.nombre}</h3>
@@ -135,6 +139,13 @@ function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar,
           onClick={() => setVerFicha(true)}
         >
           ⓘ
+        </button>
+        <button
+          className="rut-info"
+          aria-label={`Ver mis estadísticas de ${ej.nombre}`}
+          onClick={() => setVerStats(true)}
+        >
+          <IconoProgreso tam={17} />
         </button>
         <span className="ent-mover">
           <button
@@ -598,7 +609,7 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
       )}
       {modal === 'anadir' && (
         <Modal titulo="Añadir ejercicio" abierto onCerrar={() => setModal(null)}>
-          <SelectorEjercicios ejercicios={estado.ejercicios} alElegir={anadirEjercicio} />
+          <SelectorEjercicios estado={estado} ejercicios={estado.ejercicios} alElegir={anadirEjercicio} />
         </Modal>
       )}
       {modal === 'descartar' && (

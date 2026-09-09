@@ -198,6 +198,14 @@
   border-radius: 10px;
 }
 
+/* ---- ficha de estadísticas de ejercicio (modal 📈) ---- */
+.estej { display: flex; flex-direction: column; gap: 10px; }
+.estej-cab { display: flex; align-items: center; gap: 10px; }
+.estej-chips { flex: 1; margin: 0; }
+.estej-titulo { margin: 4px 0 0; }
+.estej-vacio { font-size: 14px; line-height: 1.5; }
+.estej-nota { font-size: 12.5px; margin: 0; }
+
 /* ---- pestaña Metas ---- */
 .meta { margin-bottom: 10px; }
 .meta-cab { display: flex; align-items: center; gap: 10px; }

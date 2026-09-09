@@ -96,9 +96,9 @@ h1, h2, h3 { line-height: 1.2; }
 .panel-acento-acero::before, .panel-acento-acero::after { border-color: var(--acero); }
 .panel-acento-bosque { border-top: 2px solid var(--bosque); background: linear-gradient(180deg, rgba(74, 154, 109, 0.08), #141726 60%); }
 .panel-acento-bosque::before, .panel-acento-bosque::after { border-color: var(--bosque); }
-.titulo-brasa { color: var(--forja-claro); }
-.titulo-acero { color: var(--acero-claro); }
-.titulo-bosque { color: var(--bosque-claro); }
+.titulo-seccion.titulo-brasa { color: var(--forja-claro); }
+.titulo-seccion.titulo-acero { color: var(--acero-claro); }
+.titulo-seccion.titulo-bosque { color: var(--bosque-claro); }
 
 .titulo-seccion {
   font-family: var(--fuente-titulo);

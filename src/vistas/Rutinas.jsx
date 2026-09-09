@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
+import EstadisticasEjercicio from '../components/EstadisticasEjercicio.jsx'
 import FichaEjercicio from '../components/FichaEjercicio.jsx'
+import { IconoProgreso } from '../components/Iconos.jsx'
 import MiniEjercicio from '../components/MiniEjercicio.jsx'
 import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
@@ -40,11 +42,12 @@ export function nombreGrupo(grupoId) {
 
 // Buscador de biblioteca con filtro por grupo. Lo reutiliza Entreno para
 // añadir ejercicios sobre la marcha (por eso va exportado).
-export function SelectorEjercicios({ ejercicios, alElegir, alBorrar }) {
+export function SelectorEjercicios({ ejercicios, alElegir, alBorrar, estado }) {
   const [busqueda, setBusqueda] = useState('')
   const [grupo, setGrupo] = useState('todos')
   const [equipo, setEquipo] = useState('todos')
   const [ficha, setFicha] = useState(null)
+  const [stats, setStats] = useState(null)
 
   const filtrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
@@ -123,6 +126,15 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar }) {
             >
               ⓘ
             </button>
+            {estado && (
+              <button
+                className="rut-info"
+                aria-label={`Ver mis estadísticas de ${ej.nombre}`}
+                onClick={() => setStats(ej)}
+              >
+                <IconoProgreso tam={17} />
+              </button>
+            )}
             {alBorrar && ej.personalizado && (
               <button
                 className="rut-quitar"
@@ -139,6 +151,9 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar }) {
         )}
       </div>
       <FichaEjercicio ejercicio={ficha} abierto={Boolean(ficha)} onCerrar={() => setFicha(null)} />
+      {estado && (
+        <EstadisticasEjercicio estado={estado} ejercicio={stats} abierto={Boolean(stats)} onCerrar={() => setStats(null)} />
+      )}
     </div>
   )
 }
@@ -206,6 +221,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
   const [verPlantillas, setVerPlantillas] = useState(false)
   const [equipoFiltro, setEquipoFiltro] = useState('gym')
   const [fichaDia, setFichaDia] = useState(null)
+  const [statsDia, setStatsDia] = useState(null)
   const [diasFiltro, setDiasFiltro] = useState(() =>
     Math.min(5, Math.max(2, estado.ajustes.diasPlanificados.length || 3)))
   const [modal, setModal] = useState(null)
@@ -488,6 +504,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
           ＋ Crear ejercicio propio
         </button>
         <SelectorEjercicios
+          estado={estado}
           ejercicios={estado.ejercicios}
           alBorrar={(ej) => setModal({ tipo: 'borrar-ejercicio', ej })}
         />
@@ -549,6 +566,13 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
                     onClick={() => setFichaDia(ej)}
                   >
                     ⓘ
+                  </button>
+                  <button
+                    className="rut-info"
+                    aria-label={`Ver mis estadísticas de ${ej.nombre}`}
+                    onClick={() => setStatsDia(ej)}
+                  >
+                    <IconoProgreso tam={17} />
                   </button>
                   <button
                     type="button"
@@ -628,9 +652,10 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
           Borrar este día
         </button>
         <FichaEjercicio ejercicio={fichaDia} abierto={Boolean(fichaDia)} onCerrar={() => setFichaDia(null)} />
+        <EstadisticasEjercicio estado={estado} ejercicio={statsDia} abierto={Boolean(statsDia)} onCerrar={() => setStatsDia(null)} />
         {modal && modal.tipo === 'picker' && (
           <Modal titulo="Añadir ejercicio" abierto onCerrar={() => setModal(null)}>
-            <SelectorEjercicios ejercicios={estado.ejercicios} alElegir={anadirEjercicioAlDia} />
+            <SelectorEjercicios estado={estado} ejercicios={estado.ejercicios} alElegir={anadirEjercicioAlDia} />
           </Modal>
         )}
         {modal && modal.tipo === 'borrar-dia' && (
