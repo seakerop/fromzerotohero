@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { idioma, localeNum, t } from '../i18n/idioma.js'
 
 // Stepper con REPETICIÓN: un toque cambia un paso; mantener pulsado repite
 // (400 ms de espera y luego ~11 pasos/segundo). Sin onClick para no duplicar
@@ -50,7 +51,7 @@ export default function Stepper({ valor, paso = 1, min = 0, max = Infinity, unid
     if (nuevo !== valorRef.current) onCambiar(nuevo)
   }
 
-  const texto = Number(valor).toLocaleString('es-ES', { maximumFractionDigits: Math.max(decimales, 2) })
+  const texto = Number(valor).toLocaleString(localeNum(), { maximumFractionDigits: Math.max(decimales, 2) })
 
   const props = (direccion) => ({
     type: 'button',
@@ -71,7 +72,7 @@ export default function Stepper({ valor, paso = 1, min = 0, max = Infinity, unid
         aplicarPaso(direccion)
       }
     },
-    'aria-label': `${direccion < 0 ? 'Restar' : 'Sumar'} ${paso}${unidad ? ` ${unidad}` : ''}`,
+    'aria-label': `${direccion < 0 ? t('Restar', 'Subtract') : t('Sumar', 'Add')} ${paso}${unidad ? ` ${unidad}` : ''}`,
   })
 
   return (
@@ -91,17 +92,17 @@ export default function Stepper({ valor, paso = 1, min = 0, max = Infinity, unid
             if (e.key === 'Enter') e.currentTarget.blur()
             if (e.key === 'Escape') setEditando(false)
           }}
-          aria-label={`Escribir valor${unidad ? ` en ${unidad}` : ''}`}
+          aria-label={`${t('Escribir valor', 'Type a value')}${unidad ? ` ${t('en', 'in')} ${unidad}` : ''}`}
         />
       ) : (
         <button
           type="button"
           className="stepper-valor stepper-valor-toca"
           onClick={() => {
-            setBorrador(String(valor).replace('.', ','))
+            setBorrador(idioma() === 'en' ? String(valor) : String(valor).replace('.', ','))
             setEditando(true)
           }}
-          aria-label={`Editar valor: ${texto}${unidad ? ` ${unidad}` : ''}`}
+          aria-label={`${t('Editar valor', 'Edit value')}: ${texto}${unidad ? ` ${unidad}` : ''}`}
         >
           {texto}
           {unidad ? <span className="stepper-unidad">{unidad}</span> : null}

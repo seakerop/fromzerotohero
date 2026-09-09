@@ -2,6 +2,8 @@ import { forwardRef } from 'react'
 import Avatar from './Avatar.jsx'
 import { claveDia, claveSemana, diaISO, formatearFecha, sumarDias } from '../engine/fechas.js'
 import { calcularRacha, diasCamino, etapaArbol, nivelDesdeXp } from '../engine/motor.js'
+import { idioma, t } from '../i18n/idioma.js'
+import { nombreEtapa, nombreEtapaArbol } from '../i18n/catalogo.js'
 
 // La Tarjeta de Gesta: tu semana como imagen para el pacto de hermanos.
 // TODO en atributos SVG (nada de clases CSS): la tarjeta se serializa y se
@@ -13,7 +15,8 @@ const ORO = '#d9a441'
 const ORO_CLARO = '#f0c86e'
 const TEXTO = '#e8e6df'
 const SUAVE = '#98a0b8'
-const LETRAS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+const LETRAS_ES = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+const LETRAS_EN = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
 export function datosGesta(estado) {
   const hoy = claveDia()
@@ -23,6 +26,7 @@ export function datosGesta(estado) {
   const lunes = sumarDias(hoy, 1 - diaISO(hoy))
   const fechasConSesion = new Set(estado.sesiones.map((s) => s.fecha))
   const planificados = new Set(estado.ajustes.diasPlanificados)
+  const LETRAS = idioma() === 'en' ? LETRAS_EN : LETRAS_ES
   const semana = LETRAS.map((letra, i) => {
     const fecha = sumarDias(lunes, i)
     return { letra, plan: planificados.has(i + 1), hecho: fechasConSesion.has(fecha), esHoy: fecha === hoy }
@@ -43,7 +47,7 @@ const TarjetaGesta = forwardRef(function TarjetaGesta({ estado }, ref) {
       viewBox="0 0 540 675"
       width="100%"
       role="img"
-      aria-label="Tu tarjeta de gesta semanal"
+      aria-label={t('Tu tarjeta de gesta semanal', 'Your weekly feat card')}
       xmlns="http://www.w3.org/2000/svg"
     >
       <rect x="0" y="0" width="540" height="675" fill="#0c0e13" />
@@ -55,17 +59,17 @@ const TarjetaGesta = forwardRef(function TarjetaGesta({ estado }, ref) {
       <text x="270" y="96" textAnchor="middle" fontFamily={FUENTE} fontSize="34" fontWeight="800"
         fill={TEXTO}>{estado.perfil.apodo}</text>
       <text x="270" y="122" textAnchor="middle" fontFamily={FUENTE} fontSize="16" fontWeight="700"
-        fill={ORO_CLARO}>{nv.etapa.nombre} · Nivel {nv.nivel}</text>
+        fill={ORO_CLARO}>{nombreEtapa(nv.etapa)} · {t('Nivel', 'Level')} {nv.nivel}</text>
 
       <g transform="translate(150, 138) scale(2)">
         <Avatar dias={dias} tam={120} />
       </g>
 
       <text x="270" y="408" textAnchor="middle" fontFamily={FUENTE} fontSize="15"
-        fill={SUAVE}>🌱 {etapaA.nombre} · día {dias} del camino</text>
+        fill={SUAVE}>🌱 {nombreEtapaArbol(etapaA)} · {t(`día ${dias} del camino`, `day ${dias} of the path`)}</text>
 
       <text x="270" y="452" textAnchor="middle" fontFamily={FUENTE} fontSize="21" fontWeight="700"
-        fill={TEXTO}>🔥 {racha} {racha === 1 ? 'día de racha' : 'días de racha'}</text>
+        fill={TEXTO}>🔥 {racha} {racha === 1 ? t('día de racha', 'day streak') : t('días de racha', 'day streak')}</text>
 
       {semana.map((dia, i) => {
         const cx = 90 + i * 60
@@ -87,17 +91,17 @@ const TarjetaGesta = forwardRef(function TarjetaGesta({ estado }, ref) {
       })}
 
       <text x="270" y="576" textAnchor="middle" fontFamily={FUENTE} fontSize="16"
-        fill={TEXTO}>+{xpSemana} XP esta semana</text>
+        fill={TEXTO}>+{xpSemana} {t('XP esta semana', 'XP this week')}</text>
 
       {pacto && pacto.nombre ? (
         <text x="270" y="614" textAnchor="middle" fontFamily={FUENTE} fontSize="15" fontWeight="700"
-          fill={ORO_CLARO}>🤝 Pacto con {pacto.nombre}</text>
+          fill={ORO_CLARO}>🤝 {t('Pacto con', 'Pact with')} {pacto.nombre}</text>
       ) : null}
       <text x="270" y={pacto && pacto.nombre ? 636 : 616} textAnchor="middle" fontFamily={FUENTE}
-        fontSize="12" fill={SUAVE}>semana del {formatearFecha(lunes)} · {formatearFecha(hoy)}</text>
+        fontSize="12" fill={SUAVE}>{t(`semana del ${formatearFecha(lunes)}`, `week of ${formatearFecha(lunes)}`)} · {formatearFecha(hoy)}</text>
 
       <text x="270" y="658" textAnchor="middle" fontFamily={FUENTE} fontSize="11"
-        fill={SUAVE} fillOpacity="0.7">El XP nace de lo que haces.</text>
+        fill={SUAVE} fillOpacity="0.7">{t('El XP nace de lo que haces.', 'XP is born from what you do.')}</text>
     </svg>
   )
 })
@@ -132,8 +136,8 @@ export async function compartirTarjeta(svgNode, avisar) {
 
     if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
       try {
-        await navigator.share({ files: [archivo], title: 'Mi gesta de la semana' })
-        avisar('Gesta compartida. El pacto sigue en pie.')
+        await navigator.share({ files: [archivo], title: t('Mi gesta de la semana', 'My feat of the week') })
+        avisar(t('Gesta compartida. El pacto sigue en pie.', 'Feat shared. The Pact stands.'))
         return
       } catch (err) {
         if (err && err.name === 'AbortError') return
@@ -147,8 +151,8 @@ export async function compartirTarjeta(svgNode, avisar) {
     enlace.click()
     enlace.remove()
     setTimeout(() => URL.revokeObjectURL(enlace.href), 1000)
-    avisar('Tarjeta descargada: mándasela a tu hermano de pacto.')
+    avisar(t('Tarjeta descargada: mándasela a tu hermano de pacto.', 'Card downloaded: send it to your Pact brother.'))
   } catch {
-    avisar('No se pudo generar la tarjeta', 'error')
+    avisar(t('No se pudo generar la tarjeta', 'Could not generate the card'), 'error')
   }
 }

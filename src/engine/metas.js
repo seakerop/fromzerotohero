@@ -8,12 +8,20 @@
 //   objetivo, inicial, horizonte, creadaEl, cumplidaEl }]
 
 import { historicoEjercicio } from './motor.js'
+import { idioma, t } from '../i18n/idioma.js'
+import { nombreEjercicio } from '../i18n/catalogo.js'
 
 export const HORIZONTES = [
   ['corto', 'Corto plazo'],
   ['medio', 'Medio plazo'],
   ['largo', 'Largo plazo'],
 ]
+
+export function nombreHorizonte(id) {
+  const es = (HORIZONTES.find(([x]) => x === id) || [])[1] || id
+  if (idioma() !== 'en') return es
+  return { corto: 'Short term', medio: 'Mid term', largo: 'Long term' }[id] || es
+}
 
 // Peso de referencia: media de los últimos 7 registros (o los que haya).
 export function pesoReferencia(estado) {
@@ -24,7 +32,7 @@ export function pesoReferencia(estado) {
 }
 
 export function medidaDeMeta(estado, meta) {
-  if (meta.tipo === 'sesiones') return 'sesiones'
+  if (meta.tipo === 'sesiones') return t('sesiones', 'sessions')
   if (meta.tipo === 'peso') return 'kg'
   const ej = estado.ejercicios.find((x) => x.id === meta.ejercicioId)
   const medida = ej ? ej.medida : 'peso_reps'
@@ -57,11 +65,12 @@ export function estadoDeMeta(estado, meta) {
 
 export function nombreDeMeta(estado, meta) {
   const unidad = medidaDeMeta(estado, meta)
-  const objetivo = String(meta.objetivo).replace('.', ',')
-  if (meta.tipo === 'sesiones') return `${objetivo} sesiones totales`
-  if (meta.tipo === 'peso') return `Peso corporal a ${objetivo} kg`
+  const objetivo = idioma() === 'en' ? String(meta.objetivo) : String(meta.objetivo).replace('.', ',')
+  if (meta.tipo === 'sesiones') return t(`${objetivo} sesiones totales`, `${objetivo} total sessions`)
+  if (meta.tipo === 'peso') return t(`Peso corporal a ${objetivo} kg`, `Body weight at ${objetivo} kg`)
   const ej = estado.ejercicios.find((x) => x.id === meta.ejercicioId)
-  return `${ej ? ej.nombre : meta.ejercicioId} a ${objetivo} ${unidad}`
+  const nombre = ej ? nombreEjercicio(ej) : meta.ejercicioId
+  return t(`${nombre} a ${objetivo} ${unidad}`, `${nombre} at ${objetivo} ${unidad}`)
 }
 
 // Ids de metas cuya condición ya se cumple y aún no están selladas.

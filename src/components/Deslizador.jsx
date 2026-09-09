@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { localeNum, t } from '../i18n/idioma.js'
 
 // Barra + número editable: arrastra para lo grueso, teclea para lo fino.
 // Pensado para el onboarding (edad/altura/peso): cero toques repetidos.
@@ -25,7 +26,7 @@ export default function Deslizador({ etiqueta, valor, min, max, paso = 1, unidad
             type="text"
             inputMode={decimales > 0 ? 'decimal' : 'numeric'}
             autoComplete="off"
-            value={texto !== null ? texto : Number(valor).toLocaleString('es-ES', { maximumFractionDigits: decimales })}
+            value={texto !== null ? texto : Number(valor).toLocaleString(localeNum(), { maximumFractionDigits: decimales })}
             onFocus={(e) => e.target.select()}
             onChange={(e) => setTexto(e.target.value)}
             onBlur={confirmarTexto}
@@ -43,7 +44,7 @@ export default function Deslizador({ etiqueta, valor, min, max, paso = 1, unidad
         step={paso}
         value={valor}
         onChange={(e) => onCambiar(Number(e.target.value))}
-        aria-label={`${etiqueta} (deslizador)`}
+        aria-label={`${etiqueta} ${t('(deslizador)', '(slider)')}`}
       />
     </div>
   )

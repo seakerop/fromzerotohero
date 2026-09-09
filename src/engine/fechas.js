@@ -1,6 +1,8 @@
 // Fechas con corte de día a las 04:00 (CONTRACT.md §5).
 // Clave de día: 'YYYY-MM-DD'. Nadie fuera de aquí llama a toISOString().
 
+import { idioma } from '../i18n/idioma.js'
+
 const MS_DIA = 86400000
 const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
 
@@ -57,8 +59,11 @@ export function sumarDias(clave, n) {
   return claveDesdeUTC(aUTC(clave) + n * MS_DIA)
 }
 
-// Para UI: '21 jul' (es-ES).
+// Para UI: '21 jul' (es) o 'Jul 21' (en), según el idioma activo.
+const MESES_CORTOS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
 export function formatearFecha(clave) {
   const { m, d } = partes(clave)
+  if (idioma() === 'en') return `${MESES_CORTOS_EN[m - 1]} ${d}`
   return `${d} ${MESES_CORTOS[m - 1]}`
 }

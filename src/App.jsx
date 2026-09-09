@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { aplicar, crearEstadoInicial, diasCamino } from './engine/motor.js'
 import { claveDia, diasEntre } from './engine/fechas.js'
 import { metasRecienCumplidas, nombreDeMeta } from './engine/metas.js'
+import { establecerIdioma, idiomaInicial, t } from './i18n/idioma.js'
+import { mensajeEstacion, momentoTexto, nombreEtapa, nombreEtapaArbol, nombreLogro } from './i18n/catalogo.js'
 import { cargarEstado, guardarEstado } from './db/db.js'
 import { estacionDeMes, momentosEntre, MENSAJES_ESTACION } from './components/Avatar.jsx'
 import { EJERCICIOS_SEED } from './data/ejercicios.js'
@@ -58,10 +60,13 @@ export default function App() {
     if (anunciar && visto) {
       const lineas = []
       const nuevos = momentosEntre(visto.dia ?? 0, dias)
-      if (nuevos.length > 0) lineas.push(nuevos[nuevos.length - 1].mensaje)
-      if (visto.estacion && visto.estacion !== estacion) lineas.push(MENSAJES_ESTACION[estacion])
+      if (nuevos.length > 0) lineas.push(momentoTexto(nuevos[nuevos.length - 1]).mensaje)
+      if (visto.estacion && visto.estacion !== estacion) lineas.push(mensajeEstacion(estacion, MENSAJES_ESTACION))
       if (lineas.length === 0 && visto.fecha && diasEntre(visto.fecha, hoy) >= 7) {
-        lineas.push('Tu árbol sigue aquí, igual que lo dejaste. Hoy puede crecer.')
+        lineas.push(t(
+          'Tu árbol sigue aquí, igual que lo dejaste. Hoy puede crecer.',
+          'Your tree is still here, just as you left it. Today it can grow.'
+        ))
       }
       if (lineas.length > 0) setSusurro({ lineas })
     }
@@ -79,6 +84,8 @@ export default function App() {
       if (!vivo) return
       if (e) {
         const { estado: conTick } = aplicar(e, { tipo: 'tick_diario', hoy: claveDia() })
+        // El susurro se construye AQUÍ: fija el idioma antes de redactarlo.
+        establecerIdioma(conTick.ajustes && conTick.ajustes.idioma ? conTick.ajustes.idioma : idiomaInicial())
         setEstado(marcarArbolVisto(fusionarSeed(conTick), true))
       }
       setCargado(true)
@@ -133,7 +140,7 @@ export default function App() {
     const hoy = claveDia()
     for (const id of nuevas) {
       const meta = estado.metas.find((m) => m.id === id)
-      avisar(`🎯 Meta cumplida: ${nombreDeMeta(estado, meta)}`, 'logro')
+      avisar(t(`🎯 Meta cumplida: ${nombreDeMeta(estado, meta)}`, `🎯 Goal reached: ${nombreDeMeta(estado, meta)}`), 'logro')
     }
     setEstado((prev) => ({
       ...prev,
@@ -149,11 +156,11 @@ export default function App() {
 
   function notificar(r) {
     if (r.tipo === 'xp') avisar(`+${r.cantidad} XP · ${r.motivo}`, 'xp')
-    else if (r.tipo === 'pr') avisar(`¡PR en ${r.nombre}! ${r.detalle}`, 'pr')
-    else if (r.tipo === 'logro') avisar(`Logro: ${r.logro.nombre} (+${r.logro.xp} XP)`, 'logro')
-    else if (r.tipo === 'nivel') avisar(`¡Nivel ${r.nivel} — ${r.etapa.nombre}!`, 'nivel')
-    else if (r.tipo === 'racha') avisar(`Racha: ${r.dias} días`, 'racha')
-    else if (r.tipo === 'arbol') avisar(`🌳 Tu árbol ha crecido: ${r.etapa.nombre}`, 'nivel')
+    else if (r.tipo === 'pr') avisar(t(`¡PR en ${r.nombre}! ${r.detalle}`, `PR on ${r.nombre}! ${r.detalle}`), 'pr')
+    else if (r.tipo === 'logro') avisar(t(`Logro: ${nombreLogro(r.logro)} (+${r.logro.xp} XP)`, `Achievement: ${nombreLogro(r.logro)} (+${r.logro.xp} XP)`), 'logro')
+    else if (r.tipo === 'nivel') avisar(t(`¡Nivel ${r.nivel} — ${nombreEtapa(r.etapa)}!`, `Level ${r.nivel} — ${nombreEtapa(r.etapa)}!`), 'nivel')
+    else if (r.tipo === 'racha') avisar(t(`Racha: ${r.dias} días`, `Streak: ${r.dias} days`), 'racha')
+    else if (r.tipo === 'arbol') avisar(t(`🌳 Tu árbol ha crecido: ${nombreEtapaArbol(r.etapa)}`, `🌳 Your tree has grown: ${nombreEtapaArbol(r.etapa)}`), 'nivel')
   }
 
   function aplicarEvento(evento) {
@@ -167,7 +174,7 @@ export default function App() {
       const nuevos = momentosEntre(antes, despues)
       const huboEtapa = resultados.some((r) => r.tipo === 'arbol')
       if (nuevos.length > 0 && !huboEtapa) {
-        avisar(`🌿 ${nuevos[nuevos.length - 1].mensaje}`, 'info')
+        avisar(`🌿 ${momentoTexto(nuevos[nuevos.length - 1]).mensaje}`, 'info')
       }
       final = marcarArbolVisto(nuevo, false)
     }
@@ -184,12 +191,16 @@ export default function App() {
     const hoy = claveDia()
     const inicial = crearEstadoInicial({ ...respuestas, hoy })
     const { estado: nuevo, resultados } = aplicar(inicial, { tipo: 'perfil_creado', hoy })
-    setEstado(marcarArbolVisto(nuevo, false))
+    const conIdioma = { ...nuevo, ajustes: { ...nuevo.ajustes, idioma: idiomaInicial() } }
+    setEstado(marcarArbolVisto(conIdioma, false))
     resultados.forEach(notificar)
   }
 
+  // El idioma vive en ajustes; fijarlo aquí hace que t() lo vea en el render.
+  establecerIdioma(estado && estado.ajustes && estado.ajustes.idioma ? estado.ajustes.idioma : idiomaInicial())
+
   if (!cargado) {
-    return <div className="app-carga"><div className="app-carga-logo">⚔️</div>Cargando…</div>
+    return <div className="app-carga"><div className="app-carga-logo">⚔️</div>{t('Cargando…', 'Loading…')}</div>
   }
 
   if (!estado || !estado.perfil) {

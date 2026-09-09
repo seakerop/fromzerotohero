@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { t } from '../i18n/idioma.js'
 
 export default function Modal({ titulo, abierto, onCerrar, children }) {
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function Modal({ titulo, abierto, onCerrar, children }) {
       >
         <div className="modal-cabecera">
           <h2 className="modal-titulo">{titulo}</h2>
-          <button type="button" className="modal-cerrar" onClick={onCerrar} aria-label="Cerrar">
+          <button type="button" className="modal-cerrar" onClick={onCerrar} aria-label={t('Cerrar', 'Close')}>
             ✕
           </button>
         </div>

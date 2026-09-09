@@ -22,13 +22,24 @@ import { logroPorId } from '../data/logros.js'
 import { medidaDeMeta, metaMasCercana, nombreDeMeta } from '../engine/metas.js'
 import MiniEjercicio from '../components/MiniEjercicio.jsx'
 import { suplementoPorId } from '../data/suplementos.js'
+import { idioma, localeNum, t } from '../i18n/idioma.js'
+import {
+  descEtapaArbol,
+  descLogro,
+  momentoTexto,
+  nombreEtapa,
+  nombreEtapaArbol,
+  nombreLogro,
+  nombreSuplemento,
+} from '../i18n/catalogo.js'
 
-const LETRAS_DIA = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+const LETRAS_DIA_ES = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+const LETRAS_DIA_EN = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 const NOMBRE_ESTACION = {
-  primavera: 'primavera',
-  verano: 'verano',
-  otono: 'otoño',
-  invierno: 'invierno',
+  primavera: ['primavera', 'spring'],
+  verano: ['verano', 'summer'],
+  otono: ['otoño', 'autumn'],
+  invierno: ['invierno', 'winter'],
 }
 
 export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avisar, susurro, cerrarSusurro }) {
@@ -51,12 +62,13 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
   const siguienteArbol = siguienteEtapaArbol(diasCamino)
 
   const etiquetaXp = nv.xpParaSubir === null
-    ? `Nv ${nv.nivel} · Nivel máximo`
-    : `Nv ${nv.nivel} · ${nv.xpEnNivel}/${nv.xpParaSubir} XP`
+    ? t(`Nv ${nv.nivel} · Nivel máximo`, `Lv ${nv.nivel} · Max level`)
+    : `${t('Nv', 'Lv')} ${nv.nivel} · ${nv.xpEnNivel}/${nv.xpParaSubir} XP`
 
   const lunes = sumarDias(hoy, 1 - diaISO(hoy))
   const fechasConSesion = new Set(estado.sesiones.map((s) => s.fecha))
   const planificados = new Set(estado.ajustes.diasPlanificados)
+  const LETRAS_DIA = idioma() === 'en' ? LETRAS_DIA_EN : LETRAS_DIA_ES
   const semana = LETRAS_DIA.map((letra, i) => {
     const fecha = sumarDias(lunes, i)
     return {
@@ -105,10 +117,15 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
   if (cercana) {
     const nombreMeta = nombreDeMeta(estado, cercana.meta)
     if (cercana.st.actual == null) {
-      lineaMeta = `🎯 Meta en marcha: ${nombreMeta}`
+      lineaMeta = t(`🎯 Meta en marcha: ${nombreMeta}`, `🎯 Goal under way: ${nombreMeta}`)
     } else {
       const falta = Math.round(Math.abs(cercana.meta.objetivo - cercana.st.actual) * 10) / 10
-      lineaMeta = `🎯 A ${String(falta).replace('.', ',')} ${medidaDeMeta(estado, cercana.meta)} de tu meta: ${nombreMeta}`
+      const faltaTxt = idioma() === 'en' ? String(falta) : String(falta).replace('.', ',')
+      const unidadMeta = medidaDeMeta(estado, cercana.meta)
+      lineaMeta = t(
+        `🎯 A ${faltaTxt} ${unidadMeta} de tu meta: ${nombreMeta}`,
+        `🎯 ${faltaTxt} ${unidadMeta} away from your goal: ${nombreMeta}`
+      )
     }
   }
   const tomasHoy = tomas[hoy] || []
@@ -157,23 +174,23 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
   function guardarPasos() {
     const n = parseInt(textoPasos.replace(/[.\s]/g, ''), 10)
     if (!Number.isFinite(n) || n < 0 || n > 200000) {
-      avisar('Introduce un número de pasos válido', 'error')
+      avisar(t('Introduce un número de pasos válido', 'Enter a valid step count'), 'error')
       return
     }
     const resultados = aplicarEvento({ tipo: 'pasos', fecha: hoy, pasos: n, fuente: 'manual' })
-    if (!resultados.some((r) => r.tipo === 'xp')) avisar('Pasos de hoy actualizados', 'info')
+    if (!resultados.some((r) => r.tipo === 'xp')) avisar(t('Pasos de hoy actualizados', "Today's steps updated"), 'info')
     setTextoPasos('')
   }
 
   function guardarPeso() {
     const n = parseFloat(textoPeso.replace(',', '.'))
     if (!Number.isFinite(n) || n <= 0 || n > 400) {
-      avisar('Introduce un peso válido en kg', 'error')
+      avisar(t('Introduce un peso válido en kg', 'Enter a valid weight in kg'), 'error')
       return
     }
     const kg = Math.round(n * 10) / 10
     const resultados = aplicarEvento({ tipo: 'peso', fecha: hoy, kg })
-    if (!resultados.some((r) => r.tipo === 'xp')) avisar('Peso de hoy actualizado', 'info')
+    if (!resultados.some((r) => r.tipo === 'xp')) avisar(t('Peso de hoy actualizado', "Today's weight updated"), 'info')
     setTextoPeso('')
   }
 
@@ -182,23 +199,23 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
   function guardarPasosAyer() {
     const n = parseInt(textoPasosAyer.replace(/[.\s]/g, ''), 10)
     if (!Number.isFinite(n) || n < 0 || n > 200000) {
-      avisar('Introduce un número de pasos válido', 'error')
+      avisar(t('Introduce un número de pasos válido', 'Enter a valid step count'), 'error')
       return
     }
     const resultados = aplicarEvento({ tipo: 'pasos', fecha: ayer, pasos: n, fuente: 'manual' })
-    if (!resultados.some((r) => r.tipo === 'xp')) avisar('Pasos de ayer actualizados', 'info')
+    if (!resultados.some((r) => r.tipo === 'xp')) avisar(t('Pasos de ayer actualizados', "Yesterday's steps updated"), 'info')
     setTextoPasosAyer('')
   }
 
   function guardarPesoAyer() {
     const n = parseFloat(textoPesoAyer.replace(',', '.'))
     if (!Number.isFinite(n) || n <= 0 || n > 400) {
-      avisar('Introduce un peso válido en kg', 'error')
+      avisar(t('Introduce un peso válido en kg', 'Enter a valid weight in kg'), 'error')
       return
     }
     const kg = Math.round(n * 10) / 10
     const resultados = aplicarEvento({ tipo: 'peso', fecha: ayer, kg })
-    if (!resultados.some((r) => r.tipo === 'xp')) avisar('Peso de ayer actualizado', 'info')
+    if (!resultados.some((r) => r.tipo === 'xp')) avisar(t('Peso de ayer actualizado', "Yesterday's weight updated"), 'info')
     setTextoPesoAyer('')
   }
 
@@ -208,11 +225,11 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
         <div className="home-sesion">
           <span className="home-sesion-punto" aria-hidden="true" />
           <div className="home-sesion-texto">
-            <strong>Sesión en curso</strong>
+            <strong>{t('Sesión en curso', 'Session in progress')}</strong>
             <div className="texto-suave">{estado.sesionActiva.nombreDia}</div>
           </div>
           <button type="button" className="btn" onClick={() => irA('entreno')}>
-            Continuar
+            {t('Continuar', 'Continue')}
           </button>
         </div>
       )}
@@ -223,17 +240,17 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
             type="button"
             className="home-avatar-boton"
             onClick={() => setFichaAbierta(true)}
-            aria-label="Ver la ficha de tu árbol"
+            aria-label={t('Ver la ficha de tu árbol', 'View your tree')}
           >
             <Avatar dias={diasCamino} tam={104} />
           </button>
           <div className="home-carta-info">
             <h1 className="home-apodo">{estado.perfil.apodo}</h1>
-            <div className="home-etapa">{nv.etapa.nombre} · Nivel {nv.nivel}</div>
+            <div className="home-etapa">{nombreEtapa(nv.etapa)} · {t('Nivel', 'Level')} {nv.nivel}</div>
             <BarraXP progreso={nv.progreso} etiqueta={etiquetaXp} />
-            <div className="home-arbol-linea texto-suave" title={etapaDelArbol.descripcion}>
-              🌱 {etapaDelArbol.nombre} · día {diasCamino} del camino
-              {siguienteArbol ? ` · crece el día ${siguienteArbol.dias}` : ''}
+            <div className="home-arbol-linea texto-suave" title={descEtapaArbol(etapaDelArbol)}>
+              🌱 {nombreEtapaArbol(etapaDelArbol)} · {t(`día ${diasCamino} del camino`, `day ${diasCamino} of the path`)}
+              {siguienteArbol ? t(` · crece el día ${siguienteArbol.dias}`, ` · grows on day ${siguienteArbol.dias}`) : ''}
             </div>
           </div>
         </div>
@@ -251,27 +268,30 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
       )}
 
       {fichaAbierta && (
-        <Modal titulo="Tu árbol" abierto onCerrar={() => setFichaAbierta(false)}>
+        <Modal titulo={t('Tu árbol', 'Your tree')} abierto onCerrar={() => setFichaAbierta(false)}>
           <div className="ficha-arbol">
             <Avatar dias={diasCamino} tam={160} />
             <div>
-              <div className="ficha-etapa">{etapaDelArbol.nombre}</div>
-              <p className="ficha-lema">«{etapaDelArbol.descripcion}»</p>
+              <div className="ficha-etapa">{nombreEtapaArbol(etapaDelArbol)}</div>
+              <p className="ficha-lema">«{descEtapaArbol(etapaDelArbol)}»</p>
             </div>
             <div className="ficha-datos">
-              Día {diasCamino} del camino
+              {t(`Día ${diasCamino} del camino`, `Day ${diasCamino} of the path`)}
               {proximoMomento(diasCamino) &&
-                ` · próximo brote: día ${proximoMomento(diasCamino).dia}`}
+                t(` · próximo brote: día ${proximoMomento(diasCamino).dia}`, ` · next bud: day ${proximoMomento(diasCamino).dia}`)}
               <br />
-              Ahora es {NOMBRE_ESTACION[estacionDeMes(new Date().getMonth() + 1)]}: la
-              estación real viste tu árbol.
+              {t(
+                `Ahora es ${NOMBRE_ESTACION[estacionDeMes(new Date().getMonth() + 1)][0]}: la estación real viste tu árbol.`,
+                `It is ${NOMBRE_ESTACION[estacionDeMes(new Date().getMonth() + 1)][1]} now: the real season dresses your tree.`
+              )}
             </div>
             <p className="ficha-como">
-              Crece con tus días de acción: días en los que entrenas, caminas o
-              registras. Máximo un día por día real, sin atajos. Y nunca
-              retrocede: si faltas, te espera.
+              {t(
+                'Crece con tus días de acción: días en los que entrenas, caminas o registras. Máximo un día por día real, sin atajos. Y nunca retrocede: si faltas, te espera.',
+                'It grows with your action days: days when you train, walk, or log. One day per real day at most, no shortcuts. And it never recedes: if you miss, it waits.'
+              )}
             </p>
-            <h3 className="titulo-seccion ficha-titulo">Crónica</h3>
+            <h3 className="titulo-seccion ficha-titulo">{t('Crónica', 'Chronicle')}</h3>
             <div className="ficha-cronica">
               {MOMENTOS_ARBOL.map((m) => {
                 const hecho = m.dia <= diasCamino
@@ -279,9 +299,9 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
                   <div key={m.dia} className={hecho ? 'ficha-momento hecho' : 'ficha-momento'}>
                     <span>
                       <span className="ficha-check" aria-hidden="true">{hecho ? '✓ ' : '· '}</span>
-                      {m.etiqueta}
+                      {momentoTexto(m).etiqueta}
                     </span>
-                    <span className="ficha-dia">día {m.dia}</span>
+                    <span className="ficha-dia">{t(`día ${m.dia}`, `day ${m.dia}`)}</span>
                   </div>
                 )
               })}
@@ -292,7 +312,7 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
 
       {hoyToca && (
         <>
-          <h2 className="titulo-seccion titulo-bosque">{hoyToca.esHoy ? 'Hoy toca' : 'Próxima gesta'}</h2>
+          <h2 className="titulo-seccion titulo-bosque">{hoyToca.esHoy ? t('Hoy toca', "Today's quest") : t('Próxima gesta', 'Next quest')}</h2>
           <button type="button" className="panel panel-acento-bosque home-hoytoca" onClick={() => irA('entreno')}>
             <span className="tira-minis">
               {hoyToca.dia.ejercicios.slice(0, 8).map((x) => (
@@ -300,29 +320,29 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
               ))}
             </span>
             <span className="texto-suave home-hoytoca-texto">
-              {hoyToca.dia.nombre || 'Entreno'} · {hoyToca.dia.ejercicios.length}{' '}
+              {hoyToca.dia.nombre || t('Entreno', 'Workout')} · {hoyToca.dia.ejercicios.length}{' '}
               {hoyToca.dia.ejercicios.length === 1
-                ? (hoyToca.esHoy ? 'gesta te espera hoy' : 'gesta para cuando vuelvas')
-                : (hoyToca.esHoy ? 'gestas te esperan hoy' : 'gestas para cuando vuelvas')}
+                ? (hoyToca.esHoy ? t('gesta te espera hoy', 'feat awaits you today') : t('gesta para cuando vuelvas', 'feat for when you return'))
+                : (hoyToca.esHoy ? t('gestas te esperan hoy', 'feats await you today') : t('gestas para cuando vuelvas', 'feats for when you return'))}
             </span>
           </button>
         </>
       )}
 
-      <h2 className="titulo-seccion titulo-acero">Atributos</h2>
+      <h2 className="titulo-seccion titulo-acero">{t('Atributos', 'Attributes')}</h2>
       <section className="panel panel-acento-acero">
-        <StatBarra nombre="Fuerza" icono="⚔️" valor={stats.fuerza} tono="forja" />
-        <StatBarra nombre="Resistencia" icono="🏃" valor={stats.resistencia} tono="bosque" />
-        <StatBarra nombre="Constancia" icono="🧭" valor={stats.constancia} tono="acero" />
+        <StatBarra nombre={t('Fuerza', 'Strength')} icono="⚔️" valor={stats.fuerza} tono="forja" />
+        <StatBarra nombre={t('Resistencia', 'Endurance')} icono="🏃" valor={stats.resistencia} tono="bosque" />
+        <StatBarra nombre={t('Constancia', 'Consistency')} icono="🧭" valor={stats.constancia} tono="acero" />
       </section>
 
-      <h2 className="titulo-seccion titulo-brasa">Racha</h2>
+      <h2 className="titulo-seccion titulo-brasa">{t('Racha', 'Streak')}</h2>
       <section className="panel panel-acento-brasa">
         <div className="home-racha-cab">
           <span className="home-racha-num"><IconoRacha tam={20} /> {racha}</span>
-          <span>{racha === 1 ? 'día de racha' : 'días de racha'}</span>
+          <span>{racha === 1 ? t('día de racha', 'day streak') : t('días de racha', 'day streak')}</span>
           {estado.progreso.rachaMejor > 0 && (
-            <span className="texto-suave home-racha-mejor">Mejor: {estado.progreso.rachaMejor}</span>
+            <span className="texto-suave home-racha-mejor">{t('Mejor', 'Best')}: {estado.progreso.rachaMejor}</span>
           )}
         </div>
         {estado.ajustes.diasPlanificados.length > 0 ? (
@@ -345,7 +365,7 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
             ))}
           </div>
         ) : (
-          <p className="home-vacio">Elige tus días de entreno en Ajustes para encender la racha.</p>
+          <p className="home-vacio">{t('Elige tus días de entreno en Ajustes para encender la racha.', 'Pick your training days in Settings to light up your streak.')}</p>
         )}
       </section>
 
@@ -356,15 +376,15 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
       )}
 
       <button type="button" className="btn btn-primario btn-grande home-entrenar" onClick={() => irA('entreno')}>
-        <IconoEntreno tam={20} /> {estado.sesionActiva ? 'Continuar entreno' : 'Entrenar'}
+        <IconoEntreno tam={20} /> {estado.sesionActiva ? t('Continuar entreno', 'Continue workout') : t('Entrenar', 'Train')}
       </button>
 
-      <h2 className="titulo-seccion">Registro de hoy</h2>
+      <h2 className="titulo-seccion">{t('Registro de hoy', "Today's log")}</h2>
       <div className="grid-2">
         <section className="panel home-reg">
-          <div className="home-reg-titulo">👟 Pasos</div>
+          <div className="home-reg-titulo">👟 {t('Pasos', 'Steps')}</div>
           <div className={pasosHoy ? 'home-reg-hoy home-reg-ok' : 'home-reg-hoy'}>
-            {pasosHoy ? `✓ ${pasosHoy.pasos.toLocaleString('es-ES')} hoy` : 'Sin registro hoy'}
+            {pasosHoy ? t(`✓ ${pasosHoy.pasos.toLocaleString(localeNum())} hoy`, `✓ ${pasosHoy.pasos.toLocaleString(localeNum())} today`) : t('Sin registro hoy', 'No log today')}
           </div>
           <input
             className="input"
@@ -375,41 +395,44 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
             value={textoPasos}
             onChange={(e) => setTextoPasos(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && textoPasos.trim()) guardarPasos() }}
-            aria-label="Pasos de hoy"
+            aria-label={t('Pasos de hoy', 'Steps today')}
           />
           <button type="button" className="btn home-reg-btn" onClick={guardarPasos} disabled={!textoPasos.trim()}>
-            {pasosHoy ? 'Corregir' : 'Guardar'}
+            {pasosHoy ? t('Corregir', 'Correct') : t('Guardar', 'Save')}
           </button>
         </section>
 
         <section className="panel home-reg">
-          <div className="home-reg-titulo">⚖️ Peso</div>
+          <div className="home-reg-titulo">⚖️ {t('Peso', 'Weight')}</div>
           <div className={pesoHoy ? 'home-reg-hoy home-reg-ok' : 'home-reg-hoy'}>
-            {pesoHoy ? `✓ ${pesoHoy.kg.toLocaleString('es-ES')} kg hoy` : 'Sin registro hoy'}
+            {pesoHoy ? t(`✓ ${pesoHoy.kg.toLocaleString(localeNum())} kg hoy`, `✓ ${pesoHoy.kg.toLocaleString(localeNum())} kg today`) : t('Sin registro hoy', 'No log today')}
           </div>
           <input
             className="input"
             type="text"
             inputMode="decimal"
             autoComplete="off"
-            placeholder={pesoHoy ? pesoHoy.kg.toLocaleString('es-ES') : '82,5'}
+            placeholder={pesoHoy ? pesoHoy.kg.toLocaleString(localeNum()) : t('82,5', '82.5')}
             value={textoPeso}
             onChange={(e) => setTextoPeso(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && textoPeso.trim()) guardarPeso() }}
-            aria-label="Peso de hoy en kilogramos"
+            aria-label={t('Peso de hoy en kilogramos', "Today's weight in kilograms")}
           />
           <button type="button" className="btn home-reg-btn" onClick={guardarPeso} disabled={!textoPeso.trim()}>
-            {pesoHoy ? 'Corregir' : 'Guardar'}
+            {pesoHoy ? t('Corregir', 'Correct') : t('Guardar', 'Save')}
           </button>
         </section>
       </div>
       <p className="texto-suave home-reg-nota">
-        Registrar suma XP una vez al día. La báscula es solo tu gráfica: el número nunca cambia lo que ganas.
+        {t(
+          'Registrar suma XP una vez al día. La báscula es solo tu gráfica: el número nunca cambia lo que ganas.',
+          'Logging earns XP once a day. The scale is just your chart: the number never changes what you earn.'
+        )}
       </p>
 
       {pautaSupl.length > 0 && (
         <>
-          <h2 className="titulo-seccion">Suplementos de hoy</h2>
+          <h2 className="titulo-seccion">{t('Suplementos de hoy', "Today's supplements")}</h2>
           <section className="panel">
             <div className="supl-chips">
               {pautaSupl.map((id) => {
@@ -424,13 +447,13 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
                     onClick={() => alternarSuplemento(id)}
                     aria-pressed={tomado}
                   >
-                    {s.icono} {tomado ? '✓ ' : ''}{s.nombre.split(' (')[0]}
+                    {s.icono} {tomado ? '✓ ' : ''}{nombreSuplemento(s).split(' (')[0]}
                   </button>
                 )
               })}
             </div>
-            <div className="supl-adherencia texto-suave" aria-label="Últimos 7 días de suplementación">
-              7 días:{' '}
+            <div className="supl-adherencia texto-suave" aria-label={t('Últimos 7 días de suplementación', 'Last 7 days of supplements')}>
+              {t('7 días:', '7 days:')}{' '}
               {adherencia.map((d, i) => (
                 <span key={i} className={`supl-punto supl-punto-${d}`} aria-hidden="true">●</span>
               ))}
@@ -440,46 +463,48 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
       )}
 
       <button type="button" className="btn btn-fantasma home-btn-ayer" onClick={() => setModalAyer(true)}>
-        🕰 ¿Te faltó ayer? Regístralo
+        {t('🕰 ¿Te faltó ayer? Regístralo', '🕰 Missed yesterday? Log it')}
       </button>
 
       {esDomingoDePacto && (
         <button type="button" className="home-susurro" onClick={() => abrirGesta(true)}>
           <span className="home-susurro-icono" aria-hidden="true">🤝</span>
           <span className="home-susurro-cuerpo">
-            <span className="home-susurro-linea">Domingo de pacto: comparte tu semana con {pacto.nombre}.</span>
+            <span className="home-susurro-linea">
+              {t(`Domingo de pacto: comparte tu semana con ${pacto.nombre}.`, `Pact Sunday: share your week with ${pacto.nombre}.`)}
+            </span>
           </span>
         </button>
       )}
       <button type="button" className="btn home-btn-gesta" onClick={() => abrirGesta(false)}>
-        🤝 Compartir mi semana
+        {t('🤝 Compartir mi semana', '🤝 Share my week')}
       </button>
 
       {modalGesta && (
-        <Modal titulo="Tu gesta de la semana" abierto onCerrar={() => setModalGesta(false)}>
+        <Modal titulo={t('Tu gesta de la semana', 'Your feat of the week')} abierto onCerrar={() => setModalGesta(false)}>
           <div className="gesta-marco">
             <TarjetaGesta ref={refGesta} estado={estado} />
           </div>
           <p className="texto-suave gesta-nota">
-            Se comparte como imagen: exactamente lo que ves, nada más.
+            {t('Se comparte como imagen: exactamente lo que ves, nada más.', 'Shared as an image: exactly what you see, nothing more.')}
           </p>
           <button
             type="button"
             className="btn btn-primario btn-grande"
             onClick={() => compartirTarjeta(refGesta.current, avisar)}
           >
-            🤝 Compartir
+            {t('🤝 Compartir', '🤝 Share')}
           </button>
         </Modal>
       )}
 
       {modalAyer && (
-        <Modal titulo={`Registrar ayer (${formatearFecha(ayer)})`} abierto onCerrar={() => setModalAyer(false)}>
+        <Modal titulo={t(`Registrar ayer (${formatearFecha(ayer)})`, `Log yesterday (${formatearFecha(ayer)})`)} abierto onCerrar={() => setModalAyer(false)}>
           <div className="home-ayer">
             <div>
-              <span className="etiqueta">👟 Pasos de ayer</span>
+              <span className="etiqueta">👟 {t('Pasos de ayer', "Yesterday's steps")}</span>
               <div className={pasosAyer ? 'home-reg-hoy home-reg-ok' : 'home-reg-hoy'}>
-                {pasosAyer ? `✓ ${pasosAyer.pasos.toLocaleString('es-ES')} registrados` : 'Sin registro'}
+                {pasosAyer ? t(`✓ ${pasosAyer.pasos.toLocaleString(localeNum())} registrados`, `✓ ${pasosAyer.pasos.toLocaleString(localeNum())} logged`) : t('Sin registro', 'No log')}
               </div>
               <div className="fila">
                 <input
@@ -490,17 +515,17 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
                   placeholder="6000"
                   value={textoPasosAyer}
                   onChange={(e) => setTextoPasosAyer(e.target.value)}
-                  aria-label="Pasos de ayer"
+                  aria-label={t('Pasos de ayer', "Yesterday's steps")}
                 />
                 <button type="button" className="btn" onClick={guardarPasosAyer} disabled={!textoPasosAyer.trim()}>
-                  {pasosAyer ? 'Corregir' : 'Guardar'}
+                  {pasosAyer ? t('Corregir', 'Correct') : t('Guardar', 'Save')}
                 </button>
               </div>
             </div>
             <div>
-              <span className="etiqueta">⚖️ Peso de ayer</span>
+              <span className="etiqueta">⚖️ {t('Peso de ayer', "Yesterday's weight")}</span>
               <div className={pesoAyer ? 'home-reg-hoy home-reg-ok' : 'home-reg-hoy'}>
-                {pesoAyer ? `✓ ${pesoAyer.kg.toLocaleString('es-ES')} kg` : 'Sin registro'}
+                {pesoAyer ? `✓ ${pesoAyer.kg.toLocaleString(localeNum())} kg` : t('Sin registro', 'No log')}
               </div>
               <div className="fila">
                 <input
@@ -508,37 +533,37 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
                   type="text"
                   inputMode="decimal"
                   autoComplete="off"
-                  placeholder="82,5"
+                  placeholder={t('82,5', '82.5')}
                   value={textoPesoAyer}
                   onChange={(e) => setTextoPesoAyer(e.target.value)}
-                  aria-label="Peso de ayer en kilogramos"
+                  aria-label={t('Peso de ayer en kilogramos', "Yesterday's weight in kilograms")}
                 />
                 <button type="button" className="btn" onClick={guardarPesoAyer} disabled={!textoPesoAyer.trim()}>
-                  {pesoAyer ? 'Corregir' : 'Guardar'}
+                  {pesoAyer ? t('Corregir', 'Correct') : t('Guardar', 'Save')}
                 </button>
               </div>
             </div>
             <p className="texto-suave home-ayer-nota">
-              ¿Entrenaste ayer? Regístralo desde ⚔️ Entreno activando «Es de ayer».
+              {t('¿Entrenaste ayer? Regístralo desde ⚔️ Entreno activando «Es de ayer».', "Trained yesterday? Log it from ⚔️ Workout using 'It was yesterday'.")}
             </p>
             <button type="button" className="btn home-ayer-ir" onClick={() => { setModalAyer(false); irA('entreno') }}>
-              Ir a Entreno
+              {t('Ir a Entreno', 'Go to Workout')}
             </button>
           </div>
         </Modal>
       )}
 
-      <h2 className="titulo-seccion">Últimas gestas</h2>
+      <h2 className="titulo-seccion">{t('Últimas gestas', 'Latest feats')}</h2>
       <section className="panel">
         {ultimosLogros.length === 0 ? (
-          <p className="home-vacio">Tus gestas aparecerán aquí. La primera está más cerca de lo que crees.</p>
+          <p className="home-vacio">{t('Tus gestas aparecerán aquí. La primera está más cerca de lo que crees.', 'Your feats will appear here. The first one is closer than you think.')}</p>
         ) : (
           ultimosLogros.map(({ logro, fecha }) => (
             <div key={logro.id} className="home-logro">
               <span className="home-logro-icono" aria-hidden="true">{logro.icono}</span>
               <div className="home-logro-cuerpo">
-                <div className="home-logro-nombre">{logro.nombre}</div>
-                <div className="texto-suave home-logro-desc">{logro.descripcion}</div>
+                <div className="home-logro-nombre">{nombreLogro(logro)}</div>
+                <div className="texto-suave home-logro-desc">{descLogro(logro)}</div>
               </div>
               <span className="home-logro-fecha">{formatearFecha(fecha)}</span>
             </div>

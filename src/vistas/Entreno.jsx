@@ -9,9 +9,11 @@ import Temporizador, { desbloquearAudio } from '../components/Temporizador.jsx'
 import { historicoEjercicio } from '../engine/motor.js'
 import { claveDia, formatearFecha, sumarDias } from '../engine/fechas.js'
 import { SelectorEjercicios } from './Rutinas.jsx'
+import { idioma, localeNum, t } from '../i18n/idioma.js'
+import { descLogro, lemaEtapa, nombreEjercicio, nombreEtapa, nombreLogro } from '../i18n/catalogo.js'
 
 function formatoKg(n) {
-  return String(n).replace('.', ',')
+  return idioma() === 'en' ? String(n) : String(n).replace('.', ',')
 }
 
 function formatoDuracion(seg) {
@@ -38,9 +40,9 @@ function textoSeries(medida, series) {
 function textoMejor(medida, h) {
   if (medida === 'peso_reps') {
     if (h.mejorPesoKg == null) return null
-    let t = `${formatoKg(h.mejorPesoKg)} kg`
-    if (h.mejor1rmKg != null) t += ` · e1RM ${formatoKg(h.mejor1rmKg)} kg`
-    return t
+    let txt = `${formatoKg(h.mejorPesoKg)} kg`
+    if (h.mejor1rmKg != null) txt += ` · e1RM ${formatoKg(h.mejor1rmKg)} kg`
+    return txt
   }
   if (medida === 'reps') return h.mejorReps != null ? `${h.mejorReps} reps` : null
   return h.mejorMinutos != null ? `${h.mejorMinutos} min` : null
@@ -80,21 +82,43 @@ function prellenarSeries(estado, ejercicioId, objetivo) {
   return series
 }
 
+// Los motivos del xpLog son claves canónicas en español (dedup del motor):
+// aquí solo se traducen en el punto de mostrarlos.
+const MOTIVOS_EN = {
+  'Sesión completada': 'Session completed',
+  'Pasos registrados': 'Steps logged',
+  'Pasos sobre tu base': 'Steps above your baseline',
+  'Peso registrado': 'Weight logged',
+  'Medidas registradas': 'Measurements logged',
+  'Foto de progreso': 'Progress photo',
+  'Semana perfecta': 'Perfect week',
+}
+function motivoTexto(motivo) {
+  return idioma() === 'en' ? MOTIVOS_EN[motivo] || motivo : motivo
+}
+
 function Premio({ r }) {
   if (r.tipo === 'xp') {
-    return <div className="ent-premio"><span>⭐</span><span>+{r.cantidad} XP · {r.motivo}</span></div>
+    return <div className="ent-premio"><span>⭐</span><span>+{r.cantidad} XP · {motivoTexto(r.motivo)}</span></div>
   }
   if (r.tipo === 'pr') {
-    return <div className="ent-premio ent-premio-pr"><span>🏅</span><span>¡PR en {r.nombre}! {r.detalle}</span></div>
+    const nombrePr = nombreEjercicio({ id: r.ejercicioId, nombre: r.nombre })
+    const detallePr = idioma() === 'en' ? r.detalle.replace(',', '.') : r.detalle
+    return (
+      <div className="ent-premio ent-premio-pr">
+        <span>🏅</span>
+        <span>{t(`¡PR en ${nombrePr}! ${detallePr}`, `PR on ${nombrePr}! ${detallePr}`)}</span>
+      </div>
+    )
   }
   if (r.tipo === 'logro') {
     return (
       <div className="ent-premio ent-premio-logro">
         <span>{r.logro.icono}</span>
         <span>
-          Logro: {r.logro.nombre} (+{r.logro.xp} XP)
+          {t('Logro', 'Achievement')}: {nombreLogro(r.logro)} (+{r.logro.xp} XP)
           <br />
-          <small className="texto-suave">{r.logro.descripcion}</small>
+          <small className="texto-suave">{descLogro(r.logro)}</small>
         </span>
       </div>
     )
@@ -104,15 +128,15 @@ function Premio({ r }) {
       <div className="ent-premio ent-premio-nivel">
         <span>⬆️</span>
         <span>
-          ¡Nivel {r.nivel} · {r.etapa.nombre}!
+          {t(`¡Nivel ${r.nivel} · ${nombreEtapa(r.etapa)}!`, `Level ${r.nivel} · ${nombreEtapa(r.etapa)}!`)}
           <br />
-          <small className="texto-suave">{r.etapa.lema}</small>
+          <small className="texto-suave">{lemaEtapa(r.etapa)}</small>
         </span>
       </div>
     )
   }
   if (r.tipo === 'racha') {
-    return <div className="ent-premio"><span>🔥</span><span>Racha: {r.dias} días planificados</span></div>
+    return <div className="ent-premio"><span>🔥</span><span>{t(`Racha: ${r.dias} días planificados`, `Streak: ${r.dias} planned days`)}</span></div>
   }
   return null
 }
@@ -124,6 +148,7 @@ function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar,
     { id: ejS.ejercicioId, nombre: ejS.ejercicioId, medida: 'peso_reps' }
   const h = historicoEjercicio(estado, ejS.ejercicioId)
   const mejor = textoMejor(ej.medida, h)
+  const nombreEj = nombreEjercicio(ej)
 
   return (
     <section className="panel ent-ejercicio">
@@ -131,18 +156,18 @@ function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar,
       <EstadisticasEjercicio estado={estado} ejercicio={ej} abierto={verStats} onCerrar={() => setVerStats(false)} />
       <header className="ent-ejercicio-cab">
         <MiniEjercicio id={ej.id} />
-        <h3 className="ent-ejercicio-nombre">{ej.nombre}</h3>
+        <h3 className="ent-ejercicio-nombre">{nombreEj}</h3>
         <span className="rut-ejercicio-acciones ent-acciones">
           <button
             className="rut-info"
-            aria-label={`Ver técnica de ${ej.nombre}`}
+            aria-label={t(`Ver técnica de ${nombreEj}`, `View technique for ${nombreEj}`)}
             onClick={() => setVerFicha(true)}
           >
             ⓘ
           </button>
           <button
             className="rut-info"
-            aria-label={`Ver mis estadísticas de ${ej.nombre}`}
+            aria-label={t(`Ver mis estadísticas de ${nombreEj}`, `View my stats for ${nombreEj}`)}
             onClick={() => setVerStats(true)}
           >
             <IconoProgreso tam={17} />
@@ -152,7 +177,7 @@ function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar,
             className="ent-mover-btn"
             disabled={iEj === 0}
             onClick={() => alMover(iEj, -1)}
-            aria-label={`Subir ${ej.nombre}`}
+            aria-label={t(`Subir ${nombreEj}`, `Move ${nombreEj} up`)}
           >
             ↑
           </button>
@@ -161,13 +186,13 @@ function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar,
             className="ent-mover-btn"
             disabled={iEj === total - 1}
             onClick={() => alMover(iEj, 1)}
-            aria-label={`Bajar ${ej.nombre}`}
+            aria-label={t(`Bajar ${nombreEj}`, `Move ${nombreEj} down`)}
           >
             ↓
           </button>
           <button
             className="rut-quitar"
-            aria-label={`Quitar ${ej.nombre} de la sesión`}
+            aria-label={t(`Quitar ${nombreEj} de la sesión`, `Remove ${nombreEj} from the session`)}
             onClick={() => alQuitar(iEj)}
           >
             ✕
@@ -176,16 +201,16 @@ function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar,
       </header>
       {h.ultimaVez ? (
         <p className="ent-ultima">
-          <strong className="oro">Última vez</strong>
+          <strong className="oro">{t('Última vez', 'Last time')}</strong>
           {' '}
           <span className="texto-suave">({formatearFecha(h.ultimaVez.fecha)})</span>
           {': '}
           {textoSeries(ej.medida, h.ultimaVez.series)}
         </p>
       ) : (
-        <p className="ent-ultima texto-suave">Primera vez con este ejercicio: hoy pones el listón.</p>
+        <p className="ent-ultima texto-suave">{t('Primera vez con este ejercicio: hoy pones el listón.', 'First time with this exercise: today you set the bar.')}</p>
       )}
-      {mejor && <p className="ent-mejor texto-suave">🏅 Mejor marca: {mejor}</p>}
+      {mejor && <p className="ent-mejor texto-suave">🏅 {t('Mejor marca', 'Best mark')}: {mejor}</p>}
       <div className="ent-series">
         {ejS.series.map((serie, iSerie) => (
           <div key={iSerie} className={'ent-serie' + (serie.hecha ? ' ent-serie-hecha' : '')}>
@@ -227,14 +252,16 @@ function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar,
             <button
               className={'ent-check' + (serie.hecha ? ' ent-check-hecha' : '')}
               onClick={() => alMarcar(iEj, iSerie)}
-              aria-label={serie.hecha ? `Desmarcar serie ${iSerie + 1}` : `Marcar serie ${iSerie + 1} como hecha`}
+              aria-label={serie.hecha
+                ? t(`Desmarcar serie ${iSerie + 1}`, `Unmark set ${iSerie + 1}`)
+                : t(`Marcar serie ${iSerie + 1} como hecha`, `Mark set ${iSerie + 1} as done`)}
             >
               ✓
             </button>
           </div>
         ))}
       </div>
-      <button className="btn ent-btn-serie" onClick={() => alAnadirSerie(iEj)}>＋ Añadir serie</button>
+      <button className="btn ent-btn-serie" onClick={() => alAnadirSerie(iEj)}>＋ {t('Añadir serie', 'Add set')}</button>
     </section>
   )
 }
@@ -301,7 +328,7 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
         fechaObjetivo,
         rutinaId: rutina.id,
         diaId: dia.id,
-        nombreDia: dia.nombre || 'Entreno',
+        nombreDia: dia.nombre || t('Entreno', 'Workout'),
         ejercicios: dia.ejercicios.map((obj) => ({
           ejercicioId: obj.ejercicioId,
           series: prellenarSeries(e, obj.ejercicioId, obj),
@@ -320,7 +347,7 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
         fechaObjetivo,
         rutinaId: null,
         diaId: null,
-        nombreDia: 'Entreno libre',
+        nombreDia: t('Entreno libre', 'Free workout'),
         ejercicios: [],
       },
     }))
@@ -340,7 +367,7 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
   function quitarEjercicio(iEj) {
     editarSesion((s) => ({ ...s, ejercicios: s.ejercicios.filter((_, i) => i !== iEj) }))
     setModal(null)
-    avisar('Ejercicio quitado de la sesión')
+    avisar(t('Ejercicio quitado de la sesión', 'Exercise removed from the session'))
   }
 
   // Sin series marcadas se quita al toque; con series ✓ pide confirmación
@@ -403,7 +430,7 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
 
   function anadirEjercicio(ej) {
     if (sesion.ejercicios.some((x) => x.ejercicioId === ej.id)) {
-      avisar('Ese ejercicio ya está en la sesión')
+      avisar(t('Ese ejercicio ya está en la sesión', 'That exercise is already in the session'))
       return
     }
     actualizarEstado((e) => {
@@ -428,7 +455,7 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
     const seriesHechas = s.ejercicios.reduce(
       (n, ej) => n + ej.series.filter((x) => x.hecha).length, 0)
     if (seriesHechas === 0) {
-      avisar('Marca al menos una serie con ✓ para completar la sesión')
+      avisar(t('Marca al menos una serie con ✓ para completar la sesión', 'Mark at least one set with ✓ to complete the session'))
       return
     }
     const hoy = s.fechaObjetivo || claveDia()
@@ -465,7 +492,7 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
     setDescanso(null)
     setModal(null)
     actualizarEstado((e) => ({ ...e, sesionActiva: null }))
-    avisar('Sesión descartada. La próxima te espera.')
+    avisar(t('Sesión descartada. La próxima te espera.', 'Session discarded. The next one awaits.'))
   }
 
   // ---------- Pantalla de recompensas (resumen tras terminar) ----------
@@ -478,21 +505,21 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
     return (
       <div className="vista ent-recompensa">
         <div className="ent-recompensa-icono">🏆</div>
-        <h1 className="ent-recompensa-titulo">¡Sesión completada!</h1>
+        <h1 className="ent-recompensa-titulo">{t('¡Sesión completada!', 'Session complete!')}</h1>
         <p className="texto-suave">{recompensa.nombreDia}</p>
         <div className="ent-xp-total">+{xpTotal} XP</div>
         <div className="ent-resumen-grid">
           <div className="panel ent-resumen-dato">
             <span className="ent-resumen-cifra">{recompensa.seriesHechas}</span>
-            <span className="texto-suave">series</span>
+            <span className="texto-suave">{t('series', 'sets')}</span>
           </div>
           <div className="panel ent-resumen-dato">
-            <span className="ent-resumen-cifra">{Math.round(recompensa.volumenKg).toLocaleString('es-ES')}</span>
-            <span className="texto-suave">kg movidos</span>
+            <span className="ent-resumen-cifra">{Math.round(recompensa.volumenKg).toLocaleString(localeNum())}</span>
+            <span className="texto-suave">{t('kg movidos', 'kg moved')}</span>
           </div>
           <div className="panel ent-resumen-dato">
             <span className="ent-resumen-cifra">{formatoDuracion(recompensa.duracionSeg)}</span>
-            <span className="texto-suave">duración</span>
+            <span className="texto-suave">{t('duración', 'duration')}</span>
           </div>
         </div>
         <div className="ent-premios">
@@ -502,7 +529,7 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
           className="btn btn-primario btn-grande"
           onClick={() => { setRecompensa(null); irA('home') }}
         >
-          Volver al campamento
+          {t('Volver al campamento', 'Back to camp')}
         </button>
       </div>
     )
@@ -512,48 +539,48 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
   if (!sesion) {
     return (
       <div className="vista">
-        <h1 className="rut-titulo">⚔️ Entreno</h1>
-        <p className="texto-suave rut-intro">Elige tu batalla de hoy.</p>
+        <h1 className="rut-titulo">⚔️ {t('Entreno', 'Workout')}</h1>
+        <p className="texto-suave rut-intro">{t('Elige tu batalla de hoy.', 'Choose your battle for today.')}</p>
         <button
           type="button"
           className={modoAyer ? 'chip chip-activo ent-chip-ayer' : 'chip ent-chip-ayer'}
           onClick={() => setModoAyer(!modoAyer)}
           aria-pressed={modoAyer}
         >
-          🕰 Es de ayer (se me olvidó apuntarlo)
+          🕰 {t('Es de ayer (se me olvidó apuntarlo)', 'It was yesterday (I forgot to log it)')}
         </button>
         {modoAyer && (
           <p className="texto-suave ent-ayer-nota">
-            El entreno se guardará con fecha de ayer y contará para tu racha.
+            {t('El entreno se guardará con fecha de ayer y contará para tu racha.', "The workout will be saved with yesterday's date and count toward your streak.")}
           </p>
         )}
         {estado.rutinas.map((r) => (
           <section key={r.id} className="ent-rutina-bloque">
-            <h2 className="titulo-seccion">{r.nombre || 'Rutina'}</h2>
+            <h2 className="titulo-seccion">{r.nombre || t('Rutina', 'Routine')}</h2>
             {r.dias.map((d) => (
               <button key={d.id} className="ent-dia-btn" onClick={() => empezarDia(r, d)}>
-                <span className="ent-dia-nombre">{d.nombre || 'Día'}</span>
+                <span className="ent-dia-nombre">{d.nombre || t('Día', 'Day')}</span>
                 <span className="texto-suave">
-                  {d.ejercicios.length} ejercicio{d.ejercicios.length === 1 ? '' : 's'}
+                  {d.ejercicios.length} {d.ejercicios.length === 1 ? t('ejercicio', 'exercise') : t('ejercicios', 'exercises')}
                 </span>
               </button>
             ))}
             {r.dias.length === 0 && (
-              <p className="texto-suave rut-vacio">Esta rutina aún no tiene días.</p>
+              <p className="texto-suave rut-vacio">{t('Esta rutina aún no tiene días.', 'This routine has no days yet.')}</p>
             )}
           </section>
         ))}
         {estado.rutinas.length === 0 && (
           <div className="panel rut-vacio-panel">
-            <p>Sin rutinas todavía.</p>
-            <p className="texto-suave">Puedes entrenar libre ahora mismo o preparar tu plan en Rutinas.</p>
-            <button className="btn rut-boton-ancho" onClick={() => irA('rutinas')}>📜 Crear una rutina</button>
+            <p>{t('Sin rutinas todavía.', 'No routines yet.')}</p>
+            <p className="texto-suave">{t('Puedes entrenar libre ahora mismo o preparar tu plan en Rutinas.', 'You can train free right now or shape your plan in Routines.')}</p>
+            <button className="btn rut-boton-ancho" onClick={() => irA('rutinas')}>📜 {t('Crear una rutina', 'Create a routine')}</button>
           </div>
         )}
-        <h2 className="titulo-seccion">Sin plan</h2>
+        <h2 className="titulo-seccion">{t('Sin plan', 'No plan')}</h2>
         <button className="ent-dia-btn ent-dia-libre" onClick={empezarLibre}>
-          <span className="ent-dia-nombre">🗡️ Entreno libre</span>
-          <span className="texto-suave">añade ejercicios sobre la marcha</span>
+          <span className="ent-dia-nombre">🗡️ {t('Entreno libre', 'Free workout')}</span>
+          <span className="texto-suave">{t('añade ejercicios sobre la marcha', 'add exercises as you go')}</span>
         </button>
       </div>
     )
@@ -570,17 +597,20 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
       <header className="ent-cabecera">
         <div>
           <h1 className="ent-titulo">{sesion.nombreDia}</h1>
-          <p className="texto-suave">⏱ {formatoDuracion(duracion)} · {seriesHechas}/{seriesTotales} series</p>
+          <p className="texto-suave">⏱ {formatoDuracion(duracion)} · {seriesHechas}/{seriesTotales} {t('series', 'sets')}</p>
         </div>
       </header>
       {sesion.fechaObjetivo && (
         <p className="ent-ayer-banner">
-          🕰 Registrando el entreno de <strong>ayer</strong> ({formatearFecha(sesion.fechaObjetivo)}):
-          apunta lo que hiciste y guarda.
+          {idioma() === 'en' ? (
+            <>🕰 Logging <strong>yesterday&apos;s</strong> workout ({formatearFecha(sesion.fechaObjetivo)}): note what you did and save.</>
+          ) : (
+            <>🕰 Registrando el entreno de <strong>ayer</strong> ({formatearFecha(sesion.fechaObjetivo)}): apunta lo que hiciste y guarda.</>
+          )}
         </p>
       )}
       {sesion.ejercicios.length === 0 && (
-        <p className="texto-suave rut-vacio">El campo de batalla está listo. Añade tu primer ejercicio.</p>
+        <p className="texto-suave rut-vacio">{t('El campo de batalla está listo. Añade tu primer ejercicio.', 'The battlefield is ready. Add your first exercise.')}</p>
       )}
       {sesion.ejercicios.map((ejS, iEj) => (
         <TarjetaEjercicio
@@ -597,21 +627,21 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
           alQuitar={pedirQuitar}
         />
       ))}
-      <button className="btn ent-btn-anadir" onClick={() => setModal('anadir')}>＋ Añadir ejercicio</button>
+      <button className="btn ent-btn-anadir" onClick={() => setModal('anadir')}>＋ {t('Añadir ejercicio', 'Add exercise')}</button>
       <button
         className="btn btn-primario btn-grande ent-btn-terminar"
         onClick={() => {
           if (seriesHechas === 0) {
-            avisar('Marca al menos una serie con ✓ para completar la sesión')
+            avisar(t('Marca al menos una serie con ✓ para completar la sesión', 'Mark at least one set with ✓ to complete the session'))
             return
           }
           setModal('fin')
         }}
       >
-        🏁 Terminar entreno
+        🏁 {t('Terminar entreno', 'Finish workout')}
       </button>
       <button className="btn btn-fantasma ent-btn-descartar" onClick={() => setModal('descartar')}>
-        Descartar sesión
+        {t('Descartar sesión', 'Discard session')}
       </button>
       {descanso && <div className="ent-hueco-banner" />}
       {descanso && (
@@ -622,43 +652,45 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
         />
       )}
       {modal === 'anadir' && (
-        <Modal titulo="Añadir ejercicio" abierto onCerrar={() => setModal(null)}>
+        <Modal titulo={t('Añadir ejercicio', 'Add exercise')} abierto onCerrar={() => setModal(null)}>
           <SelectorEjercicios estado={estado} ejercicios={estado.ejercicios} alElegir={anadirEjercicio} />
         </Modal>
       )}
       {modal && modal.tipo === 'quitar' && sesion.ejercicios[modal.iEj] && (
-        <Modal titulo="Quitar ejercicio" abierto onCerrar={() => setModal(null)}>
+        <Modal titulo={t('Quitar ejercicio', 'Remove exercise')} abierto onCerrar={() => setModal(null)}>
           <p>
-            Este ejercicio tiene series marcadas con ✓. Si lo quitas de la
-            sesión, se pierden. ¿Lo quitas igualmente?
+            {t(
+              'Este ejercicio tiene series marcadas con ✓. Si lo quitas de la sesión, se pierden. ¿Lo quitas igualmente?',
+              'This exercise has sets marked with ✓. If you remove it from the session, they are lost. Remove it anyway?'
+            )}
           </p>
           <div className="fila rut-modal-botones">
-            <button className="btn" onClick={() => setModal(null)}>Cancelar</button>
-            <button className="btn btn-peligro" onClick={() => quitarEjercicio(modal.iEj)}>Quitar</button>
+            <button className="btn" onClick={() => setModal(null)}>{t('Cancelar', 'Cancel')}</button>
+            <button className="btn btn-peligro" onClick={() => quitarEjercicio(modal.iEj)}>{t('Quitar', 'Remove')}</button>
           </div>
         </Modal>
       )}
       {modal === 'descartar' && (
-        <Modal titulo="Descartar sesión" abierto onCerrar={() => setModal(null)}>
-          <p>¿Descartar esta sesión? No se guardará nada ni contará para tu progreso.</p>
+        <Modal titulo={t('Descartar sesión', 'Discard session')} abierto onCerrar={() => setModal(null)}>
+          <p>{t('¿Descartar esta sesión? No se guardará nada ni contará para tu progreso.', 'Discard this session? Nothing will be saved and it will not count toward your progress.')}</p>
           <div className="fila rut-modal-botones">
-            <button className="btn" onClick={() => setModal(null)}>Seguir entrenando</button>
-            <button className="btn btn-peligro" onClick={descartar}>Descartar</button>
+            <button className="btn" onClick={() => setModal(null)}>{t('Seguir entrenando', 'Keep training')}</button>
+            <button className="btn btn-peligro" onClick={descartar}>{t('Descartar', 'Discard')}</button>
           </div>
         </Modal>
       )}
       {modal === 'fin' && (
-        <Modal titulo="Terminar entreno" abierto onCerrar={() => setModal(null)}>
+        <Modal titulo={t('Terminar entreno', 'Finish workout')} abierto onCerrar={() => setModal(null)}>
           <p>
-            Vas a guardar <strong>{seriesHechas}</strong> {seriesHechas === 1 ? 'serie' : 'series'}
+            {t('Vas a guardar ', "You're about to save ")}<strong>{seriesHechas}</strong> {seriesHechas === 1 ? t('serie', 'set') : t('series', 'sets')}
             {seriesTotales > seriesHechas
-              ? ` (las ${seriesTotales - seriesHechas} sin ✓ se descartan)`
+              ? t(` (las ${seriesTotales - seriesHechas} sin ✓ se descartan)`, ` (the ${seriesTotales - seriesHechas} without ✓ are discarded)`)
               : ''}
-            {sesion.fechaObjetivo ? ' con fecha de ayer' : ''}.
+            {sesion.fechaObjetivo ? t(' con fecha de ayer', ' dated yesterday') : ''}.
           </p>
           <div className="fila rut-modal-botones">
-            <button className="btn" onClick={() => setModal(null)}>Seguir entrenando</button>
-            <button className="btn btn-primario" onClick={terminar}>Guardar sesión</button>
+            <button className="btn" onClick={() => setModal(null)}>{t('Seguir entrenando', 'Keep training')}</button>
+            <button className="btn btn-primario" onClick={terminar}>{t('Guardar sesión', 'Save session')}</button>
           </div>
         </Modal>
       )}

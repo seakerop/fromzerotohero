@@ -2,10 +2,13 @@ import GraficaLinea from './GraficaLinea.jsx'
 import MiniEjercicio from './MiniEjercicio.jsx'
 import Modal from './Modal.jsx'
 import { historicoEjercicio, progresoEjercicio } from '../engine/motor.js'
+import { idioma, t } from '../i18n/idioma.js'
+import { nombreEjercicio } from '../i18n/catalogo.js'
 
 function fmtNum(v) {
   const r = Math.round(v * 10) / 10
-  return (Number.isInteger(r) ? String(r) : r.toFixed(1)).replace('.', ',')
+  const s = Number.isInteger(r) ? String(r) : r.toFixed(1)
+  return idioma() === 'en' ? s : s.replace('.', ',')
 }
 
 // Ficha de estadísticas PROPIAS de un ejercicio, hermana de la ficha de
@@ -21,18 +24,18 @@ export default function EstadisticasEjercicio({ estado, ejercicio, abierto, onCe
   if (ejercicio.medida === 'peso_reps') {
     unidadMarca = 'kg'
     serieMarca = [
-      { nombre: 'Mejor peso', color: 'var(--oro)', puntos: datos.map((d) => ({ x: d.fecha, y: d.mejorPesoKg })) },
+      { nombre: t('Mejor peso', 'Best weight'), color: 'var(--oro)', puntos: datos.map((d) => ({ x: d.fecha, y: d.mejorPesoKg })) },
       { nombre: 'e1RM', color: 'var(--plata)', puntos: datos.filter((d) => d.e1rmKg != null).map((d) => ({ x: d.fecha, y: d.e1rmKg })) },
     ]
   } else if (ejercicio.medida === 'tiempo') {
     unidadMarca = 'min'
     serieMarca = [
-      { nombre: 'Mejores minutos', color: 'var(--oro)', puntos: datos.map((d) => ({ x: d.fecha, y: d.mejorMinutos })) },
+      { nombre: t('Mejores minutos', 'Best minutes'), color: 'var(--oro)', puntos: datos.map((d) => ({ x: d.fecha, y: d.mejorMinutos })) },
     ]
   } else {
     unidadMarca = 'reps'
     serieMarca = [
-      { nombre: 'Mejores reps', color: 'var(--oro)', puntos: datos.map((d) => ({ x: d.fecha, y: d.mejorReps })) },
+      { nombre: t('Mejores reps', 'Best reps'), color: 'var(--oro)', puntos: datos.map((d) => ({ x: d.fecha, y: d.mejorReps })) },
     ]
   }
 
@@ -54,41 +57,49 @@ export default function EstadisticasEjercicio({ estado, ejercicio, abierto, onCe
   }
   const serieTotal = [
     {
-      nombre: ejercicio.medida === 'peso_reps' ? 'Kilos movidos' : ejercicio.medida === 'tiempo' ? 'Minutos totales' : 'Reps totales',
+      nombre: ejercicio.medida === 'peso_reps'
+        ? t('Kilos movidos', 'Kilos moved')
+        : ejercicio.medida === 'tiempo'
+          ? t('Minutos totales', 'Total minutes')
+          : t('Reps totales', 'Total reps'),
       color: 'var(--bosque-claro)',
       puntos: totales,
     },
   ]
 
   return (
-    <Modal titulo={ejercicio.nombre} abierto onCerrar={onCerrar}>
+    <Modal titulo={nombreEjercicio(ejercicio)} abierto onCerrar={onCerrar}>
       <div className="estej">
         <div className="estej-cab">
           <MiniEjercicio id={ejercicio.id} />
           <div className="prog-resumen estej-chips">
-            <span className="chip">Sesiones: {h.vecesHecho}</span>
-            {h.mejorPesoKg != null && <span className="chip">Mejor: {fmtNum(h.mejorPesoKg)} kg</span>}
+            <span className="chip">{t('Sesiones', 'Sessions')}: {h.vecesHecho}</span>
+            {h.mejorPesoKg != null && <span className="chip">{t('Mejor', 'Best')}: {fmtNum(h.mejorPesoKg)} kg</span>}
             {h.mejor1rmKg != null && <span className="chip">e1RM: {fmtNum(h.mejor1rmKg)} kg</span>}
-            {h.mejorReps != null && <span className="chip">Mejor: {h.mejorReps} reps</span>}
-            {h.mejorMinutos != null && <span className="chip">Mejor: {h.mejorMinutos} min</span>}
+            {h.mejorReps != null && <span className="chip">{t('Mejor', 'Best')}: {h.mejorReps} reps</span>}
+            {h.mejorMinutos != null && <span className="chip">{t('Mejor', 'Best')}: {h.mejorMinutos} min</span>}
           </div>
         </div>
         {datos.length === 0 ? (
           <p className="texto-suave estej-vacio">
-            Aún no hay registros tuyos de este ejercicio. En cuanto completes
-            una serie en un entreno, aquí empezará tu historia.
+            {t(
+              'Aún no hay registros tuyos de este ejercicio. En cuanto completes una serie en un entreno, aquí empezará tu historia.',
+              'No entries of yours for this exercise yet. The moment you complete a set in a workout, your story begins here.'
+            )}
           </p>
         ) : (
           <>
-            <div className="titulo-seccion estej-titulo">Tu marca</div>
+            <div className="titulo-seccion estej-titulo">{t('Tu marca', 'Your best')}</div>
             <GraficaLinea series={serieMarca} unidad={unidadMarca} alto={165} />
             {totales.length > 0 && (
               <>
-                <div className="titulo-seccion estej-titulo titulo-bosque">Total por sesión</div>
+                <div className="titulo-seccion estej-titulo titulo-bosque">{t('Total por sesión', 'Total per session')}</div>
                 <GraficaLinea series={serieTotal} unidad={unidadMarca === 'min' ? 'min' : unidadMarca === 'kg' ? 'kg' : 'reps'} alto={150} />
               </>
             )}
-            <p className="texto-suave estej-nota">Cada punto es una sesión. La línea sube porque tú subes.</p>
+            <p className="texto-suave estej-nota">
+              {t('Cada punto es una sesión. La línea sube porque tú subes.', 'Each point is a session. The line rises because you rise.')}
+            </p>
           </>
         )}
       </div>

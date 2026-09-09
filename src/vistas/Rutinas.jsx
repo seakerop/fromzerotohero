@@ -6,12 +6,24 @@ import MiniEjercicio from '../components/MiniEjercicio.jsx'
 import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
 import { EQUIPAMIENTO, GRUPOS } from '../data/ejercicios.js'
-import { EQUIPOS, GUIA_NOVATO, plantillasFiltradas } from '../data/plantillas-rutinas.js'
+import { EQUIPOS, plantillasFiltradas } from '../data/plantillas-rutinas.js'
+import { t } from '../i18n/idioma.js'
+import {
+  guiaNovato,
+  nombreEjercicio,
+  nombreEquipamiento,
+  nombreEquipoPlantilla,
+  nombreGrupo as nombreGrupoCatalogo,
+  nombreDiaPlantilla,
+  plantillaTexto,
+} from '../i18n/catalogo.js'
 
-const NOMBRE_MEDIDA = {
-  peso_reps: 'peso × reps',
-  reps: 'solo reps',
-  tiempo: 'tiempo (min)',
+// El mapa de medidas se resuelve en cada render para que cambie con el idioma.
+function nombreMedida(medida) {
+  if (medida === 'peso_reps') return t('peso × reps', 'weight × reps')
+  if (medida === 'reps') return t('solo reps', 'reps only')
+  if (medida === 'tiempo') return t('tiempo (min)', 'time (min)')
+  return medida
 }
 
 function nuevoId(prefijo) {
@@ -35,8 +47,7 @@ function idUnico(nombre, ejercicios) {
 }
 
 export function nombreGrupo(grupoId) {
-  const g = GRUPOS.find((x) => x.id === grupoId)
-  return g ? g.nombre : grupoId
+  return nombreGrupoCatalogo(grupoId)
 }
 
 
@@ -55,7 +66,7 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar, estado }) {
       if (grupo !== 'todos' && ej.grupo !== grupo) return false
       // Sin equipo declarado (personalizados antiguos) pasa cualquier filtro.
       if (equipo !== 'todos' && ej.equipo && ej.equipo !== equipo) return false
-      if (q && !ej.nombre.toLowerCase().includes(q)) return false
+      if (q && !ej.nombre.toLowerCase().includes(q) && !nombreEjercicio(ej).toLowerCase().includes(q)) return false
       return true
     })
   }, [ejercicios, busqueda, grupo, equipo])
@@ -67,17 +78,17 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar, estado }) {
       <input
         className="input"
         type="search"
-        placeholder="Buscar ejercicio…"
+        placeholder={t('Buscar ejercicio…', 'Search exercises…')}
         value={busqueda}
         onChange={(ev) => setBusqueda(ev.target.value)}
-        aria-label="Buscar ejercicio"
+        aria-label={t('Buscar ejercicio', 'Search exercises')}
       />
       <div className="rut-chips">
         <button
           className={'chip' + (grupo === 'todos' ? ' chip-activo' : '')}
           onClick={() => setGrupo('todos')}
         >
-          Todos
+          {t('Todos', 'All')}
         </button>
         {GRUPOS.map((g) => (
           <button
@@ -85,7 +96,7 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar, estado }) {
             className={'chip' + (grupo === g.id ? ' chip-activo' : '')}
             onClick={() => setGrupo(g.id)}
           >
-            {g.nombre}
+            {nombreGrupo(g.id)}
           </button>
         ))}
       </div>
@@ -94,7 +105,7 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar, estado }) {
           className={'chip' + (equipo === 'todos' ? ' chip-activo' : '')}
           onClick={() => setEquipo('todos')}
         >
-          Todo el material
+          {t('Todo el material', 'All equipment')}
         </button>
         {EQUIPAMIENTO.map((eq) => (
           <button
@@ -102,7 +113,7 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar, estado }) {
             className={'chip' + (equipo === eq.id ? ' chip-activo' : '')}
             onClick={() => setEquipo(eq.id)}
           >
-            {eq.nombre}
+            {nombreEquipamiento(eq.id)}
           </button>
         ))}
       </div>
@@ -114,14 +125,14 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar, estado }) {
               className="rut-picker-elegir"
               onClick={alElegir ? () => alElegir(ej) : undefined}
             >
-              <span className="rut-picker-nombre">{ej.nombre}{ej.personalizado ? ' ✦' : ''}</span>
+              <span className="rut-picker-nombre">{nombreEjercicio(ej)}{ej.personalizado ? ' ✦' : ''}</span>
               <span className="texto-suave rut-picker-meta">
-                {nombreGrupo(ej.grupo)} · {NOMBRE_MEDIDA[ej.medida] || ej.medida}
+                {nombreGrupo(ej.grupo)} · {nombreMedida(ej.medida)}
               </span>
             </Cuerpo>
             <button
               className="rut-info"
-              aria-label={`Ver técnica de ${ej.nombre}`}
+              aria-label={t(`Ver técnica de ${nombreEjercicio(ej)}`, `View technique for ${nombreEjercicio(ej)}`)}
               onClick={() => setFicha(ej)}
             >
               ⓘ
@@ -129,7 +140,7 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar, estado }) {
             {estado && (
               <button
                 className="rut-info"
-                aria-label={`Ver mis estadísticas de ${ej.nombre}`}
+                aria-label={t(`Ver mis estadísticas de ${nombreEjercicio(ej)}`, `View my stats for ${nombreEjercicio(ej)}`)}
                 onClick={() => setStats(ej)}
               >
                 <IconoProgreso tam={17} />
@@ -138,7 +149,7 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar, estado }) {
             {alBorrar && ej.personalizado && (
               <button
                 className="rut-quitar"
-                aria-label={`Borrar ${ej.nombre}`}
+                aria-label={t(`Borrar ${nombreEjercicio(ej)}`, `Delete ${nombreEjercicio(ej)}`)}
                 onClick={() => alBorrar(ej)}
               >
                 🗑
@@ -147,7 +158,7 @@ export function SelectorEjercicios({ ejercicios, alElegir, alBorrar, estado }) {
           </div>
         ))}
         {filtrados.length === 0 && (
-          <p className="texto-suave rut-vacio">Ningún ejercicio encaja con la búsqueda.</p>
+          <p className="texto-suave rut-vacio">{t('Ningún ejercicio encaja con la búsqueda.', 'No exercise matches your search.')}</p>
         )}
       </div>
       <FichaEjercicio ejercicio={ficha} abierto={Boolean(ficha)} onCerrar={() => setFicha(null)} />
@@ -166,15 +177,15 @@ function FormNuevoEjercicio({ alCrear }) {
 
   return (
     <div className="rut-form">
-      <label className="etiqueta" htmlFor="rut-nuevo-nombre">Nombre</label>
+      <label className="etiqueta" htmlFor="rut-nuevo-nombre">{t('Nombre', 'Name')}</label>
       <input
         id="rut-nuevo-nombre"
         className="input"
         value={nombre}
         onChange={(ev) => setNombre(ev.target.value)}
-        placeholder="Press Arnold"
+        placeholder={t('Press Arnold', 'Arnold press')}
       />
-      <label className="etiqueta" htmlFor="rut-nuevo-grupo">Grupo muscular</label>
+      <label className="etiqueta" htmlFor="rut-nuevo-grupo">{t('Grupo muscular', 'Muscle group')}</label>
       <select
         id="rut-nuevo-grupo"
         className="input"
@@ -182,21 +193,21 @@ function FormNuevoEjercicio({ alCrear }) {
         onChange={(ev) => setGrupo(ev.target.value)}
       >
         {GRUPOS.map((g) => (
-          <option key={g.id} value={g.id}>{g.nombre}</option>
+          <option key={g.id} value={g.id}>{nombreGrupo(g.id)}</option>
         ))}
       </select>
-      <label className="etiqueta" htmlFor="rut-nueva-medida">Cómo se mide</label>
+      <label className="etiqueta" htmlFor="rut-nueva-medida">{t('Cómo se mide', 'How it is measured')}</label>
       <select
         id="rut-nueva-medida"
         className="input"
         value={medida}
         onChange={(ev) => setMedida(ev.target.value)}
       >
-        <option value="peso_reps">Peso × repeticiones</option>
-        <option value="reps">Solo repeticiones</option>
-        <option value="tiempo">Tiempo (minutos)</option>
+        <option value="peso_reps">{t('Peso × repeticiones', 'Weight × repetitions')}</option>
+        <option value="reps">{t('Solo repeticiones', 'Repetitions only')}</option>
+        <option value="tiempo">{t('Tiempo (minutos)', 'Time (minutes)')}</option>
       </select>
-      <label className="etiqueta" htmlFor="rut-nuevo-equipo">Material</label>
+      <label className="etiqueta" htmlFor="rut-nuevo-equipo">{t('Material', 'Equipment')}</label>
       <select
         id="rut-nuevo-equipo"
         className="input"
@@ -204,11 +215,11 @@ function FormNuevoEjercicio({ alCrear }) {
         onChange={(ev) => setEquipo(ev.target.value)}
       >
         {EQUIPAMIENTO.map((eq) => (
-          <option key={eq.id} value={eq.id}>{eq.nombre}</option>
+          <option key={eq.id} value={eq.id}>{nombreEquipamiento(eq.id)}</option>
         ))}
       </select>
       <button className="btn btn-primario rut-boton-ancho" onClick={() => alCrear({ nombre, grupo, medida, equipo })}>
-        Añadir a la biblioteca
+        {t('Añadir a la biblioteca', 'Add to the library')}
       </button>
     </div>
   )
@@ -228,12 +239,15 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
 
   function usarPlantilla(plantilla) {
     const id = nuevoId('rut')
+    // La copia nace con los nombres en el idioma actual: desde ese momento son
+    // del usuario y ya no se traducen.
+    const nombrePlantilla = plantillaTexto(plantilla).nombre
     const rutina = {
       id,
-      nombre: plantilla.nombre,
-      dias: plantilla.dias.map((dia) => ({
+      nombre: nombrePlantilla,
+      dias: plantilla.dias.map((dia, i) => ({
         id: nuevoId('dia'),
-        nombre: dia.nombre,
+        nombre: nombreDiaPlantilla(plantilla, i),
         ejercicios: dia.ejercicios.map((ej) => ({
           ejercicioId: ej.ejercicioId,
           seriesObjetivo: ej.seriesObjetivo,
@@ -245,7 +259,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
     actualizarEstado((e) => ({ ...e, rutinas: [...e.rutinas, rutina] }))
     setVerPlantillas(false)
     setRutinaId(id)
-    avisar(`«${plantilla.nombre}» añadida: revísala y hazla tuya`)
+    avisar(t(`«${nombrePlantilla}» añadida: revísala y hazla tuya`, `"${nombrePlantilla}" added: review it and make it yours`))
   }
 
   const rutina = estado.rutinas.find((r) => r.id === rutinaId) || null
@@ -269,7 +283,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
     const id = nuevoId('rut')
     actualizarEstado((e) => ({
       ...e,
-      rutinas: [...e.rutinas, { id, nombre: `Rutina ${e.rutinas.length + 1}`, dias: [] }],
+      rutinas: [...e.rutinas, { id, nombre: `${t('Rutina', 'Routine')} ${e.rutinas.length + 1}`, dias: [] }],
     }))
     setRutinaId(id)
   }
@@ -278,7 +292,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
     const id = nuevoId('dia')
     editarRutina(rutina.id, (r) => ({
       ...r,
-      dias: [...r.dias, { id, nombre: `Día ${r.dias.length + 1}`, ejercicios: [] }],
+      dias: [...r.dias, { id, nombre: `${t('Día', 'Day')} ${r.dias.length + 1}`, ejercicios: [] }],
     }))
     setDiaId(id)
   }
@@ -288,21 +302,21 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
     setModal(null)
     setDiaId(null)
     setRutinaId(null)
-    avisar('Rutina borrada')
+    avisar(t('Rutina borrada', 'Routine deleted'))
   }
 
   function borrarDia() {
     editarRutina(rutina.id, (r) => ({ ...r, dias: r.dias.filter((d) => d.id !== dia.id) }))
     setModal(null)
     setDiaId(null)
-    avisar('Día borrado')
+    avisar(t('Día borrado', 'Day deleted'))
   }
 
   // Desde la lista de días de la rutina, sin tener que entrar en el día.
   function borrarDiaDeLista(diaId) {
     editarRutina(rutina.id, (r) => ({ ...r, dias: r.dias.filter((d) => d.id !== diaId) }))
     setModal(null)
-    avisar('Día borrado')
+    avisar(t('Día borrado', 'Day deleted'))
   }
 
   function moverDia(indice, dir) {
@@ -317,7 +331,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
 
   function anadirEjercicioAlDia(ej) {
     if (dia.ejercicios.some((x) => x.ejercicioId === ej.id)) {
-      avisar('Ese ejercicio ya está en este día')
+      avisar(t('Ese ejercicio ya está en este día', 'That exercise is already in this day'))
       return
     }
     editarDia(rutina.id, dia.id, (d) => ({
@@ -362,7 +376,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
   function crearEjercicio({ nombre, grupo, medida, equipo }) {
     const limpio = nombre.trim()
     if (!limpio) {
-      avisar('Ponle un nombre al ejercicio', 'error')
+      avisar(t('Ponle un nombre al ejercicio', 'Give the exercise a name'), 'error')
       return
     }
     const id = idUnico(limpio, estado.ejercicios)
@@ -371,7 +385,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
       ejercicios: [...e.ejercicios, { id, nombre: limpio, grupo, medida, equipo, personalizado: true }],
     }))
     setModal(null)
-    avisar(`«${limpio}» añadido a tu biblioteca`)
+    avisar(t(`«${limpio}» añadido a tu biblioteca`, `"${limpio}" added to your library`))
   }
 
   function borrarEjercicioBiblioteca(ej) {
@@ -379,26 +393,26 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
       r.dias.some((d) => d.ejercicios.some((x) => x.ejercicioId === ej.id)))
     if (enRutina) {
       setModal(null)
-      avisar('Está en una rutina: quítalo de ella antes de borrarlo', 'error')
+      avisar(t('Está en una rutina: quítalo de ella antes de borrarlo', 'It is in a routine: remove it from there before deleting it'), 'error')
       return
     }
     const conHistorial = estado.sesiones.some((s) =>
       s.ejercicios.some((x) => x.ejercicioId === ej.id))
     if (conHistorial) {
       setModal(null)
-      avisar('Tiene entrenos registrados: se conserva para no perder tus gráficas', 'error')
+      avisar(t('Tiene entrenos registrados: se conserva para no perder tus gráficas', 'It has logged workouts: it stays so your charts are not lost'), 'error')
       return
     }
     const enSesion = Boolean(estado.sesionActiva) &&
       estado.sesionActiva.ejercicios.some((x) => x.ejercicioId === ej.id)
     if (enSesion) {
       setModal(null)
-      avisar('Se está usando en la sesión en curso', 'error')
+      avisar(t('Se está usando en la sesión en curso', 'It is being used in the session in progress'), 'error')
       return
     }
     actualizarEstado((e) => ({ ...e, ejercicios: e.ejercicios.filter((x) => x.id !== ej.id) }))
     setModal(null)
-    avisar(`«${ej.nombre}» borrado de la biblioteca`)
+    avisar(t(`«${ej.nombre}» borrado de la biblioteca`, `"${ej.nombre}" deleted from the library`))
   }
 
   // ---------- Rutinas recomendadas (novatos) ----------
@@ -406,23 +420,25 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
     const opciones = plantillasFiltradas(diasFiltro, equipoFiltro)
     const nombreDe = (id) => {
       const ej = estado.ejercicios.find((x) => x.id === id)
-      return ej ? ej.nombre : id
+      return ej ? nombreEjercicio(ej) : id
     }
     return (
       <div className="vista">
         <button className="btn btn-fantasma rut-volver" onClick={() => setVerPlantillas(false)}>
-          ← Rutinas
+          ← {t('Rutinas', 'Routines')}
         </button>
-        <h1 className="rut-titulo">🗺 Rutinas recomendadas</h1>
+        <h1 className="rut-titulo">🗺 {t('Rutinas recomendadas', 'Recommended routines')}</h1>
         <p className="texto-suave rut-intro">
-          Para empezar sin perderse: elige cuántos días entrenas, usa una tal
-          cual, y con las semanas la haces tuya.
+          {t(
+            'Para empezar sin perderse: elige cuántos días entrenas, usa una tal cual, y con las semanas la haces tuya.',
+            'To start without getting lost: pick how many days you train, use one as is, and over the weeks make it yours.'
+          )}
         </p>
 
         <div className="panel rut-guia">
-          <div className="rut-guia-titulo">La guía del novato</div>
+          <div className="rut-guia-titulo">{t('La guía del novato', "The novice's guide")}</div>
           <ul className="rut-guia-lista">
-            {GUIA_NOVATO.map((linea, i) => (
+            {guiaNovato().map((linea, i) => (
               <li key={i}>{linea}</li>
             ))}
           </ul>
@@ -435,7 +451,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
               className={equipoFiltro === id ? 'chip chip-activo' : 'chip'}
               onClick={() => setEquipoFiltro(id)}
             >
-              {nombre}
+              {nombreEquipoPlantilla(id, nombre)}
             </button>
           ))}
         </div>
@@ -446,45 +462,50 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
               className={diasFiltro === n ? 'chip chip-activo' : 'chip'}
               onClick={() => setDiasFiltro(n)}
             >
-              {n} días
+              {n} {t('días', 'days')}
             </button>
           ))}
         </div>
 
         {opciones.length === 0 && (
           <div className="panel rut-vacio-panel">
-            <p>Sin gimnasio, con {diasFiltro} días lo honesto es otra cosa.</p>
+            <p>{t(`Sin gimnasio, con ${diasFiltro} días lo honesto es otra cosa.`, `Without a gym, with ${diasFiltro} days the honest answer is something else.`)}</p>
             <p className="texto-suave">
-              Usa el ciclo de 3 días y repítelo; los días extra, paseo largo o
-              cardio suave. Más días no es mejor: la mejora llega al recuperarte.
+              {t(
+                'Usa el ciclo de 3 días y repítelo; los días extra, paseo largo o cardio suave. Más días no es mejor: la mejora llega al recuperarte.',
+                'Use the 3-day cycle and repeat it; on the extra days, a long walk or easy cardio. More days is not better: the gains come as you recover.'
+              )}
             </p>
           </div>
         )}
 
-        {opciones.map((p) => (
-          <section key={p.id} className="panel rut-plantilla">
-            <h2 className="rut-plantilla-nombre">{p.nombre}</h2>
-            <p className="texto-suave rut-plantilla-resumen">{p.resumen}</p>
-            <p className="rut-plantilla-porque">{p.porQue}</p>
-            {p.dias.map((dia, i) => (
-              <div key={i} className="rut-pl-dia">
-                <strong>{dia.nombre}</strong>
-                <span className="tira-minis">
-                  {dia.ejercicios.slice(0, 8).map((e) => (
-                    <MiniEjercicio key={e.ejercicioId} chica id={e.ejercicioId} />
-                  ))}
-                </span>
-                <span className="texto-suave rut-pl-ejercicios">
-                  {dia.ejercicios.map((e) => nombreDe(e.ejercicioId)).join(' · ')}
-                </span>
-              </div>
-            ))}
-            <p className="texto-suave rut-plantilla-consejo">💡 {p.consejo}</p>
-            <button className="btn btn-primario rut-boton-ancho" onClick={() => usarPlantilla(p)}>
-              Usar esta rutina
-            </button>
-          </section>
-        ))}
+        {opciones.map((p) => {
+          const tx = plantillaTexto(p)
+          return (
+            <section key={p.id} className="panel rut-plantilla">
+              <h2 className="rut-plantilla-nombre">{tx.nombre}</h2>
+              <p className="texto-suave rut-plantilla-resumen">{tx.resumen}</p>
+              <p className="rut-plantilla-porque">{tx.porQue}</p>
+              {p.dias.map((dia, i) => (
+                <div key={i} className="rut-pl-dia">
+                  <strong>{nombreDiaPlantilla(p, i)}</strong>
+                  <span className="tira-minis">
+                    {dia.ejercicios.slice(0, 8).map((e) => (
+                      <MiniEjercicio key={e.ejercicioId} chica id={e.ejercicioId} />
+                    ))}
+                  </span>
+                  <span className="texto-suave rut-pl-ejercicios">
+                    {dia.ejercicios.map((e) => nombreDe(e.ejercicioId)).join(' · ')}
+                  </span>
+                </div>
+              ))}
+              <p className="texto-suave rut-plantilla-consejo">💡 {tx.consejo}</p>
+              <button className="btn btn-primario rut-boton-ancho" onClick={() => usarPlantilla(p)}>
+                {t('Usar esta rutina', 'Use this routine')}
+              </button>
+            </section>
+          )
+        })}
       </div>
     )
   }
@@ -494,14 +515,17 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
     return (
       <div className="vista">
         <button className="btn btn-fantasma rut-volver" onClick={() => { setModal(null); setVerBiblioteca(false) }}>
-          ← Rutinas
+          ← {t('Rutinas', 'Routines')}
         </button>
-        <h1 className="rut-titulo">📚 Biblioteca</h1>
+        <h1 className="rut-titulo">📚 {t('Biblioteca', 'Library')}</h1>
         <p className="texto-suave rut-intro">
-          Tu arsenal: {estado.ejercicios.length} ejercicios. Los marcados con ✦ los has forjado tú.
+          {t(
+            `Tu arsenal: ${estado.ejercicios.length} ejercicios. Los marcados con ✦ los has forjado tú.`,
+            `Your arsenal: ${estado.ejercicios.length} exercises. The ones marked ✦ you forged yourself.`
+          )}
         </p>
         <button className="btn rut-boton-ancho" onClick={() => setModal({ tipo: 'nuevo-ejercicio' })}>
-          ＋ Crear ejercicio propio
+          ＋ {t('Crear ejercicio propio', 'Create your own exercise')}
         </button>
         <SelectorEjercicios
           estado={estado}
@@ -509,16 +533,16 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
           alBorrar={(ej) => setModal({ tipo: 'borrar-ejercicio', ej })}
         />
         {modal && modal.tipo === 'nuevo-ejercicio' && (
-          <Modal titulo="Nuevo ejercicio" abierto onCerrar={() => setModal(null)}>
+          <Modal titulo={t('Nuevo ejercicio', 'New exercise')} abierto onCerrar={() => setModal(null)}>
             <FormNuevoEjercicio alCrear={crearEjercicio} />
           </Modal>
         )}
         {modal && modal.tipo === 'borrar-ejercicio' && (
-          <Modal titulo="Borrar ejercicio" abierto onCerrar={() => setModal(null)}>
-            <p>¿Borrar «{modal.ej.nombre}» de tu biblioteca?</p>
+          <Modal titulo={t('Borrar ejercicio', 'Delete exercise')} abierto onCerrar={() => setModal(null)}>
+            <p>{t(`¿Borrar «${modal.ej.nombre}» de tu biblioteca?`, `Delete "${modal.ej.nombre}" from your library?`)}</p>
             <div className="fila rut-modal-botones">
-              <button className="btn" onClick={() => setModal(null)}>Cancelar</button>
-              <button className="btn btn-peligro" onClick={() => borrarEjercicioBiblioteca(modal.ej)}>Borrar</button>
+              <button className="btn" onClick={() => setModal(null)}>{t('Cancelar', 'Cancel')}</button>
+              <button className="btn btn-peligro" onClick={() => borrarEjercicioBiblioteca(modal.ej)}>{t('Borrar', 'Delete')}</button>
             </div>
           </Modal>
         )}
@@ -531,20 +555,20 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
     return (
       <div className="vista">
         <button className="btn btn-fantasma rut-volver" onClick={() => { setModal(null); setDiaId(null) }}>
-          ← {rutina.nombre || 'Rutina'}
+          ← {rutina.nombre || t('Rutina', 'Routine')}
         </button>
-        <label className="etiqueta" htmlFor="rut-nombre-dia">Nombre del día</label>
+        <label className="etiqueta" htmlFor="rut-nombre-dia">{t('Nombre del día', 'Day name')}</label>
         <input
           id="rut-nombre-dia"
           className="input"
           value={dia.nombre}
           onChange={(ev) => editarDia(rutina.id, dia.id, (d) => ({ ...d, nombre: ev.target.value }))}
-          placeholder="Torso, Pierna, Empuje…"
+          placeholder={t('Torso, Pierna, Empuje…', 'Upper, Legs, Push…')}
         />
-        <p className="texto-suave rut-autosave">Todo se guarda solo mientras editas.</p>
-        <h2 className="titulo-seccion">Ejercicios del día</h2>
+        <p className="texto-suave rut-autosave">{t('Todo se guarda solo mientras editas.', 'Everything saves itself as you edit.')}</p>
+        <h2 className="titulo-seccion">{t('Ejercicios del día', "The day's exercises")}</h2>
         {dia.ejercicios.length === 0 && (
-          <p className="texto-suave rut-vacio">Aún no hay ejercicios. Añade el primero y dale forma a este día.</p>
+          <p className="texto-suave rut-vacio">{t('Aún no hay ejercicios. Añade el primero y dale forma a este día.', 'No exercises yet. Add the first one and give this day its shape.')}</p>
         )}
         {dia.ejercicios.map((obj, indice) => {
           const ej = estado.ejercicios.find((x) => x.id === obj.ejercicioId) ||
@@ -554,22 +578,22 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
               <div className="rut-ejercicio-cab">
                 <MiniEjercicio id={ej.id} />
                 <div className="rut-ejercicio-titular">
-                  <div className="rut-ejercicio-nombre">{ej.nombre}</div>
+                  <div className="rut-ejercicio-nombre">{nombreEjercicio(ej)}</div>
                   <div className="texto-suave rut-picker-meta">
-                    {nombreGrupo(ej.grupo)} · {NOMBRE_MEDIDA[ej.medida] || ej.medida}
+                    {nombreGrupo(ej.grupo)} · {nombreMedida(ej.medida)}
                   </div>
                 </div>
                 <span className="rut-ejercicio-acciones">
                   <button
                     className="rut-info"
-                    aria-label={`Ver técnica de ${ej.nombre}`}
+                    aria-label={t(`Ver técnica de ${nombreEjercicio(ej)}`, `View technique for ${nombreEjercicio(ej)}`)}
                     onClick={() => setFichaDia(ej)}
                   >
                     ⓘ
                   </button>
                   <button
                     className="rut-info"
-                    aria-label={`Ver mis estadísticas de ${ej.nombre}`}
+                    aria-label={t(`Ver mis estadísticas de ${nombreEjercicio(ej)}`, `View my stats for ${nombreEjercicio(ej)}`)}
                     onClick={() => setStatsDia(ej)}
                   >
                     <IconoProgreso tam={17} />
@@ -579,7 +603,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
                     className="ent-mover-btn"
                     disabled={indice === 0}
                     onClick={() => moverEnDia(indice, -1)}
-                    aria-label={`Subir ${ej.nombre}`}
+                    aria-label={t(`Subir ${nombreEjercicio(ej)}`, `Move ${nombreEjercicio(ej)} up`)}
                   >
                     ↑
                   </button>
@@ -588,13 +612,13 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
                     className="ent-mover-btn"
                     disabled={indice === dia.ejercicios.length - 1}
                     onClick={() => moverEnDia(indice, 1)}
-                    aria-label={`Bajar ${ej.nombre}`}
+                    aria-label={t(`Bajar ${nombreEjercicio(ej)}`, `Move ${nombreEjercicio(ej)} down`)}
                   >
                     ↓
                   </button>
                   <button
                     className="rut-quitar"
-                    aria-label={`Quitar ${ej.nombre}`}
+                    aria-label={t(`Quitar ${nombreEjercicio(ej)}`, `Remove ${nombreEjercicio(ej)}`)}
                     onClick={() => quitarDelDia(obj.ejercicioId)}
                   >
                     ✕
@@ -603,7 +627,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
               </div>
               <div className="rut-objetivos">
                 <div className="rut-objetivo">
-                  <span className="rut-objetivo-etiqueta">Series</span>
+                  <span className="rut-objetivo-etiqueta">{t('Series', 'Sets')}</span>
                   <Stepper
                     valor={obj.seriesObjetivo}
                     paso={1}
@@ -613,7 +637,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
                   />
                 </div>
                 <div className="rut-objetivo">
-                  <span className="rut-objetivo-etiqueta">{ej.medida === 'tiempo' ? 'Minutos' : 'Reps'}</span>
+                  <span className="rut-objetivo-etiqueta">{ej.medida === 'tiempo' ? t('Minutos', 'Minutes') : t('Reps', 'Reps')}</span>
                   <Stepper
                     valor={obj.repsObjetivo}
                     paso={1}
@@ -624,7 +648,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
                 </div>
                 {ej.medida === 'peso_reps' && (
                   <div className="rut-objetivo">
-                    <span className="rut-objetivo-etiqueta">Peso</span>
+                    <span className="rut-objetivo-etiqueta">{t('Peso', 'Weight')}</span>
                     <Stepper
                       valor={obj.pesoObjetivoKg != null ? obj.pesoObjetivoKg : 0}
                       paso={2.5}
@@ -640,30 +664,34 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
           )
         })}
         <button className="btn rut-boton-ancho" onClick={() => setModal({ tipo: 'picker' })}>
-          ＋ Añadir ejercicio
+          ＋ {t('Añadir ejercicio', 'Add exercise')}
         </button>
         <button
           className="btn btn-primario btn-grande rut-listo"
-          onClick={() => { setModal(null); setDiaId(null); avisar(`«${dia.nombre || 'Día'}» guardado`) }}
+          onClick={() => {
+            setModal(null)
+            setDiaId(null)
+            avisar(t(`«${dia.nombre || 'Día'}» guardado`, `"${dia.nombre || 'Day'}" saved`))
+          }}
         >
-          ✓ Día listo
+          ✓ {t('Día listo', 'Day ready')}
         </button>
         <button className="rut-borrar-enlace" onClick={() => setModal({ tipo: 'borrar-dia' })}>
-          Borrar este día
+          {t('Borrar este día', 'Delete this day')}
         </button>
         <FichaEjercicio ejercicio={fichaDia} abierto={Boolean(fichaDia)} onCerrar={() => setFichaDia(null)} />
         <EstadisticasEjercicio estado={estado} ejercicio={statsDia} abierto={Boolean(statsDia)} onCerrar={() => setStatsDia(null)} />
         {modal && modal.tipo === 'picker' && (
-          <Modal titulo="Añadir ejercicio" abierto onCerrar={() => setModal(null)}>
+          <Modal titulo={t('Añadir ejercicio', 'Add exercise')} abierto onCerrar={() => setModal(null)}>
             <SelectorEjercicios estado={estado} ejercicios={estado.ejercicios} alElegir={anadirEjercicioAlDia} />
           </Modal>
         )}
         {modal && modal.tipo === 'borrar-dia' && (
-          <Modal titulo="Borrar día" abierto onCerrar={() => setModal(null)}>
-            <p>¿Borrar «{dia.nombre}» de esta rutina? Tus sesiones ya registradas no se tocan.</p>
+          <Modal titulo={t('Borrar día', 'Delete day')} abierto onCerrar={() => setModal(null)}>
+            <p>{t(`¿Borrar «${dia.nombre}» de esta rutina? Tus sesiones ya registradas no se tocan.`, `Delete "${dia.nombre}" from this routine? Your logged sessions stay untouched.`)}</p>
             <div className="fila rut-modal-botones">
-              <button className="btn" onClick={() => setModal(null)}>Cancelar</button>
-              <button className="btn btn-peligro" onClick={borrarDia}>Borrar</button>
+              <button className="btn" onClick={() => setModal(null)}>{t('Cancelar', 'Cancel')}</button>
+              <button className="btn btn-peligro" onClick={borrarDia}>{t('Borrar', 'Delete')}</button>
             </div>
           </Modal>
         )}
@@ -676,26 +704,26 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
     return (
       <div className="vista">
         <button className="btn btn-fantasma rut-volver" onClick={() => { setModal(null); setRutinaId(null) }}>
-          ← Rutinas
+          ← {t('Rutinas', 'Routines')}
         </button>
-        <label className="etiqueta" htmlFor="rut-nombre-rutina">Nombre de la rutina</label>
+        <label className="etiqueta" htmlFor="rut-nombre-rutina">{t('Nombre de la rutina', 'Routine name')}</label>
         <input
           id="rut-nombre-rutina"
           className="input"
           value={rutina.nombre}
           onChange={(ev) => editarRutina(rutina.id, (r) => ({ ...r, nombre: ev.target.value }))}
-          placeholder="Torso / Pierna"
+          placeholder={t('Torso / Pierna', 'Upper / Lower')}
         />
-        <p className="texto-suave rut-autosave">Todo se guarda solo mientras editas.</p>
-        <h2 className="titulo-seccion">Días de entreno</h2>
+        <p className="texto-suave rut-autosave">{t('Todo se guarda solo mientras editas.', 'Everything saves itself as you edit.')}</p>
+        <h2 className="titulo-seccion">{t('Días de entreno', 'Workout days')}</h2>
         {rutina.dias.length === 0 && (
-          <p className="texto-suave rut-vacio">Una rutina se forja día a día. Crea el primero.</p>
+          <p className="texto-suave rut-vacio">{t('Una rutina se forja día a día. Crea el primero.', 'A routine is forged day by day. Create the first one.')}</p>
         )}
         {rutina.dias.map((d, indice) => (
           <div key={d.id} className="rut-dia-fila">
             <button className="rut-dia" onClick={() => setDiaId(d.id)}>
               <span className="rut-dia-izq">
-                <span className="rut-dia-nombre">{d.nombre || 'Día'}</span>
+                <span className="rut-dia-nombre">{d.nombre || t('Día', 'Day')}</span>
                 {d.ejercicios.length > 0 && (
                   <span className="tira-minis">
                     {d.ejercicios.slice(0, 8).map((x) => (
@@ -704,7 +732,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
                   </span>
                 )}
                 <span className="texto-suave rut-dia-meta">
-                  {d.ejercicios.length} ejercicio{d.ejercicios.length === 1 ? '' : 's'} ›
+                  {d.ejercicios.length} {d.ejercicios.length === 1 ? t('ejercicio', 'exercise') : t('ejercicios', 'exercises')} ›
                 </span>
               </span>
             </button>
@@ -714,7 +742,7 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
                 className="ent-mover-btn"
                 disabled={indice === 0}
                 onClick={() => moverDia(indice, -1)}
-                aria-label={`Subir ${d.nombre || 'día'}`}
+                aria-label={t(`Subir ${d.nombre || 'día'}`, `Move ${d.nombre || 'day'} up`)}
               >
                 ↑
               </button>
@@ -723,13 +751,13 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
                 className="ent-mover-btn"
                 disabled={indice === rutina.dias.length - 1}
                 onClick={() => moverDia(indice, 1)}
-                aria-label={`Bajar ${d.nombre || 'día'}`}
+                aria-label={t(`Bajar ${d.nombre || 'día'}`, `Move ${d.nombre || 'day'} down`)}
               >
                 ↓
               </button>
               <button
                 className="rut-quitar"
-                aria-label={`Borrar ${d.nombre || 'día'}`}
+                aria-label={t(`Borrar ${d.nombre || 'día'}`, `Delete ${d.nombre || 'day'}`)}
                 onClick={() => setModal({ tipo: 'borrar-dia-lista', dia: d })}
               >
                 ✕
@@ -737,38 +765,46 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
             </span>
           </div>
         ))}
-        <button className="btn rut-boton-ancho" onClick={crearDia}>＋ Añadir día</button>
+        <button className="btn rut-boton-ancho" onClick={crearDia}>＋ {t('Añadir día', 'Add day')}</button>
         <button
           className="btn btn-primario btn-grande rut-listo"
           onClick={() => {
             setModal(null)
             setRutinaId(null)
-            avisar(`«${rutina.nombre || 'Rutina'}» guardada · te espera en ⚔️ Entreno`)
+            avisar(t(
+              `«${rutina.nombre || 'Rutina'}» guardada · te espera en ⚔️ Entreno`,
+              `"${rutina.nombre || 'Routine'}" saved · it awaits you in ⚔️ Workout`
+            ))
           }}
         >
-          ✓ Rutina lista
+          ✓ {t('Rutina lista', 'Routine ready')}
         </button>
         <button className="rut-borrar-enlace" onClick={() => setModal({ tipo: 'borrar-rutina' })}>
-          Borrar rutina
+          {t('Borrar rutina', 'Delete routine')}
         </button>
         {modal && modal.tipo === 'borrar-dia-lista' && (
-          <Modal titulo="Borrar día" abierto onCerrar={() => setModal(null)}>
-            <p>¿Borrar «{modal.dia.nombre || 'este día'}» de la rutina? Tus sesiones ya registradas no se tocan.</p>
+          <Modal titulo={t('Borrar día', 'Delete day')} abierto onCerrar={() => setModal(null)}>
+            <p>{t(
+              `¿Borrar «${modal.dia.nombre || 'este día'}» de la rutina? Tus sesiones ya registradas no se tocan.`,
+              `Delete "${modal.dia.nombre || 'this day'}" from the routine? Your logged sessions stay untouched.`
+            )}</p>
             <div className="fila rut-modal-botones">
-              <button className="btn" onClick={() => setModal(null)}>Cancelar</button>
-              <button className="btn btn-peligro" onClick={() => borrarDiaDeLista(modal.dia.id)}>Borrar</button>
+              <button className="btn" onClick={() => setModal(null)}>{t('Cancelar', 'Cancel')}</button>
+              <button className="btn btn-peligro" onClick={() => borrarDiaDeLista(modal.dia.id)}>{t('Borrar', 'Delete')}</button>
             </div>
           </Modal>
         )}
         {modal && modal.tipo === 'borrar-rutina' && (
-          <Modal titulo="Borrar rutina" abierto onCerrar={() => setModal(null)}>
+          <Modal titulo={t('Borrar rutina', 'Delete routine')} abierto onCerrar={() => setModal(null)}>
             <p>
-              ¿Borrar «{rutina.nombre || 'esta rutina'}» con sus {rutina.dias.length} día{rutina.dias.length === 1 ? '' : 's'}?
-              Tus sesiones ya registradas no se tocan.
+              {t(
+                `¿Borrar «${rutina.nombre || 'esta rutina'}» con sus ${rutina.dias.length} día${rutina.dias.length === 1 ? '' : 's'}? Tus sesiones ya registradas no se tocan.`,
+                `Delete "${rutina.nombre || 'this routine'}" and its ${rutina.dias.length} day${rutina.dias.length === 1 ? '' : 's'}? Your logged sessions stay untouched.`
+              )}
             </p>
             <div className="fila rut-modal-botones">
-              <button className="btn" onClick={() => setModal(null)}>Cancelar</button>
-              <button className="btn btn-peligro" onClick={() => borrarRutina(rutina.id)}>Borrar</button>
+              <button className="btn" onClick={() => setModal(null)}>{t('Cancelar', 'Cancel')}</button>
+              <button className="btn btn-peligro" onClick={() => borrarRutina(rutina.id)}>{t('Borrar', 'Delete')}</button>
             </div>
           </Modal>
         )}
@@ -779,32 +815,34 @@ export default function Rutinas({ estado, actualizarEstado, avisar }) {
   // ---------- Lista de rutinas ----------
   return (
     <div className="vista">
-      <h1 className="rut-titulo">📜 Rutinas</h1>
-      <p className="texto-suave rut-intro">Tus planes de batalla. Defínelos aquí y el modo entreno hará el resto.</p>
+      <h1 className="rut-titulo">📜 {t('Rutinas', 'Routines')}</h1>
+      <p className="texto-suave rut-intro">{t('Tus planes de batalla. Defínelos aquí y el modo entreno hará el resto.', 'Your battle plans. Shape them here and workout mode will do the rest.')}</p>
       {estado.rutinas.length === 0 && (
         <div className="panel rut-vacio-panel">
-          <p>Aún no tienes rutinas.</p>
+          <p>{t('Aún no tienes rutinas.', 'You have no routines yet.')}</p>
           <p className="texto-suave">
-            ¿Primera vez? Las rutinas recomendadas te dan un plan probado con un
-            toque. Y si ya sabes lo que quieres, forja el tuyo.
+            {t(
+              '¿Primera vez? Las rutinas recomendadas te dan un plan probado con un toque. Y si ya sabes lo que quieres, forja el tuyo.',
+              'First time? The recommended routines hand you a proven plan in one tap. And if you already know what you want, forge your own.'
+            )}
           </p>
         </div>
       )}
       {estado.rutinas.map((r) => (
         <button key={r.id} className="rut-dia" onClick={() => setRutinaId(r.id)}>
-          <span className="rut-dia-nombre">{r.nombre || 'Sin nombre'}</span>
+          <span className="rut-dia-nombre">{r.nombre || t('Sin nombre', 'Unnamed')}</span>
           <span className="texto-suave rut-dia-meta">
-            {r.dias.length} día{r.dias.length === 1 ? '' : 's'} ›
+            {r.dias.length} {r.dias.length === 1 ? t('día', 'day') : t('días', 'days')} ›
           </span>
         </button>
       ))}
       <button className="btn rut-boton-ancho" onClick={() => setVerPlantillas(true)}>
-        🗺 Rutinas recomendadas (para empezar)
+        🗺 {t('Rutinas recomendadas (para empezar)', 'Recommended routines (to get started)')}
       </button>
-      <button className="btn btn-primario rut-boton-ancho" onClick={crearRutina}>＋ Nueva rutina</button>
-      <h2 className="titulo-seccion">Biblioteca</h2>
+      <button className="btn btn-primario rut-boton-ancho" onClick={crearRutina}>＋ {t('Nueva rutina', 'New routine')}</button>
+      <h2 className="titulo-seccion">{t('Biblioteca', 'Library')}</h2>
       <button className="btn rut-boton-ancho" onClick={() => setVerBiblioteca(true)}>
-        📚 Biblioteca de ejercicios ({estado.ejercicios.length})
+        📚 {t('Biblioteca de ejercicios', 'Exercise library')} ({estado.ejercicios.length})
       </button>
     </div>
   )

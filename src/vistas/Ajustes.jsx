@@ -5,17 +5,26 @@ import { claveDia } from '../engine/fechas.js'
 import { borrarBaseDeDatos } from '../db/db.js'
 import { exportarJSON, exportarJSONConFotos, importarCopia } from '../db/exportar.js'
 import { borrarTodasLasFotos, restaurarFotos, serializarFotos } from '../db/fotos.js'
-import { AVISO_SUPLEMENTOS, SUPLEMENTOS } from '../data/suplementos.js'
+import { SUPLEMENTOS } from '../data/suplementos.js'
+import { t } from '../i18n/idioma.js'
+import { avisoSuplementos, nombreSuplemento, suplementoTexto } from '../i18n/catalogo.js'
 
+// [dia ISO, letra es, letra en, nombre es, nombre en]
 const DIAS = [
-  [1, 'L', 'lunes'],
-  [2, 'M', 'martes'],
-  [3, 'X', 'miércoles'],
-  [4, 'J', 'jueves'],
-  [5, 'V', 'viernes'],
-  [6, 'S', 'sábado'],
-  [7, 'D', 'domingo'],
+  [1, 'L', 'M', 'lunes', 'Monday'],
+  [2, 'M', 'T', 'martes', 'Tuesday'],
+  [3, 'X', 'W', 'miércoles', 'Wednesday'],
+  [4, 'J', 'T', 'jueves', 'Thursday'],
+  [5, 'V', 'F', 'viernes', 'Friday'],
+  [6, 'S', 'S', 'sábado', 'Saturday'],
+  [7, 'D', 'S', 'domingo', 'Sunday'],
 ]
+
+function textoEvidencia(evidencia) {
+  return evidencia === 'fuerte'
+    ? t('evidencia fuerte', 'strong evidence')
+    : t('evidencia moderada', 'moderate evidence')
+}
 
 export default function Ajustes({ estado, actualizarEstado, avisar }) {
   const [apodo, setApodo] = useState(estado.perfil.apodo)
@@ -28,6 +37,12 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
   const [fichaSupl, setFichaSupl] = useState(null)
 
   const pautaSupl = (estado.suplementos && estado.suplementos.pauta) || []
+  const idiomaActivo = estado.ajustes.idioma || 'es'
+  const palabraBorrar = t('BORRAR', 'DELETE')
+
+  function cambiarIdioma(codigo) {
+    actualizarEstado((e) => ({ ...e, ajustes: { ...e.ajustes, idioma: codigo } }))
+  }
 
   function alternarPautaSupl(id) {
     actualizarEstado((prev) => {
@@ -40,17 +55,20 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
   function sellarPacto() {
     const nombre = nombrePacto.trim()
     if (!nombre) {
-      avisar('Ponle nombre a tu hermano de pacto', 'error')
+      avisar(t('Ponle nombre a tu hermano de pacto', 'Give your Pact brother a name'), 'error')
       return
     }
     actualizarEstado((prev) => ({ ...prev, pacto: { nombre, selladoEl: claveDia() } }))
     setNombrePacto('')
-    avisar(`Pacto sellado con ${nombre}. Dos que se levantan a la vez.`)
+    avisar(t(
+      `Pacto sellado con ${nombre}. Dos que se levantan a la vez.`,
+      `Pact sealed with ${nombre}. Two who rise together.`
+    ))
   }
 
   function deshacerPacto() {
     actualizarEstado((prev) => ({ ...prev, pacto: null }))
-    avisar('Pacto deshecho, sin rencores.')
+    avisar(t('Pacto deshecho, sin rencores.', 'Pact undone, no hard feelings.'))
   }
 
   function guardarPerfil() {
@@ -58,14 +76,14 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
     const edadNum = Math.round(Number(edad))
     const alturaNum = Math.round(Number(altura))
     if (!apodoLimpio || !(edadNum > 0) || !(alturaNum > 0)) {
-      avisar('Revisa los datos del perfil', 'error')
+      avisar(t('Revisa los datos del perfil', 'Check your profile details'), 'error')
       return
     }
     actualizarEstado((prev) => ({
       ...prev,
       perfil: { ...prev.perfil, apodo: apodoLimpio, edad: edadNum, alturaCm: alturaNum },
     }))
-    avisar('Perfil actualizado')
+    avisar(t('Perfil actualizado', 'Profile updated'))
   }
 
   function alternarDia(dia) {
@@ -95,7 +113,10 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
         : exportarJSON(estado, hoy)
     } catch {
       texto = exportarJSON(estado, hoy) // sin fotos antes que sin copia
-      avisar('Las fotos no cupieron en la copia: se exporta sin ellas', 'error')
+      avisar(t(
+        'Las fotos no cupieron en la copia: se exporta sin ellas',
+        'The photos did not fit in the backup: exporting without them'
+      ), 'error')
     }
     const nombre = `fromzerotohero-${hoy}.json`
     const archivo = new File([texto], nombre, { type: 'application/json' })
@@ -107,10 +128,13 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
       window.navigator.standalone === true
     if ((esIOS || instalada) && navigator.canShare && navigator.canShare({ files: [archivo] })) {
       try {
-        await navigator.share({ files: [archivo], title: 'Copia de FromZeroToHero' })
-        avisar('Copia compartida: guárdala en Archivos o donde quieras')
+        await navigator.share({ files: [archivo], title: t('Copia de FromZeroToHero', 'FromZeroToHero backup') })
+        avisar(t(
+          'Copia compartida: guárdala en Archivos o donde quieras',
+          'Backup shared: save it to Files or wherever you like'
+        ))
       } catch (err) {
-        if (!err || err.name !== 'AbortError') avisar('No se pudo compartir la copia', 'error')
+        if (!err || err.name !== 'AbortError') avisar(t('No se pudo compartir la copia', 'Could not share the backup'), 'error')
       }
       return
     }
@@ -124,7 +148,7 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
     enlace.click()
     enlace.remove()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
-    avisar('Copia descargada')
+    avisar(t('Copia descargada', 'Backup downloaded'))
   }
 
   async function alElegirCopia(ev) {
@@ -135,7 +159,7 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
       const texto = await fichero.text()
       setImportado(importarCopia(texto))
     } catch (err) {
-      avisar(err && err.message ? err.message : 'Ese fichero no parece una copia válida', 'error')
+      avisar(err && err.message ? err.message : t('Ese fichero no parece una copia válida', 'That file does not look like a valid backup'), 'error')
     }
   }
 
@@ -163,7 +187,7 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
     setApodo(final.perfil.apodo)
     setEdad(String(final.perfil.edad ?? ''))
     setAltura(String(final.perfil.alturaCm ?? ''))
-    avisar('Datos importados')
+    avisar(t('Datos importados', 'Data imported'))
   }
 
   function cerrarBorrar() {
@@ -188,11 +212,31 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
 
   return (
     <div className="vista">
-      <h1 className="aju-titulo">Ajustes</h1>
+      <h1 className="aju-titulo">{t('Ajustes', 'Settings')}</h1>
 
-      <div className="titulo-seccion">Perfil</div>
+      <div className="titulo-seccion">Idioma · Language</div>
       <div className="panel">
-        <label className="etiqueta" htmlFor="aju-apodo">Apodo</label>
+        <div className="supl-chips">
+          <button
+            className={idiomaActivo === 'es' ? 'chip chip-activo' : 'chip'}
+            aria-pressed={idiomaActivo === 'es'}
+            onClick={() => cambiarIdioma('es')}
+          >
+            Español
+          </button>
+          <button
+            className={idiomaActivo === 'en' ? 'chip chip-activo' : 'chip'}
+            aria-pressed={idiomaActivo === 'en'}
+            onClick={() => cambiarIdioma('en')}
+          >
+            English
+          </button>
+        </div>
+      </div>
+
+      <div className="titulo-seccion">{t('Perfil', 'Profile')}</div>
+      <div className="panel">
+        <label className="etiqueta" htmlFor="aju-apodo">{t('Apodo', 'Nickname')}</label>
         <input
           id="aju-apodo"
           className="input"
@@ -202,7 +246,7 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
         />
         <div className="grid-2 aju-campos">
           <div>
-            <label className="etiqueta" htmlFor="aju-edad">Edad</label>
+            <label className="etiqueta" htmlFor="aju-edad">{t('Edad', 'Age')}</label>
             <input
               id="aju-edad"
               className="input"
@@ -213,7 +257,7 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
             />
           </div>
           <div>
-            <label className="etiqueta" htmlFor="aju-altura">Altura (cm)</label>
+            <label className="etiqueta" htmlFor="aju-altura">{t('Altura (cm)', 'Height (cm)')}</label>
             <input
               id="aju-altura"
               className="input"
@@ -224,36 +268,38 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
             />
           </div>
         </div>
-        <button className="btn btn-primario aju-btn-bloque" onClick={guardarPerfil}>Guardar cambios</button>
+        <button className="btn btn-primario aju-btn-bloque" onClick={guardarPerfil}>{t('Guardar cambios', 'Save changes')}</button>
       </div>
 
-      <div className="titulo-seccion">Días de entreno</div>
+      <div className="titulo-seccion">{t('Días de entreno', 'Training days')}</div>
       <div className="panel">
         <div className="aju-dias">
-          {DIAS.map(([dia, letra, nombre]) => {
+          {DIAS.map(([dia, letraEs, letraEn, nombreEs, nombreEn]) => {
             const activo = estado.ajustes.diasPlanificados.includes(dia)
             return (
               <button
                 key={dia}
                 className={activo ? 'chip chip-activo aju-dia' : 'chip aju-dia'}
                 aria-pressed={activo}
-                aria-label={nombre}
+                aria-label={t(nombreEs, nombreEn)}
                 onClick={() => alternarDia(dia)}
               >
-                {letra}
+                {t(letraEs, letraEn)}
               </button>
             )
           })}
         </div>
         <p className="texto-suave aju-nota">
-          Solo los días marcados cuentan para la racha; al cambiarlos, se recalcula sola.
-          Los días de descanso nunca la rompen.
+          {t(
+            'Solo los días marcados cuentan para la racha; al cambiarlos, se recalcula sola. Los días de descanso nunca la rompen.',
+            'Only the marked days count toward your streak; change them and it recalculates on its own. Rest days never break it.'
+          )}
         </p>
       </div>
 
-      <div className="titulo-seccion">Entreno</div>
+      <div className="titulo-seccion">{t('Entreno', 'Workout')}</div>
       <div className="panel">
-        <span className="etiqueta">Descanso entre series por defecto</span>
+        <span className="etiqueta">{t('Descanso entre series por defecto', 'Default rest between sets')}</span>
         <Stepper
           valor={estado.ajustes.descansoSeg}
           paso={15}
@@ -264,52 +310,57 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
         />
       </div>
 
-      <div className="titulo-seccion">El pacto</div>
+      <div className="titulo-seccion">{t('El pacto', 'The Pact')}</div>
       <div className="panel">
         {estado.pacto && estado.pacto.nombre ? (
           <>
-            <p className="aju-pacto-sellado">🤝 Pacto sellado con <strong>{estado.pacto.nombre}</strong></p>
+            <p className="aju-pacto-sellado">🤝 {t('Pacto sellado con', 'Pact sealed with')} <strong>{estado.pacto.nombre}</strong></p>
             <p className="texto-suave aju-nota">
-              Cada domingo, la app te propondrá compartir tu semana con {estado.pacto.nombre}.
-              Tú decides si la envías: el pacto anima, nunca vigila.
+              {t(
+                `Cada domingo, la app te propondrá compartir tu semana con ${estado.pacto.nombre}. Tú decides si la envías: el pacto anima, nunca vigila.`,
+                `Every Sunday, the app will offer to share your week with ${estado.pacto.nombre}. You decide whether to send it: the Pact encourages, it never watches.`
+              )}
             </p>
-            <button className="rut-borrar-enlace" onClick={deshacerPacto}>Deshacer el pacto</button>
+            <button className="rut-borrar-enlace" onClick={deshacerPacto}>{t('Deshacer el pacto', 'Undo the Pact')}</button>
           </>
         ) : (
           <>
             <p className="texto-suave aju-nota">
-              Dos que se levantan a la vez llegan más lejos. Sella un pacto con tu
-              hermano de armas: cada domingo compartiréis vuestra semana (una imagen,
-              por donde queráis). Nada sale de tu móvil sin que tú lo envíes.
+              {t(
+                'Dos que se levantan a la vez llegan más lejos. Sella un pacto con tu hermano de armas: cada domingo compartiréis vuestra semana (una imagen, por donde queráis). Nada sale de tu móvil sin que tú lo envíes.',
+                'Two who rise together go further. Seal a Pact with your brother in arms: every Sunday you will share your week (one image, through whichever channel you like). Nothing leaves your phone unless you send it.'
+              )}
             </p>
             <input
               className="input"
               type="text"
               maxLength={20}
-              placeholder="Nombre de tu hermano de pacto"
+              placeholder={t('Nombre de tu hermano de pacto', "Your Pact brother's name")}
               value={nombrePacto}
               onChange={(ev) => setNombrePacto(ev.target.value)}
-              aria-label="Nombre de tu hermano de pacto"
+              aria-label={t('Nombre de tu hermano de pacto', "Your Pact brother's name")}
             />
             <button className="btn aju-btn-bloque" onClick={sellarPacto} disabled={!nombrePacto.trim()}>
-              🤝 Sellar el pacto
+              {t('🤝 Sellar el pacto', '🤝 Seal the Pact')}
             </button>
           </>
         )}
       </div>
 
-      <div className="titulo-seccion">Suplementación</div>
+      <div className="titulo-seccion">{t('Suplementación', 'Supplements')}</div>
       <div className="panel">
         <p className="texto-suave aju-nota">
-          Opcional, y sin XP a propósito: lo que tomas es información tuya, no un
-          juego. Marca «Lo tomo» y podrás apuntarlo cada día desde Inicio.
+          {t(
+            'Opcional, y sin XP a propósito: lo que tomas es información tuya, no un juego. Marca «Lo tomo» y podrás apuntarlo cada día desde Inicio.',
+            "Optional, and XP-free on purpose: what you take is your own information, not a game. Mark 'I take it' and you can log it each day from Home."
+          )}
         </p>
         {SUPLEMENTOS.map((s) => (
           <div key={s.id} className="supl-fila">
             <button className="supl-nombre" onClick={() => setFichaSupl(s)}>
-              <span aria-hidden="true">{s.icono}</span> {s.nombre}
+              <span aria-hidden="true">{s.icono}</span> {nombreSuplemento(s)}
               <span className={s.evidencia === 'fuerte' ? 'supl-evid supl-evid-fuerte' : 'supl-evid'}>
-                evidencia {s.evidencia}
+                {textoEvidencia(s.evidencia)}
               </span>
             </button>
             <button
@@ -317,32 +368,32 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
               onClick={() => alternarPautaSupl(s.id)}
               aria-pressed={pautaSupl.includes(s.id)}
             >
-              {pautaSupl.includes(s.id) ? '✓ Lo tomo' : 'Lo tomo'}
+              {pautaSupl.includes(s.id) ? `✓ ${t('Lo tomo', 'I take it')}` : t('Lo tomo', 'I take it')}
             </button>
           </div>
         ))}
-        <p className="texto-suave supl-aviso">{AVISO_SUPLEMENTOS}</p>
+        <p className="texto-suave supl-aviso">{avisoSuplementos()}</p>
       </div>
 
       {fichaSupl && (
-        <Modal titulo={`${fichaSupl.icono} ${fichaSupl.nombre}`} abierto onCerrar={() => setFichaSupl(null)}>
+        <Modal titulo={`${fichaSupl.icono} ${nombreSuplemento(fichaSupl)}`} abierto onCerrar={() => setFichaSupl(null)}>
           <div className="supl-ficha">
             <p className={fichaSupl.evidencia === 'fuerte' ? 'supl-evid supl-evid-fuerte' : 'supl-evid'}>
-              evidencia {fichaSupl.evidencia}
+              {textoEvidencia(fichaSupl.evidencia)}
             </p>
-            <p>{fichaSupl.que}</p>
-            <p><strong className="oro">Dosis:</strong> {fichaSupl.dosis}</p>
-            <p><strong className="oro">Cuándo:</strong> {fichaSupl.cuando}</p>
-            <p><strong>Ojo:</strong> {fichaSupl.ojo}</p>
-            <p className="texto-suave supl-aviso">{AVISO_SUPLEMENTOS}</p>
+            <p>{suplementoTexto(fichaSupl).que}</p>
+            <p><strong className="oro">{t('Dosis:', 'Dose:')}</strong> {suplementoTexto(fichaSupl).dosis}</p>
+            <p><strong className="oro">{t('Cuándo:', 'When:')}</strong> {suplementoTexto(fichaSupl).cuando}</p>
+            <p><strong>{t('Ojo:', 'Watch out:')}</strong> {suplementoTexto(fichaSupl).ojo}</p>
+            <p className="texto-suave supl-aviso">{avisoSuplementos()}</p>
           </div>
         </Modal>
       )}
 
-      <div className="titulo-seccion">Tus datos</div>
+      <div className="titulo-seccion">{t('Tus datos', 'Your data')}</div>
       <div className="panel">
-        <button className="btn aju-btn-bloque" onClick={exportar}>⬇️ Exportar copia (.json)</button>
-        <label className="btn aju-btn-bloque" htmlFor="aju-input-importar">⬆️ Importar copia</label>
+        <button className="btn aju-btn-bloque" onClick={exportar}>{t('⬇️ Exportar copia (.json)', '⬇️ Export backup (.json)')}</button>
+        <label className="btn aju-btn-bloque" htmlFor="aju-input-importar">{t('⬆️ Importar copia', '⬆️ Import backup')}</label>
         <input
           id="aju-input-importar"
           className="aju-oculto"
@@ -351,77 +402,86 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
           onChange={alElegirCopia}
         />
         <p className="texto-suave aju-nota">
-          La copia incluye todo tu progreso, fotos incluidas. Guárdala donde no se pierda.
+          {t(
+            'La copia incluye todo tu progreso, fotos incluidas. Guárdala donde no se pierda.',
+            'The backup includes all your progress, photos included. Keep it somewhere it will not get lost.'
+          )}
         </p>
       </div>
 
-      <div className="titulo-seccion">Sobre la app</div>
+      <div className="titulo-seccion">{t('Sobre la app', 'About the app')}</div>
       <div className="panel aju-sobre">
-        <p><strong>FromZeroToHero</strong> · versión 1</p>
-        <p className="texto-suave">El XP nace de lo que haces, nunca de lo que pesas.</p>
-        <p className="texto-suave">Compites contra quien eras al empezar, no contra nadie más.</p>
-        <p className="texto-suave">Descansar forma parte del camino: la racha respeta tus días libres.</p>
+        <p><strong>FromZeroToHero</strong> · {t('versión 1', 'version 1')}</p>
+        <p className="texto-suave">{t('El XP nace de lo que haces, nunca de lo que pesas.', 'XP is born from what you do, never from what you weigh.')}</p>
+        <p className="texto-suave">{t('Compites contra quien eras al empezar, no contra nadie más.', 'You compete against who you were when you began, no one else.')}</p>
+        <p className="texto-suave">{t('Descansar forma parte del camino: la racha respeta tus días libres.', 'Rest is part of the path: your streak respects your days off.')}</p>
       </div>
 
-      <div className="titulo-seccion aju-titulo-peligro">Zona peligrosa</div>
+      <div className="titulo-seccion aju-titulo-peligro">{t('Zona peligrosa', 'Danger zone')}</div>
       <div className="panel aju-peligro">
         <p className="texto-suave aju-nota">
-          Borra a tu héroe, tus sesiones, tus fotos y todo tu progreso de este dispositivo.
+          {t(
+            'Borra a tu héroe, tus sesiones, tus fotos y todo tu progreso de este dispositivo.',
+            'Erases your hero, your sessions, your photos, and all your progress from this device.'
+          )}
         </p>
         <button className="btn btn-peligro aju-btn-bloque" onClick={() => setPasoBorrar(1)}>
-          Borrar todos los datos
+          {t('Borrar todos los datos', 'Delete all data')}
         </button>
       </div>
 
       {importado && (
-        <Modal titulo="Importar copia" abierto onCerrar={() => setImportado(null)}>
-          <p>Vas a reemplazar todos los datos actuales por esta copia:</p>
+        <Modal titulo={t('Importar copia', 'Import backup')} abierto onCerrar={() => setImportado(null)}>
+          <p>{t('Vas a reemplazar todos los datos actuales por esta copia:', 'You are about to replace all current data with this backup:')}</p>
           <ul className="aju-resumen">
-            <li>Héroe: <strong>{(importado.estado.perfil && importado.estado.perfil.apodo) || '—'}</strong></li>
-            <li>Sesiones: <strong>{importado.estado.sesiones.length}</strong></li>
-            <li>XP total: <strong>{importado.estado.progreso.xp}</strong></li>
-            <li>Fotos: <strong>{importado.fotos.length}</strong></li>
+            <li>{t('Héroe:', 'Hero:')} <strong>{(importado.estado.perfil && importado.estado.perfil.apodo) || '—'}</strong></li>
+            <li>{t('Sesiones:', 'Sessions:')} <strong>{importado.estado.sesiones.length}</strong></li>
+            <li>{t('XP total:', 'Total XP:')} <strong>{importado.estado.progreso.xp}</strong></li>
+            <li>{t('Fotos:', 'Photos:')} <strong>{importado.fotos.length}</strong></li>
           </ul>
-          <p className="texto-suave">Los datos actuales de este dispositivo se perderán.</p>
+          <p className="texto-suave">{t('Los datos actuales de este dispositivo se perderán.', 'The current data on this device will be lost.')}</p>
           <div className="fila aju-acciones-modal">
-            <button className="btn" onClick={() => setImportado(null)}>Cancelar</button>
-            <button className="btn btn-peligro" onClick={confirmarImportar}>Reemplazar</button>
+            <button className="btn" onClick={() => setImportado(null)}>{t('Cancelar', 'Cancel')}</button>
+            <button className="btn btn-peligro" onClick={confirmarImportar}>{t('Reemplazar', 'Replace')}</button>
           </div>
         </Modal>
       )}
 
       {pasoBorrar > 0 && (
-        <Modal titulo="Borrar todos los datos" abierto onCerrar={cerrarBorrar}>
+        <Modal titulo={t('Borrar todos los datos', 'Delete all data')} abierto onCerrar={cerrarBorrar}>
           {pasoBorrar === 1 ? (
             <>
-              <p>Esto borra a tu héroe, tus sesiones, tus fotos y todo tu progreso de este dispositivo. No hay marcha atrás.</p>
-              <p className="texto-suave aju-nota">Si quieres conservar algo, exporta una copia antes.</p>
+              <p>{t(
+                'Esto borra a tu héroe, tus sesiones, tus fotos y todo tu progreso de este dispositivo. No hay marcha atrás.',
+                'This erases your hero, your sessions, your photos, and all your progress from this device. There is no way back.'
+              )}</p>
+              <p className="texto-suave aju-nota">{t('Si quieres conservar algo, exporta una copia antes.', 'If you want to keep anything, export a backup first.')}</p>
               <div className="fila aju-acciones-modal">
-                <button className="btn" onClick={cerrarBorrar}>Cancelar</button>
-                <button className="btn btn-peligro" onClick={() => setPasoBorrar(2)}>Continuar</button>
+                <button className="btn" onClick={cerrarBorrar}>{t('Cancelar', 'Cancel')}</button>
+                <button className="btn btn-peligro" onClick={() => setPasoBorrar(2)}>{t('Continuar', 'Continue')}</button>
               </div>
             </>
           ) : (
             <>
-              <p>Escribe <strong>BORRAR</strong> para confirmar.</p>
+              <p>{t('Escribe', 'Type')} <strong>{palabraBorrar}</strong> {t('para confirmar.', 'to confirm.')}</p>
               <input
                 className="input aju-campo-borrar"
                 type="text"
                 value={textoBorrar}
                 onChange={(e) => setTextoBorrar(e.target.value)}
-                placeholder="BORRAR"
+                placeholder={palabraBorrar}
                 autoCapitalize="characters"
                 autoComplete="off"
-                aria-label="Escribe BORRAR para confirmar"
+                aria-label={t('Escribe BORRAR para confirmar', 'Type DELETE to confirm')}
               />
               <div className="fila aju-acciones-modal">
-                <button className="btn" onClick={cerrarBorrar}>Cancelar</button>
+                <button className="btn" onClick={cerrarBorrar}>{t('Cancelar', 'Cancel')}</button>
                 <button
                   className="btn btn-peligro"
-                  disabled={textoBorrar.trim() !== 'BORRAR'}
+                  disabled={textoBorrar.trim() !== palabraBorrar}
                   onClick={borrarTodo}
                 >
-                  Borrar para siempre
+                  {t('Borrar para siempre', 'Delete forever')}
                 </button>
               </div>
             </>

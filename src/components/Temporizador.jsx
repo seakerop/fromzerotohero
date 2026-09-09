@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { t } from '../i18n/idioma.js'
 
 // Audio COMPARTIDO: iOS solo permite arrancar un AudioContext dentro de un
 // gesto de usuario. Entreno llama a desbloquearAudio() en cada ✓ de serie;
@@ -95,11 +96,11 @@ export default function Temporizador({ segundos, alCerrar }) {
       </div>
       <div className="ent-tempo-fila">
         <div className="ent-tempo-info">
-          <span className="ent-tempo-etiqueta">{restante > 0 ? 'Descanso' : '¡A por la siguiente!'}</span>
+          <span className="ent-tempo-etiqueta">{restante > 0 ? t('Descanso', 'Rest') : t('¡A por la siguiente!', 'On to the next!')}</span>
           <span className="ent-tempo-cuenta">{minutos}:{String(segs).padStart(2, '0')}</span>
         </div>
         <button className="btn ent-tempo-btn" onClick={extender}>+30 s</button>
-        <button className="btn ent-tempo-btn" onClick={alCerrar}>Saltar</button>
+        <button className="btn ent-tempo-btn" onClick={alCerrar}>{t('Saltar', 'Skip')}</button>
       </div>
     </div>
   )
