@@ -90,6 +90,8 @@
   margin-left: auto;
   flex-shrink: 0;
 }
+/* En el entreno, las acciones van SIEMPRE en su propia fila: nada se monta */
+.ent-acciones { flex-basis: 100%; justify-content: flex-end; }
 .rut-quitar {
   min-width: 44px;
   min-height: 44px;

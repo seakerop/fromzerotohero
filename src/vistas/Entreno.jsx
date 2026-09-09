@@ -117,13 +117,12 @@ function Premio({ r }) {
   return null
 }
 
-function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar, alAnadirSerie, alMover }) {
+function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar, alAnadirSerie, alMover, alQuitar }) {
   const [verFicha, setVerFicha] = useState(false)
   const [verStats, setVerStats] = useState(false)
   const ej = estado.ejercicios.find((x) => x.id === ejS.ejercicioId) ||
     { id: ejS.ejercicioId, nombre: ejS.ejercicioId, medida: 'peso_reps' }
   const h = historicoEjercicio(estado, ejS.ejercicioId)
-  const objetivo = objetivoDe(estado, sesion, ejS.ejercicioId)
   const mejor = textoMejor(ej.medida, h)
 
   return (
@@ -133,21 +132,21 @@ function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar,
       <header className="ent-ejercicio-cab">
         <MiniEjercicio id={ej.id} />
         <h3 className="ent-ejercicio-nombre">{ej.nombre}</h3>
-        <button
-          className="rut-info"
-          aria-label={`Ver técnica de ${ej.nombre}`}
-          onClick={() => setVerFicha(true)}
-        >
-          ⓘ
-        </button>
-        <button
-          className="rut-info"
-          aria-label={`Ver mis estadísticas de ${ej.nombre}`}
-          onClick={() => setVerStats(true)}
-        >
-          <IconoProgreso tam={17} />
-        </button>
-        <span className="ent-mover">
+        <span className="rut-ejercicio-acciones ent-acciones">
+          <button
+            className="rut-info"
+            aria-label={`Ver técnica de ${ej.nombre}`}
+            onClick={() => setVerFicha(true)}
+          >
+            ⓘ
+          </button>
+          <button
+            className="rut-info"
+            aria-label={`Ver mis estadísticas de ${ej.nombre}`}
+            onClick={() => setVerStats(true)}
+          >
+            <IconoProgreso tam={17} />
+          </button>
           <button
             type="button"
             className="ent-mover-btn"
@@ -166,14 +165,14 @@ function TarjetaEjercicio({ estado, sesion, ejS, iEj, total, alEditar, alMarcar,
           >
             ↓
           </button>
+          <button
+            className="rut-quitar"
+            aria-label={`Quitar ${ej.nombre} de la sesión`}
+            onClick={() => alQuitar(iEj)}
+          >
+            ✕
+          </button>
         </span>
-        {objetivo && (
-          <span className="ent-objetivo">
-            Objetivo {objetivo.seriesObjetivo}×{objetivo.repsObjetivo}
-            {ej.medida === 'tiempo' ? ' min' : ''}
-            {objetivo.pesoObjetivoKg != null ? ` · ${formatoKg(objetivo.pesoObjetivoKg)} kg` : ''}
-          </span>
-        )}
       </header>
       {h.ultimaVez ? (
         <p className="ent-ultima">
@@ -336,6 +335,20 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
       ;[lista[iEj], lista[j]] = [lista[j], lista[iEj]]
       return { ...s, ejercicios: lista }
     })
+  }
+
+  function quitarEjercicio(iEj) {
+    editarSesion((s) => ({ ...s, ejercicios: s.ejercicios.filter((_, i) => i !== iEj) }))
+    setModal(null)
+    avisar('Ejercicio quitado de la sesión')
+  }
+
+  // Sin series marcadas se quita al toque; con series ✓ pide confirmación
+  // porque se perderían al quitarlo.
+  function pedirQuitar(iEj) {
+    const tieneHechas = sesion.ejercicios[iEj].series.some((se) => se.hecha)
+    if (tieneHechas) setModal({ tipo: 'quitar', iEj })
+    else quitarEjercicio(iEj)
   }
 
   function editarSerie(iEj, iSerie, cambio) {
@@ -581,6 +594,7 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
           alMarcar={marcarSerie}
           alAnadirSerie={anadirSerie}
           alMover={moverEjercicio}
+          alQuitar={pedirQuitar}
         />
       ))}
       <button className="btn ent-btn-anadir" onClick={() => setModal('anadir')}>＋ Añadir ejercicio</button>
@@ -610,6 +624,18 @@ export default function Entreno({ estado, actualizarEstado, aplicarEvento, irA, 
       {modal === 'anadir' && (
         <Modal titulo="Añadir ejercicio" abierto onCerrar={() => setModal(null)}>
           <SelectorEjercicios estado={estado} ejercicios={estado.ejercicios} alElegir={anadirEjercicio} />
+        </Modal>
+      )}
+      {modal && modal.tipo === 'quitar' && sesion.ejercicios[modal.iEj] && (
+        <Modal titulo="Quitar ejercicio" abierto onCerrar={() => setModal(null)}>
+          <p>
+            Este ejercicio tiene series marcadas con ✓. Si lo quitas de la
+            sesión, se pierden. ¿Lo quitas igualmente?
+          </p>
+          <div className="fila rut-modal-botones">
+            <button className="btn" onClick={() => setModal(null)}>Cancelar</button>
+            <button className="btn btn-peligro" onClick={() => quitarEjercicio(modal.iEj)}>Quitar</button>
+          </div>
         </Modal>
       )}
       {modal === 'descartar' && (
