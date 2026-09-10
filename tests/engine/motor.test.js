@@ -71,7 +71,7 @@ describe('crearEstadoInicial', () => {
       historial: [{ fecha: '2026-07-20', pasosDia: 4000 }],
       ultimaRecalibracion: '2026-07-20',
     })
-    expect(e.ajustes).toEqual({ diasPlanificados: [1, 3, 5], descansoSeg: 90 })
+    expect(e.ajustes).toEqual({ diasPlanificados: [1, 3, 5], descansoSeg: 90, metaPasos: null })
     expect(e.progreso.xp).toBe(0)
     expect(e.progreso.logros).toEqual({})
     expect(e.progreso.contadores).toEqual({

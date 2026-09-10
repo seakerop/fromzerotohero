@@ -16,7 +16,9 @@ import {
   calcularRacha,
   diasCamino as diasCaminoDe,
   etapaArbol,
+  metaPasosDe,
   siguienteEtapaArbol,
+  tramosDePasos,
 } from '../engine/motor.js'
 import { logroPorId } from '../data/logros.js'
 import { medidaDeMeta, metaMasCercana, nombreDeMeta } from '../engine/metas.js'
@@ -81,6 +83,11 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
   })
 
   const pasosHoy = estado.pasos.find((p) => p.fecha === hoy) || null
+  // Barra de pasos: el esfuerzo real llena la barra por cuartos (CONTRACT §8).
+  const metaPasos = metaPasosDe(estado)
+  const pasosDeHoy = pasosHoy ? pasosHoy.pasos : 0
+  const pctPasos = Math.min(100, Math.round((pasosDeHoy / metaPasos) * 100))
+  const tramosHoy = tramosDePasos(pasosDeHoy, metaPasos)
   const pesoHoy = estado.cuerpo.pesos.find((p) => p.fecha === hoy) || null
 
   const ayer = sumarDias(hoy, -1)
@@ -386,6 +393,24 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
           <div className={pasosHoy ? 'home-reg-hoy home-reg-ok' : 'home-reg-hoy'}>
             {pasosHoy ? t(`✓ ${pasosHoy.pasos.toLocaleString(localeNum())} hoy`, `✓ ${pasosHoy.pasos.toLocaleString(localeNum())} today`) : t('Sin registro hoy', 'No log today')}
           </div>
+          <div
+            className={'pasos-barra' + (pasosDeHoy >= metaPasos ? ' pasos-barra-llena' : '')}
+            role="img"
+            aria-label={t(
+              `${pasosDeHoy.toLocaleString(localeNum())} de ${metaPasos.toLocaleString(localeNum())} pasos: ${tramosHoy} de 4 tramos`,
+              `${pasosDeHoy.toLocaleString(localeNum())} of ${metaPasos.toLocaleString(localeNum())} steps: ${tramosHoy} of 4 segments`
+            )}
+          >
+            <div className="pasos-barra-relleno" style={{ width: `${pctPasos}%` }} />
+            <span className="pasos-marca" style={{ left: '25%' }} />
+            <span className="pasos-marca" style={{ left: '50%' }} />
+            <span className="pasos-marca" style={{ left: '75%' }} />
+          </div>
+          <div className="texto-suave pasos-meta-texto">
+            {pasosDeHoy >= metaPasos
+              ? t('✓ Meta del día', '✓ Daily goal')
+              : `${pasosDeHoy.toLocaleString(localeNum())} / ${metaPasos.toLocaleString(localeNum())}`}
+          </div>
           <input
             className="input"
             type="text"
@@ -425,8 +450,8 @@ export default function Home({ estado, actualizarEstado, aplicarEvento, irA, avi
       </div>
       <p className="texto-suave home-reg-nota">
         {t(
-          'Registrar suma XP una vez al día. La báscula es solo tu gráfica: el número nunca cambia lo que ganas.',
-          'Logging earns XP once a day. The scale is just your chart: the number never changes what you earn.'
+          'Los pasos suman según lo que andes: cada cuarto de tu meta cuenta, y completarla suma más. La báscula es solo tu gráfica: el número nunca cambia lo que ganas.',
+          'Steps earn by how far you walk: every quarter of your goal counts, and completing it earns more. The scale is just your chart: the number never changes what you earn.'
         )}
       </p>
 

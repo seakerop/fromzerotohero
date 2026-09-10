@@ -14,10 +14,14 @@ import {
   MOTIVOS,
   XP_TABLA,
   xpSesion,
-  xpBonusPasos,
+  metaPasosDe,
+  xpCobradoDia,
+  xpPasosParcial,
   yaCobradoDia,
   yaCobradoSemana,
 } from './xp.js'
+
+export { metaPasosDe, tramosDePasos } from './xp.js'
 
 export { nivelDesdeXp } from './niveles.js'
 export { statsActuales } from './stats.js'
@@ -54,7 +58,7 @@ export function crearEstadoInicial(respuestas) {
       historial: [{ fecha: hoy, pasosDia }],
       ultimaRecalibracion: hoy,
     },
-    ajustes: { diasPlanificados: plan, descansoSeg: 90 },
+    ajustes: { diasPlanificados: plan, descansoSeg: 90, metaPasos: null },
     progreso: {
       xp: 0,
       logros: {},
@@ -273,13 +277,20 @@ function aplicarPasos(e, evento, acc) {
   const { fecha, pasos } = evento
   reemplazarPorFecha(e.pasos, { fecha, pasos, fuente: evento.fuente || 'manual' })
 
-  if (!yaCobradoDia(e.progreso.xpLog, fecha, MOTIVOS.PASOS)) {
-    darXp(e, acc, fecha, XP_TABLA.pasos, MOTIVOS.PASOS)
+  // Escalonado: cuanto más caminas, más suma (CONTRACT §8). Se cobra por
+  // diferencia con lo ya pagado hoy, así corregir al alza paga lo que falta
+  // y corregir a la baja nunca retira XP ya ganado.
+  const meta = metaPasosDe(e)
+  const debido = xpPasosParcial(pasos, meta)
+  const cobrado = xpCobradoDia(e.progreso.xpLog, fecha, MOTIVOS.PASOS)
+  if (debido > cobrado) {
+    darXp(e, acc, fecha, debido - cobrado, MOTIVOS.PASOS)
   }
-  const bonus = xpBonusPasos(pasos, e.baseline.pasosDia)
-  if (bonus > 0 && !yaCobradoDia(e.progreso.xpLog, fecha, MOTIVOS.PASOS_BONUS)) {
+
+  // Completar la barra: premio y marca del día (alimenta 'camino_diario').
+  if (pasos >= meta && !yaCobradoDia(e.progreso.xpLog, fecha, MOTIVOS.PASOS_BONUS)) {
     e.progreso.contadores.diasPasosSobreBaseline += 1
-    darXp(e, acc, fecha, bonus, MOTIVOS.PASOS_BONUS)
+    darXp(e, acc, fecha, XP_TABLA.pasosMetaDiaria, MOTIVOS.PASOS_BONUS)
   }
 }
 

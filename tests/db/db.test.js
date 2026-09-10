@@ -14,7 +14,7 @@ function estadoCompleto() {
       historial: [{ fecha: '2026-07-20', pasosDia: 4000 }],
       ultimaRecalibracion: '2026-07-20',
     },
-    ajustes: { diasPlanificados: [1, 3, 5], descansoSeg: 90 },
+    ajustes: { diasPlanificados: [1, 3, 5], descansoSeg: 90, metaPasos: null },
     progreso: {
       xp: 165,
       logros: { primer_paso: '2026-07-20' },
@@ -104,7 +104,7 @@ describe('migrar', () => {
       pasosDia: 4000, diasEjercicioSemana: 0, pesoInicialKg: null,
       historial: [], ultimaRecalibracion: null,
     })
-    expect(estado.ajustes).toEqual({ diasPlanificados: [], descansoSeg: 90 })
+    expect(estado.ajustes).toEqual({ diasPlanificados: [], descansoSeg: 90, metaPasos: null })
     expect(estado.progreso).toEqual({
       xp: 0, logros: {},
       contadores: { sesionesTotales: 0, prsTotales: 0, diasPasosSobreBaseline: 0, semanasPerfectasClaves: [] },

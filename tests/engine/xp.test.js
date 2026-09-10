@@ -75,49 +75,63 @@ describe('sesión completada', () => {
   })
 })
 
-describe('pasos', () => {
-  it('registrar pasos da 10 XP, una vez al día', () => {
+// Pasos escalonados (CONTRACT §8): con baseline 4000 la meta derivada es
+// 5000 (4000 × 1,25). Tramos de 1250 pasos; 4 + 6 por cada uno de los tres
+// primeros cuartos, 12 al completar la barra y 8 por la milla extra (7500).
+describe('pasos escalonados por esfuerzo', () => {
+  it('caminar poco suma poco: 120 pasos solo pagan el acto de registrar', () => {
     const e = estadoBase()
-    const r = aplicar(e, { tipo: 'pasos', fecha: '2026-07-20', pasos: 3000, fuente: 'manual' })
-    expect(xpDe(r.resultados, 'Pasos registrados')[0].cantidad).toBe(10)
-    expect(r.estado.pasos).toEqual([{ fecha: '2026-07-20', pasos: 3000, fuente: 'manual' }])
+    const r = aplicar(e, { tipo: 'pasos', fecha: '2026-07-20', pasos: 120, fuente: 'manual' })
+    expect(xpDe(r.resultados, 'Pasos registrados')[0].cantidad).toBe(4)
+    expect(xpDe(r.resultados, 'Pasos sobre tu base')).toHaveLength(0)
+    expect(r.estado.pasos).toEqual([{ fecha: '2026-07-20', pasos: 120, fuente: 'manual' }])
   })
 
-  it('reeditar los pasos del día actualiza el dato SIN volver a cobrar', () => {
-    let e = estadoBase()
-    e = aplicar(e, { tipo: 'pasos', fecha: '2026-07-20', pasos: 3000, fuente: 'manual' }).estado
-    const antes = e.progreso.xp
-    const r = aplicar(e, { tipo: 'pasos', fecha: '2026-07-20', pasos: 3500, fuente: 'manual' })
-    expect(r.estado.pasos).toEqual([{ fecha: '2026-07-20', pasos: 3500, fuente: 'manual' }])
-    expect(r.estado.progreso.xp).toBe(antes)
-    expect(r.resultados).toEqual([])
+  it('cada cuarto de la meta suma más que el anterior tramo', () => {
+    const e = estadoBase()
+    const xpCon = (pasos) =>
+      aplicar(e, { tipo: 'pasos', fecha: '2026-07-20', pasos, fuente: 'manual' }).estado.progreso.xp -
+      e.progreso.xp
+    expect(xpCon(120)).toBe(4) // sin tramos
+    expect(xpCon(1250)).toBe(10) // 1 tramo
+    expect(xpCon(2500)).toBe(16) // 2 tramos
+    expect(xpCon(3750)).toBe(22) // 3 tramos
+    expect(xpCon(5000)).toBe(34) // barra completa: +12
+    expect(xpCon(7500)).toBe(42) // milla extra: +8 (tope diario)
+    expect(xpCon(30000)).toBe(42) // no se puede farmear más allá del tope
   })
 
-  it('pasos ≥ baseline añaden +15', () => {
-    const e = estadoBase() // baseline 4000
-    const r = aplicar(e, { tipo: 'pasos', fecha: '2026-07-20', pasos: 4000, fuente: 'manual' })
-    expect(xpDe(r.resultados, 'Pasos registrados')[0].cantidad).toBe(10)
-    expect(xpDe(r.resultados, 'Pasos sobre tu base')[0].cantidad).toBe(15)
+  it('completar la barra marca el día y cuenta para camino_diario', () => {
+    const e = estadoBase()
+    const r = aplicar(e, { tipo: 'pasos', fecha: '2026-07-20', pasos: 5200, fuente: 'manual' })
+    expect(xpDe(r.resultados, 'Pasos sobre tu base')[0].cantidad).toBe(12)
     expect(r.estado.progreso.contadores.diasPasosSobreBaseline).toBe(1)
   })
 
-  it('pasos ≥ 1,5× baseline añaden +25 (el mayor, no ambos)', () => {
-    const e = estadoBase()
-    const r = aplicar(e, { tipo: 'pasos', fecha: '2026-07-20', pasos: 6000, fuente: 'manual' })
-    const bonus = xpDe(r.resultados, 'Pasos sobre tu base')
-    expect(bonus).toHaveLength(1)
-    expect(bonus[0].cantidad).toBe(25)
+  it('corregir al alza cobra solo la diferencia; a la baja no retira nada', () => {
+    const inicial = estadoBase()
+    const partida = inicial.progreso.xp
+    let e = aplicar(inicial, { tipo: 'pasos', fecha: '2026-07-20', pasos: 1250, fuente: 'manual' }).estado
+    expect(e.progreso.xp - partida).toBe(10)
+
+    const subida = aplicar(e, { tipo: 'pasos', fecha: '2026-07-20', pasos: 5000, fuente: 'manual' })
+    expect(subida.estado.progreso.xp - partida).toBe(34) // 10 + 12 de tramos + 12 de meta
+    expect(xpDe(subida.resultados, 'Pasos registrados')[0].cantidad).toBe(12)
+
+    const bajada = aplicar(subida.estado, { tipo: 'pasos', fecha: '2026-07-20', pasos: 500, fuente: 'manual' })
+    expect(bajada.estado.progreso.xp - partida).toBe(34)
+    expect(bajada.resultados).toEqual([])
+    expect(bajada.estado.pasos[0].pasos).toBe(500)
+    expect(bajada.estado.progreso.contadores.diasPasosSobreBaseline).toBe(1)
   })
 
-  it('si el día pasa de debajo a encima de la base al reeditar, el bonus se cobra una sola vez', () => {
-    let e = estadoBase()
-    e = aplicar(e, { tipo: 'pasos', fecha: '2026-07-20', pasos: 3000, fuente: 'manual' }).estado
+  it('la meta de ajustes manda sobre la derivada del baseline', () => {
+    const e = { ...estadoBase() }
+    e.ajustes = { ...e.ajustes, metaPasos: 10000 }
     const r = aplicar(e, { tipo: 'pasos', fecha: '2026-07-20', pasos: 5000, fuente: 'manual' })
-    expect(r.resultados.map((x) => x.motivo)).toEqual(['Pasos sobre tu base'])
-    expect(r.estado.progreso.contadores.diasPasosSobreBaseline).toBe(1)
-    const r2 = aplicar(r.estado, { tipo: 'pasos', fecha: '2026-07-20', pasos: 9000, fuente: 'manual' })
-    expect(r2.resultados).toEqual([])
-    expect(r2.estado.progreso.contadores.diasPasosSobreBaseline).toBe(1)
+    // 5000 de 10000: dos tramos, sin premio de meta
+    expect(r.estado.progreso.xp - e.progreso.xp).toBe(16)
+    expect(r.estado.progreso.contadores.diasPasosSobreBaseline).toBe(0)
   })
 })
 

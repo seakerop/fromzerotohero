@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import Deslizador from '../components/Deslizador.jsx'
 import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
 import { claveDia } from '../engine/fechas.js'
+import { metaPasosDe } from '../engine/motor.js'
 import { borrarBaseDeDatos } from '../db/db.js'
 import { exportarJSON, exportarJSONConFotos, importarCopia } from '../db/exportar.js'
 import { borrarTodasLasFotos, restaurarFotos, serializarFotos } from '../db/fotos.js'
@@ -100,6 +102,13 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
     actualizarEstado((prev) => ({
       ...prev,
       ajustes: { ...prev.ajustes, descansoSeg: segundos },
+    }))
+  }
+
+  function cambiarMetaPasos(pasos) {
+    actualizarEstado((prev) => ({
+      ...prev,
+      ajustes: { ...prev.ajustes, metaPasos: pasos },
     }))
   }
 
@@ -308,6 +317,24 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
           unidad="s"
           onCambiar={cambiarDescanso}
         />
+      </div>
+
+      <div className="titulo-seccion titulo-bosque">{t('Pasos', 'Steps')}</div>
+      <div className="panel panel-acento-bosque">
+        <Deslizador
+          etiqueta={t('Meta diaria de pasos', 'Daily step goal')}
+          valor={metaPasosDe(estado)}
+          min={2000}
+          max={20000}
+          paso={250}
+          onCambiar={cambiarMetaPasos}
+        />
+        <p className="texto-suave aju-nota">
+          {t(
+            'Es la barra que llenas cada día: cada cuarto suma XP y completarla suma más. Se sugiere a partir de los pasos que ya das; caminar 7.000-8.000 al día ya recoge casi todo el beneficio en salud, los 10.000 vienen de un anuncio de 1965.',
+            'This is the bar you fill each day: every quarter earns XP and completing it earns more. It is suggested from the steps you already take; 7,000-8,000 a day already captures nearly all the health benefit — the famous 10,000 came from a 1965 ad.'
+          )}
+        </p>
       </div>
 
       <div className="titulo-seccion">{t('El pacto', 'The Pact')}</div>

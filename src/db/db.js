@@ -147,6 +147,8 @@ function migrarAjustes(bruto) {
     ...b,
     diasPlanificados: lista(b.diasPlanificados),
     descansoSeg: numero(b.descansoSeg, 90),
+    // null = sin meta propia: se deriva del baseline (engine/xp.metaPasosDe).
+    metaPasos: numeroONulo(b.metaPasos),
   }
 }
 

@@ -263,12 +263,13 @@ describe('mes_camino: 4 semanas perfectas ISO consecutivas', () => {
 describe('hero: alcanzar el nivel 25', () => {
   it('se concede al cruzar el umbral y encadena con el resultado de nivel', () => {
     const e = estadoBase()
-    e.progreso.xp = 18400
+    e.progreso.xp = 18406
+    // 100 pasos solo pagan el acto de registrar (+4): justo para cruzar.
     const r = aplicar(e, { tipo: 'pasos', fecha: '2026-07-21', pasos: 100, fuente: 'manual' })
     expect(idsDeLogros(r.resultados)).toContain('hero')
     const nivel = r.resultados.find((x) => x.tipo === 'nivel')
     expect(nivel.nivel).toBe(25)
     expect(nivel.etapa.id).toBe('hero')
-    expect(r.estado.progreso.xp).toBe(18400 + 10 + 200)
+    expect(r.estado.progreso.xp).toBe(18406 + 4 + 200)
   })
 })

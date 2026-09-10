@@ -219,6 +219,41 @@
   font-weight: 600;
   color: var(--texto-suave);
 }
+/* Barra de pasos del día: se llena por cuartos y se dora al completarse */
+.pasos-barra {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--borde);
+  overflow: hidden;
+  margin-top: 2px;
+}
+.pasos-barra-relleno {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--bosque), var(--bosque-claro));
+  transition: width 0.45s ease;
+}
+.pasos-barra-llena {
+  border-color: rgba(217, 164, 65, 0.6);
+}
+.pasos-barra-llena .pasos-barra-relleno {
+  background: linear-gradient(90deg, var(--oro), var(--oro-claro));
+}
+.pasos-marca {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(10, 12, 19, 0.8);
+}
+.pasos-meta-texto {
+  font-size: 11.5px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Línea serena de la meta más cercana en Home */
 .home-meta {
   width: 100%;
