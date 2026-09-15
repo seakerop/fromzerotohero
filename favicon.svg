@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- FromZeroToHero: mancuerna dorada ascendente (misma geometría que los PNG) -->
+  <defs>
+    <radialGradient id="fondo" cx="50%" cy="50%" r="72%">
+      <stop offset="0" stop-color="#11141c"/>
+      <stop offset="1" stop-color="#0c0e13"/>
+    </radialGradient>
+  </defs>
+  <rect width="120" height="120" rx="23" fill="url(#fondo)"/>
+  <g transform="rotate(-30 60 60)">
+    <rect x="21.3" y="57" width="65.2" height="6" rx="2.4" fill="#d9a441"/>
+    <rect x="22.2" y="47.9" width="6.9" height="24.2" rx="2.6" fill="#d9a441"/>
+    <rect x="30.4" y="42.7" width="7.8" height="34.6" rx="3" fill="#d9a441"/>
+    <rect x="61.5" y="42.7" width="7.8" height="34.6" rx="3" fill="#d9a441"/>
+    <rect x="70.6" y="47.9" width="6.9" height="24.2" rx="2.6" fill="#d9a441"/>
+    <polygon points="98.7,60 83.1,49.6 83.1,70.4" fill="#f0c86e"/>
+  </g>
+</svg>

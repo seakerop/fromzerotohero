@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FromZeroToHero · 3 direcciones para quitarle la sosería</title>
+<style>
+  :root {
+    --fondo: #0c0e13; --panel: #1a1e2c; --panel2: #141726; --borde: #35314a;
+    --texto: #e8e6f0; --suave: #9b97ad; --oro: #d9a441; --oro-claro: #f0c86e;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: #08090d; color: var(--texto);
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+    padding: 26px 14px 60px;
+  }
+  h1 { font-family: Georgia, serif; text-align: center; font-size: 26px; color: var(--oro-claro); }
+  .intro { max-width: 720px; margin: 10px auto 30px; color: var(--suave); text-align: center; font-size: 14.5px; line-height: 1.5; }
+  .fila { display: flex; flex-wrap: wrap; gap: 26px; justify-content: center; align-items: flex-start; }
+  .col { width: 360px; }
+  .etiqueta-dir { font-family: Georgia, serif; font-size: 19px; color: var(--oro); margin-bottom: 4px; }
+  .desc-dir { font-size: 13px; color: var(--suave); line-height: 1.45; margin-bottom: 12px; min-height: 74px; }
+  .movil {
+    width: 360px; border-radius: 28px; border: 1px solid #2a2d3d;
+    overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,0.55);
+    padding: 18px 16px 22px; min-height: 640px; position: relative;
+  }
+  .tituloseccion { font-family: Georgia, serif; font-variant: small-caps; letter-spacing: 1.5px; font-size: 14px; color: var(--oro); margin: 16px 0 8px; }
+  .panel { border-radius: 14px; padding: 14px; border: 1px solid var(--borde); background: linear-gradient(180deg, #1a1e2c, #141726); margin-bottom: 10px; }
+  .carta { display: flex; gap: 14px; align-items: center; }
+  .avatar { width: 84px; height: 84px; border-radius: 50%; flex-shrink: 0; background: radial-gradient(circle at 50% 62%, #232842, #12141f 70%); border: 2px solid var(--oro); position: relative; display:flex; align-items:center; justify-content:center; }
+  .brote { width: 10px; height: 26px; border-radius: 6px 6px 2px 2px; background: linear-gradient(180deg, #6fae54, #45702f); position: relative; }
+  .brote::before { content:''; position:absolute; top:-3px; left:-7px; width: 12px; height: 9px; border-radius: 50% 50% 50% 0; background:#5d9445; transform: rotate(-25deg); }
+  .apodo { font-family: Georgia, serif; font-size: 21px; }
+  .nivel { font-size: 12px; letter-spacing: 1.4px; color: var(--oro); font-weight: 700; margin: 2px 0 8px; }
+  .xp { height: 9px; border-radius: 999px; background: rgba(255,255,255,0.07); border: 1px solid var(--borde); overflow: hidden; }
+  .xp > i { display: block; height: 100%; width: 62%; background: linear-gradient(90deg, var(--oro), var(--oro-claro)); border-radius: 999px; }
+  .xp-meta { font-size: 11.5px; color: var(--suave); margin-top: 5px; text-align: right; }
+  .stat { display: flex; align-items: center; gap: 9px; font-size: 14px; margin: 9px 0; }
+  .stat b { margin-left: auto; }
+  .statbar { height: 7px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; margin-top: -3px; margin-bottom: 7px; }
+  .statbar > i { display: block; height: 100%; border-radius: 999px; background: var(--oro); }
+  .dias { display: flex; gap: 7px; margin-top: 10px; }
+  .dia { flex: 1; text-align: center; font-size: 11.5px; color: var(--suave); border: 1px solid var(--borde); border-radius: 9px; padding: 6px 0; }
+  .dia.si { border-color: var(--oro); color: var(--oro-claro); }
+  .racha-num { font-size: 19px; font-weight: 800; }
+  .meta-linea { border: 1px dashed var(--borde); border-radius: 12px; padding: 10px 12px; font-size: 13px; color: var(--suave); margin: 10px 0; }
+  .cta { display: block; width: 100%; border: none; border-radius: 13px; padding: 15px; font-size: 16.5px; font-weight: 800; color: #241a05; background: linear-gradient(180deg, #e3b455, #b8842c); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35); font-family: inherit; }
+  .mini { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--borde); background: #0c0e13; object-fit: cover; }
+
+  /* ══════════ A · VIDA (movimiento) ══════════ */
+  .A { background: linear-gradient(170deg, #10131d, #0b0d14 55%, #0d1019); }
+  .A .panel { animation: subir 0.6s ease both; }
+  .A .panel:nth-child(3) { animation-delay: 0.12s; }
+  .A .panel:nth-child(5) { animation-delay: 0.24s; }
+  @keyframes subir { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .A .xp > i { animation: llenar 1.4s cubic-bezier(.2,.7,.3,1) both 0.4s; position: relative; overflow: hidden; }
+  @keyframes llenar { from { width: 0; } to { width: 62%; } }
+  .A .xp > i::after { content:''; position:absolute; inset:0; background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%); animation: brillo 3.2s ease-in-out infinite 1.8s; transform: translateX(-100%); }
+  @keyframes brillo { 0% { transform: translateX(-100%);} 45%,100% { transform: translateX(100%);} }
+  .A .statbar > i { animation: llenarStat 1.1s ease both 0.5s; }
+  @keyframes llenarStat { from { width: 0 !important; } }
+  .A .avatar { animation: respirar 4.5s ease-in-out infinite; box-shadow: 0 0 22px rgba(217,164,65,0.25); }
+  @keyframes respirar { 0%,100% { box-shadow: 0 0 14px rgba(217,164,65,0.18);} 50% { box-shadow: 0 0 30px rgba(217,164,65,0.4);} }
+  .A .fuego { display: inline-block; animation: titilar 1.6s ease-in-out infinite; }
+  @keyframes titilar { 0%,100% { transform: scale(1);} 50% { transform: scale(1.18) rotate(-4deg);} }
+  .A .luciernaga { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--oro-claro); opacity: 0; animation: flotar 7s ease-in-out infinite; }
+  .A .luciernaga:nth-child(2) { left: 68%; top: 12%; animation-delay: 2.5s; }
+  .A .luciernaga:nth-child(3) { left: 24%; top: 20%; animation-delay: 4.5s; }
+  @keyframes flotar { 0%,100% { opacity: 0; transform: translateY(0);} 25% { opacity: 0.85;} 50% { opacity: 0.3; transform: translateY(-16px) translateX(6px);} 75% { opacity: 0.7;} }
+  .A .cta { transition: transform 0.15s; }
+  .A .cta:active { transform: scale(0.97); }
+
+  /* ══════════ B · COLOR ══════════ */
+  .B { background: linear-gradient(165deg, #131022, #0b0d16 50%, #0d1420); }
+  .B .stat-f i { background: linear-gradient(90deg, #c65f4a, #e08a6d); }
+  .B .stat-r i { background: linear-gradient(90deg, #4a9a6d, #74c294); }
+  .B .stat-c i { background: linear-gradient(90deg, #5f7fd9, #8aa6ef); }
+  .B .stat-f b { color: #e08a6d; } .B .stat-r b { color: #74c294; } .B .stat-c b { color: #8aa6ef; }
+  .B .panel-carta { border-top: 3px solid var(--oro); background: linear-gradient(180deg, rgba(217,164,65,0.09), #141726 60%); }
+  .B .panel-racha { border-top: 3px solid #d96a4a; background: linear-gradient(180deg, rgba(217,106,74,0.09), #141726 60%); }
+  .B .panel-stats { border-top: 3px solid #5f7fd9; background: linear-gradient(180deg, rgba(95,127,217,0.08), #141726 60%); }
+  .B .racha-num { color: #e08a6d; }
+  .B .dia.si { border-color: #d96a4a; color: #e5a08a; background: rgba(217,106,74,0.1); }
+  .B .tituloseccion.t-racha { color: #e08a6d; }
+  .B .tituloseccion.t-stats { color: #8aa6ef; }
+  .B .meta-linea { border-color: rgba(116,194,148,0.5); color: #9fd4b5; }
+  .B .nivel { color: var(--oro-claro); }
+
+  /* ══════════ C · CÓDICE ══════════ */
+  .C { background: linear-gradient(170deg, #16121c, #0d0b12 55%, #100d15); }
+  .C .panel { border: 1px solid #4a3f2e; position: relative; border-radius: 10px; background: linear-gradient(180deg, #1d1a26, #151220); }
+  .C .panel::before, .C .panel::after {
+    content: ''; position: absolute; width: 14px; height: 14px; border: 2px solid var(--oro); opacity: 0.8;
+  }
+  .C .panel::before { top: -2px; left: -2px; border-right: none; border-bottom: none; border-radius: 10px 0 0 0; }
+  .C .panel::after { bottom: -2px; right: -2px; border-left: none; border-top: none; border-radius: 0 0 10px 0; }
+  .C .tituloseccion { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+  .C .tituloseccion::before, .C .tituloseccion::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #4a3f2e); }
+  .C .tituloseccion::after { background: linear-gradient(90deg, #4a3f2e, transparent); }
+  .C .escena { display: flex; gap: 8px; justify-content: center; margin: 12px 0 2px; }
+  .C .escena img { width: 52px; height: 52px; border-radius: 10px; border: 1px solid #4a3f2e; background: #0c0e13; }
+  .C .apodo { font-size: 23px; letter-spacing: 0.5px; }
+  .C .capitular::first-letter { font-family: Georgia, serif; font-size: 30px; color: var(--oro); float: left; line-height: 0.9; padding-right: 6px; }
+  .C .capitular { font-size: 13px; color: var(--suave); line-height: 1.5; margin-top: 10px; font-style: italic; }
+  .C .cta { border-radius: 8px; font-family: Georgia, serif; letter-spacing: 0.5px; }
+  .C .sello-fila { display: flex; justify-content: center; gap: 14px; margin-top: 12px; }
+  .C .sello { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--oro); display: flex; align-items: center; justify-content: center; font-size: 20px; background: radial-gradient(circle, rgba(217,164,65,0.2), transparent); box-shadow: 0 0 12px rgba(217,164,65,0.3); }
+  .C .sello.apagado { border-color: #3a3448; filter: grayscale(1); opacity: 0.5; box-shadow: none; }
+
+  .nota-combos { max-width: 720px; margin: 34px auto 0; text-align: center; color: var(--suave); font-size: 14px; line-height: 1.55; border: 1px dashed var(--borde); border-radius: 14px; padding: 16px; }
+  .nota-combos b { color: var(--oro-claro); }
+</style>
+</head>
+<body>
+<h1>Tres remedios contra la sosería</h1>
+<p class="intro">La misma Home, tres tratamientos. Miradlas en el móvil, con calma.
+Se pueden <b>combinar</b> — la pregunta es cuál os hace sonreír al abrirla.</p>
+
+<div class="fila">
+
+  <!-- ════════ A ════════ -->
+  <div class="col">
+    <div class="etiqueta-dir">A · Vida y movimiento</div>
+    <p class="desc-dir">El mismo tema Piedra y oro, pero VIVO: las tarjetas entran suaves, la barra de XP
+    se llena y reluce, el avatar respira con un halo, la llama de la racha titila y alguna
+    luciérnaga cruza la carta. Nada chillón: la quietud era la sosería.</p>
+    <div class="movil A">
+      <span class="luciernaga" style="left:40%; top:9%"></span>
+      <span class="luciernaga"></span>
+      <span class="luciernaga"></span>
+      <div class="panel">
+        <div class="carta">
+          <div class="avatar"><div class="brote"></div></div>
+          <div style="flex:1">
+            <div class="apodo">Emilio</div>
+            <div class="nivel">LAS PRUEBAS · NIVEL 12</div>
+            <div class="xp"><i></i></div>
+            <div class="xp-meta">Nv 13 · 620/1.000 XP</div>
+          </div>
+        </div>
+      </div>
+      <div class="tituloseccion">Atributos</div>
+      <div class="panel">
+        <div class="stat">⚔️ Fuerza <b>34</b></div><div class="statbar"><i style="width:34%"></i></div>
+        <div class="stat">🏃 Resistencia <b>28</b></div><div class="statbar"><i style="width:28%"></i></div>
+        <div class="stat">🧭 Constancia <b>41</b></div><div class="statbar"><i style="width:41%"></i></div>
+      </div>
+      <div class="tituloseccion">Racha</div>
+      <div class="panel">
+        <span class="racha-num"><span class="fuego">🔥</span> 12 días</span>
+        <div class="dias"><span class="dia si">L ✓</span><span class="dia">M</span><span class="dia si">X ✓</span><span class="dia">J</span><span class="dia si">V ·</span><span class="dia">S</span><span class="dia">D</span></div>
+      </div>
+      <div class="meta-linea">🎯 A 2,5 kg de tu meta: Press banca a 80 kg</div>
+      <button class="cta">⚔️ Entrenar</button>
+    </div>
+  </div>
+
+  <!-- ════════ B ════════ -->
+  <div class="col">
+    <div class="etiqueta-dir">B · Color de aventura</div>
+    <p class="desc-dir">Cada zona gana su color de fantasía: fuerza en rojo forja, resistencia en verde
+    bosque, constancia en azul acero, la racha en brasas. El oro sigue siendo el hilo,
+    pero deja de estar solo. Más "juego de rol", sin perder sobriedad.</p>
+    <div class="movil B">
+      <div class="panel panel-carta">
+        <div class="carta">
+          <div class="avatar"><div class="brote"></div></div>
+          <div style="flex:1">
+            <div class="apodo">Emilio</div>
+            <div class="nivel">LAS PRUEBAS · NIVEL 12</div>
+            <div class="xp"><i></i></div>
+            <div class="xp-meta">Nv 13 · 620/1.000 XP</div>
+          </div>
+        </div>
+      </div>
+      <div class="tituloseccion t-stats">Atributos</div>
+      <div class="panel panel-stats">
+        <div class="stat stat-f">⚔️ Fuerza <b>34</b></div><div class="statbar stat-f"><i style="width:34%"></i></div>
+        <div class="stat stat-r">🏃 Resistencia <b>28</b></div><div class="statbar stat-r"><i style="width:28%"></i></div>
+        <div class="stat stat-c">🧭 Constancia <b>41</b></div><div class="statbar stat-c"><i style="width:41%"></i></div>
+      </div>
+      <div class="tituloseccion t-racha">Racha</div>
+      <div class="panel panel-racha">
+        <span class="racha-num">🔥 12 días</span>
+        <div class="dias"><span class="dia si">L ✓</span><span class="dia">M</span><span class="dia si">X ✓</span><span class="dia">J</span><span class="dia si">V ·</span><span class="dia">S</span><span class="dia">D</span></div>
+      </div>
+      <div class="meta-linea">🎯 A 2,5 kg de tu meta: Press banca a 80 kg</div>
+      <button class="cta">⚔️ Entrenar</button>
+    </div>
+  </div>
+
+  <!-- ════════ C ════════ -->
+  <div class="col">
+    <div class="etiqueta-dir">C · Códice ilustrado</div>
+    <p class="desc-dir">La app como manuscrito de tu leyenda: esquinas doradas más presentes, separadores
+    ornamentados, letra capitular, tus maniquíes luciendo como viñetas y los sellos de
+    logros a la vista. La ilustración que ya tenemos, por fin protagonista.</p>
+    <div class="movil C">
+      <div class="panel">
+        <div class="carta">
+          <div class="avatar"><div class="brote"></div></div>
+          <div style="flex:1">
+            <div class="apodo">Emilio</div>
+            <div class="nivel">LAS PRUEBAS · NIVEL 12</div>
+            <div class="xp"><i></i></div>
+            <div class="xp-meta">Nv 13 · 620/1.000 XP</div>
+          </div>
+        </div>
+        <p class="capitular">Duodécimo nivel del viaje. La constancia, dicen los bardos, pesa más que el hierro.</p>
+      </div>
+      <div class="tituloseccion">Hoy toca</div>
+      <div class="panel">
+        <div class="escena">
+          <img src="https://seakerop.github.io/fromzerotohero/img/ejercicios/sentadilla.webp" alt="">
+          <img src="https://seakerop.github.io/fromzerotohero/img/ejercicios/press-banca.webp" alt="">
+          <img src="https://seakerop.github.io/fromzerotohero/img/ejercicios/remo-polea-baja.webp" alt="">
+          <img src="https://seakerop.github.io/fromzerotohero/img/ejercicios/plancha.webp" alt="">
+        </div>
+        <div style="text-align:center; font-size:12.5px; color:var(--suave); margin-top:6px">Full body A · 6 gestas te esperan</div>
+      </div>
+      <div class="tituloseccion">Sellos recientes</div>
+      <div class="panel">
+        <div class="sello-fila">
+          <div class="sello">💪</div><div class="sello">🔥</div><div class="sello apagado">🐘</div><div class="sello apagado">⚜️</div>
+        </div>
+      </div>
+      <div class="meta-linea">🎯 A 2,5 kg de tu meta: Press banca a 80 kg</div>
+      <button class="cta">⚔️ Entrenar</button>
+    </div>
+  </div>
+
+</div>
+
+<p class="nota-combos"><b>Se pueden mezclar.</b> Mi recomendación de casa: <b>A como base</b> (el movimiento
+quita el 70 % de la sosería sin tocar identidad) + la fila de viñetas "Hoy toca" de C +
+quizá el color de racha de B. Pero mandáis vosotros: decidme letras o combinación.</p>
+</body>
+</html>
