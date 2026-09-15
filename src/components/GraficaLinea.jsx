@@ -1,5 +1,6 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { formatearFecha } from '../engine/fechas.js'
+import { idioma, t } from '../i18n/idioma.js'
 
 const ANCHO = 360
 const MARGEN = { arriba: 18, abajo: 26, izq: 42, der: 14 }
@@ -10,7 +11,8 @@ function r1(v) {
 
 function fmtValor(v) {
   const r = r1(v)
-  return (Number.isInteger(r) ? String(r) : r.toFixed(1)).replace('.', ',')
+  const s = Number.isInteger(r) ? String(r) : r.toFixed(1)
+  return idioma() === 'en' ? s : s.replace('.', ',')
 }
 
 /* 3-5 marcas redondas que cubren [min, max] con pasos 1/2/2.5/5 × 10^k */
@@ -63,9 +65,24 @@ function caminoSuave(pts) {
   return d
 }
 
+// Gráfica de líneas por fecha. Pasar el ratón (o arrastrar el dedo) en
+// cualquier punto del área engancha la fecha más cercana y muestra el valor
+// de cada serie ese día, sin tener que acertar encima de un punto.
 export default function GraficaLinea({ series, unidad, alto = 180 }) {
-  const [sel, setSel] = useState(null)
+  const [foco, setFoco] = useState(null) // clave de fecha bajo el puntero
   const idBase = useId()
+  const svgRef = useRef(null)
+
+  // En táctil el tooltip se queda fijo tras levantar el dedo; se quita al
+  // tocar fuera de la gráfica.
+  useEffect(() => {
+    if (!foco) return undefined
+    const fuera = (e) => {
+      if (svgRef.current && !svgRef.current.contains(e.target)) setFoco(null)
+    }
+    document.addEventListener('pointerdown', fuera)
+    return () => document.removeEventListener('pointerdown', fuera)
+  }, [foco])
 
   const visibles = (series || [])
     .map((s) => ({
@@ -79,7 +96,7 @@ export default function GraficaLinea({ series, unidad, alto = 180 }) {
 
   const todos = visibles.flatMap((s) => s.puntos)
   if (!todos.length) {
-    return <p className="prog-gl-vacia texto-suave">Aún no hay datos que dibujar.</p>
+    return <p className="prog-gl-vacia texto-suave">{t('Aún no hay datos que dibujar.', 'No data to chart yet.')}</p>
   }
 
   let claveMin = todos[0].x
@@ -114,25 +131,78 @@ export default function GraficaLinea({ series, unidad, alto = 180 }) {
   const diasRango = (xMax - xMin) / 86400000
   const fechaMedia = diasRango > 21 ? new Date((xMin + xMax) / 2).toISOString().slice(0, 10) : null
 
-  let tooltip = null
-  if (sel && visibles[sel.si] && visibles[sel.si].puntos[sel.pi]) {
-    const p = visibles[sel.si].puntos[sel.pi]
-    const linea1 = `${fmtValor(p.y)}${unidad ? ` ${unidad}` : ''}`
-    const linea2 = formatearFecha(p.x)
-    const anchoTip = Math.max(linea1.length, linea2.length) * 6.6 + 18
-    const cx = px(p.x)
-    const cy = py(p.y)
-    const tx = Math.min(Math.max(cx - anchoTip / 2, 4), ANCHO - anchoTip - 4)
-    const ty = cy - 48 < 2 ? cy + 14 : cy - 48
-    tooltip = (
+  const fechas = [...new Set(todos.map((p) => p.x))].sort()
+
+  function enfocarDesdePuntero(e) {
+    const svg = svgRef.current
+    const ctm = svg && svg.getScreenCTM()
+    if (!ctm) return
+    const pt = svg.createSVGPoint()
+    pt.x = e.clientX
+    pt.y = e.clientY
+    const { x } = pt.matrixTransform(ctm.inverse())
+    let mejor = fechas[0]
+    let distMejor = Infinity
+    for (const f of fechas) {
+      const d = Math.abs(px(f) - x)
+      if (d < distMejor) {
+        distMejor = d
+        mejor = f
+      }
+    }
+    if (mejor !== foco) setFoco(mejor)
+  }
+
+  // Valor de cada serie en la fecha enfocada (si hay dos sesiones ese día,
+  // cuenta la última).
+  const enFoco = foco
+    ? visibles
+        .map((s) => {
+          const delDia = s.puntos.filter((p) => p.x === foco)
+          return delDia.length ? { serie: s, punto: delDia[delDia.length - 1] } : null
+        })
+        .filter(Boolean)
+    : []
+
+  let guia = null
+  if (foco && enFoco.length) {
+    const gx = px(foco)
+    const unidadTxt = unidad ? ` ${unidad}` : ''
+    const lineas = enFoco.map(({ serie, punto }) =>
+      visibles.length > 1 ? `${serie.nombre}: ${fmtValor(punto.y)}${unidadTxt}` : `${fmtValor(punto.y)}${unidadTxt}`
+    )
+    const cabecera = formatearFecha(foco)
+    const anchoTip = Math.max(cabecera.length, ...lineas.map((l) => l.length + 2)) * 6.3 + 20
+    const altoTip = 22 + lineas.length * 15
+    const aLaDerecha = gx < (izq + der) / 2
+    const tx = Math.min(Math.max(aLaDerecha ? gx + 10 : gx - anchoTip - 10, 2), ANCHO - anchoTip - 2)
+    const ty = Math.min(arriba, abajo - altoTip)
+    guia = (
       <g pointerEvents="none">
-        <rect x={tx} y={ty} width={anchoTip} height={38} rx="8" fill="var(--panel-2)" stroke="var(--oro)" strokeOpacity="0.55" />
-        <text x={tx + anchoTip / 2} y={ty + 16} textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--oro-claro)">
-          {linea1}
+        <line x1={gx} y1={arriba - 4} x2={gx} y2={abajo} stroke="var(--texto-suave)" strokeOpacity="0.55" strokeWidth="1" strokeDasharray="3 3" />
+        {enFoco.map(({ serie, punto }) => (
+          <circle
+            key={serie.nombre}
+            cx={gx}
+            cy={py(punto.y)}
+            r={serie.fino ? 3.4 : 5}
+            fill={serie.color}
+            stroke="var(--fondo, #0c0e13)"
+            strokeWidth="2"
+          />
+        ))}
+        <rect x={tx} y={ty} width={anchoTip} height={altoTip} rx="8" fill="var(--panel-2)" stroke="var(--oro)" strokeOpacity="0.55" />
+        <text x={tx + 10} y={ty + 15} fontSize="10" fill="var(--texto-suave)">
+          {cabecera}
         </text>
-        <text x={tx + anchoTip / 2} y={ty + 30} textAnchor="middle" fontSize="10" fill="var(--texto-suave)">
-          {linea2}
-        </text>
+        {enFoco.map(({ serie }, i) => (
+          <g key={serie.nombre}>
+            <circle cx={tx + 13} cy={ty + 26 + i * 15} r="3" fill={serie.color} />
+            <text x={tx + 21} y={ty + 30 + i * 15} fontSize="11.5" fontWeight="700" fill="var(--texto)">
+              {lineas[i]}
+            </text>
+          </g>
+        ))}
       </g>
     )
   }
@@ -150,12 +220,20 @@ export default function GraficaLinea({ series, unidad, alto = 180 }) {
         </div>
       )}
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${ANCHO} ${alto}`}
         preserveAspectRatio="xMidYMid meet"
         className="prog-gl-svg"
         role="img"
-        aria-label={`Gráfica de ${visibles.map((s) => s.nombre).join(' y ')}`}
-        onClick={() => setSel(null)}
+        aria-label={t(
+          `Gráfica de ${visibles.map((s) => s.nombre).join(' y ')}`,
+          `Chart of ${visibles.map((s) => s.nombre).join(' and ')}`
+        )}
+        onPointerMove={enfocarDesdePuntero}
+        onPointerDown={enfocarDesdePuntero}
+        onPointerLeave={(e) => {
+          if (e.pointerType === 'mouse') setFoco(null)
+        }}
       >
         <defs>
           {visibles.map((s, si) => (
@@ -165,35 +243,39 @@ export default function GraficaLinea({ series, unidad, alto = 180 }) {
             </linearGradient>
           ))}
         </defs>
+        {/* Área de captura: todo el lienzo responde al puntero */}
+        <rect x="0" y="0" width={ANCHO} height={alto} fill="transparent" />
         {marcas.map((m) => (
-          <g key={m}>
+          <g key={m} pointerEvents="none">
             <line x1={izq} y1={py(m)} x2={der} y2={py(m)} stroke="var(--borde)" strokeWidth="1" strokeOpacity="0.55" strokeDasharray="2 5" />
             <text x={izq - 6} y={py(m) + 3.5} textAnchor="end" fontSize="10" fill="var(--texto-suave)">
               {fmtValor(m)}
             </text>
           </g>
         ))}
-        <line x1={izq} y1={abajo} x2={der} y2={abajo} stroke="var(--borde)" strokeWidth="1" />
-        <text x={izq} y={alto - 7} fontSize="10" fill="var(--texto-suave)">
-          {formatearFecha(claveMin)}
-        </text>
-        {fechaMedia && (
-          <text x={(izq + der) / 2} y={alto - 7} textAnchor="middle" fontSize="10" fill="var(--texto-suave)" opacity="0.8">
-            {formatearFecha(fechaMedia)}
+        <line x1={izq} y1={abajo} x2={der} y2={abajo} stroke="var(--borde)" strokeWidth="1" pointerEvents="none" />
+        <g pointerEvents="none">
+          <text x={izq} y={alto - 7} fontSize="10" fill="var(--texto-suave)">
+            {formatearFecha(claveMin)}
           </text>
-        )}
-        {claveMax !== claveMin && (
-          <text x={der} y={alto - 7} textAnchor="end" fontSize="10" fill="var(--texto-suave)">
-            {formatearFecha(claveMax)}
-          </text>
-        )}
+          {fechaMedia && (
+            <text x={(izq + der) / 2} y={alto - 7} textAnchor="middle" fontSize="10" fill="var(--texto-suave)" opacity="0.8">
+              {formatearFecha(fechaMedia)}
+            </text>
+          )}
+          {claveMax !== claveMin && (
+            <text x={der} y={alto - 7} textAnchor="end" fontSize="10" fill="var(--texto-suave)">
+              {formatearFecha(claveMax)}
+            </text>
+          )}
+        </g>
         {visibles.map((s, si) => {
           const pts = s.puntos.map((p) => ({ px: px(p.x), py: py(p.y) }))
           const camino = caminoSuave(pts)
           const ultima = s.puntos[s.puntos.length - 1]
           const muchos = s.puntos.length > 24
           return (
-            <g key={s.nombre}>
+            <g key={s.nombre} pointerEvents="none">
               {!s.fino && s.puntos.length > 1 && (
                 <path
                   d={`${camino} L ${pts[pts.length - 1].px} ${abajo} L ${pts[0].px} ${abajo} Z`}
@@ -215,7 +297,6 @@ export default function GraficaLinea({ series, unidad, alto = 180 }) {
               {s.puntos.map((p, pi) => {
                 const cx = px(p.x)
                 const cy = py(p.y)
-                const activo = sel && sel.si === si && sel.pi === pi
                 const esUltimo = pi === s.puntos.length - 1 && !s.fino
                 return (
                   <g key={`${p.x}-${pi}`}>
@@ -228,23 +309,11 @@ export default function GraficaLinea({ series, unidad, alto = 180 }) {
                       r={s.fino ? 2.2 : esUltimo ? 4 : muchos ? 2.6 : 3.4}
                       fill={s.color}
                       fillOpacity={s.fino ? 0.55 : 1}
-                      stroke={activo ? 'var(--texto)' : 'none'}
-                      strokeWidth={activo ? 1.5 : 0}
-                    />
-                    <circle
-                      cx={cx}
-                      cy={cy}
-                      r="12"
-                      fill="transparent"
-                      onClick={(ev) => {
-                        ev.stopPropagation()
-                        setSel(activo ? null : { si, pi })
-                      }}
                     />
                   </g>
                 )
               })}
-              {!s.fino && !sel && (
+              {!s.fino && !foco && (
                 <text
                   x={Math.min(px(ultima.x) + 10, ANCHO - 4)}
                   y={Math.max(py(ultima.y) - 8, 12)}
@@ -259,7 +328,7 @@ export default function GraficaLinea({ series, unidad, alto = 180 }) {
             </g>
           )
         })}
-        {tooltip}
+        {guia}
       </svg>
     </div>
   )

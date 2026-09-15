@@ -39,6 +39,11 @@
 .prog-gl-svg {
   width: 100%;
   height: auto;
+  cursor: crosshair;
+  /* El dedo en horizontal recorre la gráfica; en vertical sigue haciendo scroll */
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .prog-gl-vacia {
