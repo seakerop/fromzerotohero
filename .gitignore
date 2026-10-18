@@ -8,3 +8,8 @@ CONTRACT.md
 
 # arte generado pendiente de revisión (se moverá a public/ tras el QA)
 arte/
+
+# Capacitor (la app nativa se genera en el Mac)
+ios/App/Pods/
+ios/App/App/public/
+android/

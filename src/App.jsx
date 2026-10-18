@@ -7,6 +7,7 @@ import { mensajeEstacion, momentoTexto, nombreEtapa, nombreEtapaArbol, nombreLog
 import { cargarEstado, guardarEstado } from './db/db.js'
 import { estacionDeMes, momentosEntre, MENSAJES_ESTACION } from './components/Avatar.jsx'
 import { EJERCICIOS_SEED } from './data/ejercicios.js'
+import { sincronizarPasosSalud } from './salud/sincronizarPasos.js'
 
 // La biblioteca seed crece con las versiones: fusiona en bibliotecas ya
 // creadas los ejercicios nuevos que falten (por id; nunca pisa los tuyos).
@@ -122,6 +123,29 @@ export default function App() {
     document.addEventListener('visibilitychange', alVolver)
     return () => document.removeEventListener('visibilitychange', alVolver)
   }, [])
+
+  // Pasos de Apple Salud / Health Connect: solo dentro de la app nativa y
+  // solo si conectaste Salud en Ajustes. Al abrir y al volver a la app.
+  const ultimaSincro = useRef(0)
+  useEffect(() => {
+    if (!cargado) return undefined
+    async function sincronizar() {
+      if (Date.now() - ultimaSincro.current < 60000) return
+      ultimaSincro.current = Date.now()
+      try {
+        const n = await sincronizarPasosSalud(estadoRef.current, aplicarEvento)
+        if (n > 0) avisar(t('👟 Pasos actualizados desde Salud', '👟 Steps updated from Health'), 'info')
+      } catch {
+        // Si Salud falla, la app sigue igual: los pasos se pueden escribir.
+      }
+    }
+    sincronizar()
+    function alVolverDeSalud() {
+      if (document.visibilityState === 'visible') sincronizar()
+    }
+    document.addEventListener('visibilitychange', alVolverDeSalud)
+    return () => document.removeEventListener('visibilitychange', alVolverDeSalud)
+  }, [cargado])
 
   useEffect(() => {
     if (!estado) return

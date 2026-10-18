@@ -4,6 +4,8 @@ import Modal from '../components/Modal.jsx'
 import Stepper from '../components/Stepper.jsx'
 import { claveDia } from '../engine/fechas.js'
 import { metaPasosDe } from '../engine/motor.js'
+import { esNativo, pedirPermisoPasos, saludDisponible } from '../salud/salud.js'
+import { sincronizarPasosSalud } from '../salud/sincronizarPasos.js'
 import { borrarBaseDeDatos } from '../db/db.js'
 import { exportarJSON, exportarJSONConFotos, importarCopia } from '../db/exportar.js'
 import { borrarTodasLasFotos, restaurarFotos, serializarFotos } from '../db/fotos.js'
@@ -28,7 +30,7 @@ function textoEvidencia(evidencia) {
     : t('evidencia moderada', 'moderate evidence')
 }
 
-export default function Ajustes({ estado, actualizarEstado, avisar }) {
+export default function Ajustes({ estado, actualizarEstado, aplicarEvento, avisar }) {
   const [apodo, setApodo] = useState(estado.perfil.apodo)
   const [edad, setEdad] = useState(String(estado.perfil.edad ?? ''))
   const [altura, setAltura] = useState(String(estado.perfil.alturaCm ?? ''))
@@ -110,6 +112,34 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
       ...prev,
       ajustes: { ...prev.ajustes, metaPasos: pasos },
     }))
+  }
+
+  // Conectar con Apple Salud / Health Connect (solo en la app nativa).
+  async function conectarSalud() {
+    const { disponible, motivo } = await saludDisponible()
+    if (!disponible) {
+      avisar(t(`Salud no está disponible aquí (${motivo || 'sin motivo'})`, `Health is not available here (${motivo || 'no reason'})`), 'error')
+      return
+    }
+    const ok = await pedirPermisoPasos()
+    if (!ok) {
+      avisar(t('No se pudo abrir el permiso de Salud', 'Could not open the Health permission'), 'error')
+      return
+    }
+    actualizarEstado((prev) => ({ ...prev, ajustes: { ...prev.ajustes, saludConectada: true } }))
+    avisar(t('Salud conectada: tus pasos entrarán solos', 'Health connected: your steps will come in by themselves'))
+  }
+
+  function desconectarSalud() {
+    actualizarEstado((prev) => ({ ...prev, ajustes: { ...prev.ajustes, saludConectada: false } }))
+    avisar(t('Salud desconectada: los pasos vuelven a ser a mano', 'Health disconnected: steps are manual again'))
+  }
+
+  async function sincronizarAhora() {
+    const n = await sincronizarPasosSalud(estado, aplicarEvento)
+    avisar(n > 0
+      ? t('Pasos traídos de Salud', 'Steps pulled from Health')
+      : t('Sin cambios: tus pasos ya estaban al día', 'No changes: your steps were already up to date'))
   }
 
   async function exportar() {
@@ -336,6 +366,43 @@ export default function Ajustes({ estado, actualizarEstado, avisar }) {
           )}
         </p>
       </div>
+
+      {esNativo() && (
+        <>
+          <div className="titulo-seccion titulo-bosque">{t('Salud', 'Health')}</div>
+          <div className="panel panel-acento-bosque">
+            {estado.ajustes && estado.ajustes.saludConectada ? (
+              <>
+                <p className="aju-pacto-sellado">⌚ {t('Salud conectada', 'Health connected')}</p>
+                <p className="texto-suave aju-nota">
+                  {t(
+                    'Tus pasos del iPhone y del Apple Watch entran solos al abrir la app. Si un día apuntas a mano un número mayor, se respeta el tuyo.',
+                    'Your iPhone and Apple Watch steps come in by themselves when you open the app. If you log a larger number by hand, yours is kept.'
+                  )}
+                </p>
+                <button type="button" className="btn" onClick={sincronizarAhora}>
+                  {t('Sincronizar ahora', 'Sync now')}
+                </button>
+                <button type="button" className="btn btn-fantasma" onClick={desconectarSalud}>
+                  {t('Desconectar', 'Disconnect')}
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="texto-suave aju-nota">
+                  {t(
+                    'Conecta con Salud y la app leerá tus pasos del iPhone y del Apple Watch. Solo lee pasos, nada más, y todo se queda en tu móvil.',
+                    'Connect to Health and the app will read your iPhone and Apple Watch steps. It only reads steps, nothing else, and everything stays on your phone.'
+                  )}
+                </p>
+                <button type="button" className="btn btn-primario" onClick={conectarSalud}>
+                  {t('Conectar con Salud', 'Connect to Health')}
+                </button>
+              </>
+            )}
+          </div>
+        </>
+      )}
 
       <div className="titulo-seccion">{t('El pacto', 'The Pact')}</div>
       <div className="panel">
